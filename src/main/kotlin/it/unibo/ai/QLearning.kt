@@ -30,6 +30,7 @@ class ApproximateQLearning<T,E : Enum<*>>(private val alpha : Double,
 
 }
 
+/*
 // TESTING
 enum class Actions{
     NORTH
@@ -61,4 +62,4 @@ fun main(args : Array<String>){
     println(q.weights.contentDeepToString())
     q.thinkAndExecute(PacmanState(1))
     println(q.weights.contentDeepToString())
-}
+}*/

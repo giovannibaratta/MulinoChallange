@@ -24,7 +24,7 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testCompile group: 'junit', name: 'junit', version: '4.12'
-
+    compile group: 'com.googlecode.aima-java', name: 'aima-core', version: '3.0.0'
 }
 
 compileKotlin {
