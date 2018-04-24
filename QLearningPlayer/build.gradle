@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.40'
+    ext.kotlin_version = '1.2.31'
 
     repositories {
         mavenCentral()
@@ -24,7 +24,8 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'com.googlecode.aima-java', name: 'aima-core', version: '3.0.0'
+    compile project(':Server')
+    compile project(':api')
 }
 
 compileKotlin {
