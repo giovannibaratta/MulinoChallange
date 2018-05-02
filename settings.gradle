@@ -4,4 +4,5 @@ include 'Server'
 include 'Client'
 include 'PlayerAPI'
 include 'api'
+include 'MinMaxPlayer'
 

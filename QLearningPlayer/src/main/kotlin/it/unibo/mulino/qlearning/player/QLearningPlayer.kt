@@ -1,6 +1,5 @@
 package it.unibo.mulino.qlearning.player
 
-import it.unibo.ai.ApproximateQLearning
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
@@ -147,7 +146,7 @@ class QLearningPlayer : AIPlayer {
     }
 
     override fun playPhase1(state: ExternalState): Phase1Action {
-        val learner = ApproximateQLearning<State, Action>(0.01, 0.01, { 0 },
+        //val learner = ApproximateQLearning<State, Action>(0.01, 0.01, { 0 },
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
