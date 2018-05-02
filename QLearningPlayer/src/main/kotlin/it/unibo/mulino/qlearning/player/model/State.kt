@@ -1,33 +1,33 @@
-package it.unibo.mulino.qlearning.player
+package it.unibo.mulino.qlearning.player.model
 
+import it.unibo.utils.SquareMatrix
 import java.util.*
 import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-internal class State(state: ExternalState) {
+internal class State(val grid: SquareMatrix<Type>,
+                     isWhiteTurn: Boolean
+        /*state: ExternalState*/) {
 
-    data class Position(val x: Int, val y: Int)
-
-    val grid: Array<Array<Type>>
-    val boardSize = 7
-
-    var whiteTurn = true
-        private set
-
+    val boardSize = grid.size
     private val middleLine = (boardSize - 1) / 2
     private val midllePoint = Position(middleLine, middleLine)
+    val blackCount = grid.count { it == Type.BLACK }
+    val whiteCount = grid.count { it == Type.WHITE }
 
+    /*
     // undo var
     private var previousFrom: Pair<Position, Type>? = null
     private var previousTo: Pair<Position, Type>? = null
     private var previousRemove: Pair<Position, Type>? = null
-
-    fun blackCount() = grid.sumBy { it.count { it == Type.BLACK } }
-    fun whiteCount() = grid.sumBy { it.count { it == Type.WHITE } }
+    */
+    constructor(state: ExternalState)
+            : this(SquareMatrix<Type>(7, { x, y -> Type.INVALID }), true) {
+        grid
+    }
 
     init {
         grid = Array(boardSize, { Array(boardSize, { Type.INVALID }) })
-
         // Inserisco le caselle vuote valide
         grid.forEachIndexed { xIndex, columns ->
             columns.forEachIndexed { yIndex, _ ->
@@ -61,15 +61,17 @@ internal class State(state: ExternalState) {
         }
     }
 
-    fun closeMill(position: Position): Boolean {
+    private fun millTest(position: Position, typeToMill: Type? = null): Boolean {
         require(position.x >= 0 && position.x < boardSize, { "Coordinata X non valida" })
         require(position.y >= 0 && position.y < boardSize, { "Coordinata Y non valida" })
         require(grid.get(position) != Type.INVALID, { "Casella non valida" })
-        require(grid.get(position) == Type.EMPTY, { "Casella non vuota" })
 
-        val type = when (whiteTurn) {
-            true -> Type.WHITE
-            false -> Type.BLACK
+        val type = when (typeToMill != null) {
+            true -> typeToMill
+            false -> when (isWhiteTurn) {
+                true -> Type.WHITE
+                false -> Type.BLACK
+            }
         }
         var mill = false
         // top mill
@@ -119,76 +121,101 @@ internal class State(state: ExternalState) {
         return mill
     }
 
+    fun isAClosedMill(position: Position, typeToMill: Type? = null): Boolean {
+        val type = when (typeToMill != null) {
+            true -> typeToMill
+            false -> when (isWhiteTurn) {
+                true -> Type.WHITE
+                false -> Type.BLACK
+            }
+        }
+        require(grid.get(position) == type)
+        return millTest(position, type)
+    }
+
+    /**
+     * True se la pedina nella posizione indicata forma un mulino, altrimenti false
+     */
+    fun closeAMill(position: Position, typeToMill: Type? = null): Boolean {
+        require(grid.get(position) == Type.EMPTY, { "Casella non vuota" })
+        return millTest(position, typeToMill)
+    }
+
+
     // restituisce la griglia, e se ha chiuso un it.unibo.ai.didattica.mulino. Se azione non valida errore
-    fun simulateAction(from: Optional<Position>, to: Optional<Position>, remove: Optional<Position>) {
+    fun simulateAction(action: Action): ActionResult {
         var closedMill = false
-        val prevPrevFrom = previousFrom
-        val prevPrevTo = previousTo
-        val fromType: Type = when (from.isPresent) {
-            true -> grid.get(from.get())
+        //val prevPrevFrom = previousFrom
+        //val prevPrevTo = previousTo
+        //var previousFrom : Pair<Position,Type>
+        //var previousTo : Pair<Position,Type>
+        //var previousRemove : Pair<Position,Type>
+        val fromType: Type = when (action.from.isPresent) {
+            true -> grid.get(action.from.get())
             false -> Type.INVALID
         }
 
-        if (from.isPresent &&
-                ((fromType != Type.WHITE && whiteTurn) || (fromType == Type.BLACK && !whiteTurn) || !to.isPresent))
+        if (action.from.isPresent &&
+                ((fromType != Type.WHITE && isWhiteTurn) || (fromType == Type.BLACK && !isWhiteTurn) || !action.to.isPresent))
             throw IllegalStateException("La mossa from non è valida")
 
-        if (to.isPresent && grid.get(to.get()) != Type.EMPTY)
+        if (action.to.isPresent && grid.get(action.to.get()) != Type.EMPTY)
             throw IllegalStateException("La mossa to non è valida")
 
-        val removeType: Type = when (remove.isPresent) {
-            true -> grid.get(remove.get())
+        val removeType: Type = when (action.remove.isPresent) {
+            true -> grid.get(action.remove.get())
             false -> Type.INVALID
         }
 
-        if (remove.isPresent &&
-                ((removeType == Type.WHITE && whiteTurn) || (removeType == Type.BLACK && !whiteTurn)))
+        if (action.remove.isPresent &&
+                ((removeType == Type.WHITE && isWhiteTurn) || (removeType == Type.BLACK && !isWhiteTurn)))
             throw IllegalStateException("La mossa remove non è valida")
-        whiteTurn = !whiteTurn
+        isWhiteTurn = !isWhiteTurn
 
-        from.ifPresent {
+        action.from.ifPresent {
             grid.put(it, Type.EMPTY)
-            previousFrom = Pair(it, when (whiteTurn) {
+            /*previousFrom = Pair(it, when (isWhiteTurn) {
                 true -> Type.WHITE
                 false -> Type.BLACK
-            })
+            })*/
         }
-        to.ifPresent {
-            closedMill = closeMill(to.get())
-            previousTo = Pair(it, Type.EMPTY)
-            grid.put(to.get(), when (whiteTurn) {
+        action.to.ifPresent {
+            closedMill = closeAMill(action.to.get())
+            //previousTo = Pair(it, Type.EMPTY)
+            grid.put(action.to.get(), when (isWhiteTurn) {
                 true -> Type.WHITE
                 false -> Type.BLACK
             })
         }
 
-        if ((!closedMill && remove.isPresent) || (closedMill && when (whiteTurn) {
+        if ((!closedMill && action.remove.isPresent) || (closedMill && when (isWhiteTurn) {
                     true -> blackCount()
                     false -> whiteCount()
-                } > 0 && !remove.isPresent)
+                } > 0 && !action.remove.isPresent)
         ) {
             // reverse
-            from.ifPresent {
-                grid.put(it, when (whiteTurn) {
+            action.from.ifPresent {
+                grid.put(it, when (isWhiteTurn) {
                     true -> Type.WHITE
                     else -> Type.BLACK
                 })
             }
-            to.ifPresent { grid.put(it, Type.EMPTY) }
-            previousFrom = prevPrevFrom
-            previousTo = prevPrevTo
+            action.to.ifPresent { grid.put(it, Type.EMPTY) }
+            //previousFrom = prevPrevFrom
+            //previousTo = prevPrevTo
             throw IllegalArgumentException("La mossa non è valida")
         }
 
-        remove.ifPresent {
-            grid.put(remove.get(), Type.EMPTY)
-            previousRemove = Pair(it, when (whiteTurn) {
+        action.remove.ifPresent {
+            grid.put(action.remove.get(), Type.EMPTY)
+            /*
+            previousRemove = Pair(it, when (isWhiteTurn) {
                 true -> Type.BLACK
                 false -> Type.WHITE
-            })
+            })*/
         }
 
-        whiteTurn = !whiteTurn
+        isWhiteTurn = !isWhiteTurn
     }
 
     private fun rightAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -257,6 +284,7 @@ internal class State(state: ExternalState) {
         return adjacentSet
     }
 
+    /*
     fun undo() {
         if (previousRemove != null)
             grid[previousRemove!!.first.x][previousRemove!!.first.y] = previousRemove!!.second
@@ -270,17 +298,30 @@ internal class State(state: ExternalState) {
         previousRemove = null
         previousFrom = null
         previousTo = null
-        whiteTurn = !whiteTurn
+        isWhiteTurn = !isWhiteTurn
     }
+    */
 
     fun enemyCanMove(): Boolean {
-        val enemyType = when (whiteTurn) {
+        val enemyType = when (isWhiteTurn) {
             true -> Type.BLACK
             false -> Type.WHITE
         }
+        return playerCanMove(enemyType)
+    }
+
+    fun iCanMove(): Boolean {
+        val myType = when (isWhiteTurn) {
+            false -> Type.BLACK
+            true -> Type.WHITE
+        }
+        return playerCanMove(myType)
+    }
+
+    fun playerCanMove(type: Type): Boolean {
         grid.forEachIndexed { xIndex, row ->
             row.forEachIndexed { yIndex, value ->
-                if (value == enemyType &&
+                if (value == type &&
                         adjacent(Position(xIndex, yIndex), true).filter { it.second == Type.EMPTY }.isNotEmpty())
                     return true
             }

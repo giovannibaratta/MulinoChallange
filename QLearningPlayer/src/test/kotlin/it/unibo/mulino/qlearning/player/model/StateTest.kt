@@ -1,7 +1,6 @@
-package it.unibo.mulino.qlearning.player
+package it.unibo.mulino.qlearning.player.model
 
-import it.unibo.mulino.qlearning.player.State.Position
-import it.unibo.mulino.qlearning.player.State.Type
+import it.unibo.mulino.qlearning.player.model.State.Type
 import org.junit.Assert
 import org.junit.Test
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
@@ -129,7 +128,7 @@ class StateTest {
     fun MillTestNegative() {
         val state = ExternalState()
         val remappedState = State(state)
-        Assert.assertFalse(remappedState.closeMill(Position(0, 0)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 0)))
     }
 
     @Test
@@ -137,7 +136,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         val remappedState = State(state)
-        Assert.assertFalse(remappedState.closeMill(Position(0, 3)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
     }
 
     @Test
@@ -146,7 +145,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.BLACK)
         val remappedState = State(state)
-        Assert.assertFalse(remappedState.closeMill(Position(0, 3)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
     }
 
     @Test
@@ -155,7 +154,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.WHITE)
         val remappedState = State(state)
-        Assert.assertTrue(remappedState.closeMill(Position(0, 3)))
+        Assert.assertTrue(remappedState.closeAMill(Position(0, 3)))
     }
 
     @Test
@@ -164,7 +163,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("g1", ExternalState.Checker.WHITE)
         val remappedState = State(state)
-        Assert.assertTrue(remappedState.closeMill(Position(3, 0)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 0)))
     }
 
     @Test
@@ -173,7 +172,7 @@ class StateTest {
         state.board.put("c3", ExternalState.Checker.WHITE)
         state.board.put("e3", ExternalState.Checker.WHITE)
         val remappedState = State(state)
-        Assert.assertTrue(remappedState.closeMill(Position(3, 2)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 2)))
     }
 
     @Test
@@ -182,7 +181,7 @@ class StateTest {
         state.board.put("d3", ExternalState.Checker.WHITE)
         state.board.put("d1", ExternalState.Checker.WHITE)
         val remappedState = State(state)
-        Assert.assertTrue(remappedState.closeMill(Position(3, 1)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 1)))
     }
 
 
