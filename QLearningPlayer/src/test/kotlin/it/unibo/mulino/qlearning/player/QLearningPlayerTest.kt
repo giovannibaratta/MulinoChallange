@@ -2,6 +2,7 @@ package it.unibo.mulino.qlearning.player
 
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
+import it.unibo.utils.filterCellIndexed
 import org.junit.Assert
 import org.junit.Test
 
@@ -33,10 +34,10 @@ class QLearningPlayerTest {
         val state = it.unibo.mulino.qlearning.player.model.State(externalState)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
-            state.grid[it.first.first][it.first.second] = State.Type.BLACK
+            state.grid[it.first.first, it.first.second] = State.Type.BLACK
         }
 
-        state.grid[state.boardSize - 1][state.boardSize - 1] = State.Type.EMPTY
+        state.grid[state.boardSize - 1, state.boardSize - 1] = State.Type.EMPTY
 
         val actionList = player.actionFromStatePhase1(state)
         Assert.assertEquals(1, actionList.size)
@@ -53,12 +54,12 @@ class QLearningPlayerTest {
         val state = it.unibo.mulino.qlearning.player.model.State(externalState)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
-            state.grid[it.first.first][it.first.second] = State.Type.WHITE
+            state.grid[it.first.first, it.first.second] = State.Type.WHITE
         }
 
-        state.grid[0][0] = State.Type.EMPTY
+        state.grid[0, 0] = State.Type.EMPTY
 
-        state.grid[state.boardSize - 1][state.boardSize - 1] = State.Type.BLACK
+        state.grid[state.boardSize - 1, state.boardSize - 1] = State.Type.BLACK
 
         val actionList = player.actionFromStatePhase1(state)
         Assert.assertEquals(1, actionList.size)
@@ -76,14 +77,14 @@ class QLearningPlayerTest {
         val state = it.unibo.mulino.qlearning.player.model.State(externalState)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
-            state.grid[it.first.first][it.first.second] = State.Type.WHITE
+            state.grid[it.first.first, it.first.second] = State.Type.WHITE
         }
 
-        state.grid[0][0] = State.Type.EMPTY
+        state.grid[0, 0] = State.Type.EMPTY
 
-        state.grid[state.boardSize - 1][state.boardSize - 1] = State.Type.BLACK
-        state.grid[state.boardSize - 1][0] = State.Type.BLACK
-        state.grid[state.boardSize - 1][3] = State.Type.BLACK
+        state.grid[state.boardSize - 1, state.boardSize - 1] = State.Type.BLACK
+        state.grid[state.boardSize - 1, 0] = State.Type.BLACK
+        state.grid[state.boardSize - 1, 3] = State.Type.BLACK
 
         val actionList = player.actionFromStatePhase1(state)
         Assert.assertEquals(1, actionList.size)

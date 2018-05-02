@@ -1,13 +1,13 @@
 package it.unibo.mulino.qlearning.player.model
 
+import it.unibo.utils.Matrix
 import it.unibo.utils.SquareMatrix
 import java.util.*
 import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-internal class State(val grid: SquareMatrix<Type>,
-                     isWhiteTurn: Boolean
-        /*state: ExternalState*/) {
+internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y -> Type.INVALID }),
+                     val isWhiteTurn: Boolean) {
 
     val boardSize = grid.size
     private val middleLine = (boardSize - 1) / 2
@@ -15,33 +15,21 @@ internal class State(val grid: SquareMatrix<Type>,
     val blackCount = grid.count { it == Type.BLACK }
     val whiteCount = grid.count { it == Type.WHITE }
 
-    /*
-    // undo var
-    private var previousFrom: Pair<Position, Type>? = null
-    private var previousTo: Pair<Position, Type>? = null
-    private var previousRemove: Pair<Position, Type>? = null
-    */
-    constructor(state: ExternalState)
-            : this(SquareMatrix<Type>(7, { x, y -> Type.INVALID }), true) {
-        grid
+    init {
+        // Inserisco le caselle vuote valide
+        grid.forEachIndexed { xIndex, yIndex, _ ->
+            if ((xIndex == middleLine && yIndex != middleLine) ||
+                    (xIndex != middleLine && yIndex == middleLine) ||
+                    (xIndex == yIndex && xIndex != middleLine) ||
+                    (xIndex + yIndex == boardSize - 1 && xIndex != middleLine))
+                grid[xIndex, yIndex] = Type.EMPTY
+        }
     }
 
-    init {
-        grid = Array(boardSize, { Array(boardSize, { Type.INVALID }) })
-        // Inserisco le caselle vuote valide
-        grid.forEachIndexed { xIndex, columns ->
-            columns.forEachIndexed { yIndex, _ ->
-                if ((xIndex == middleLine && yIndex != middleLine) ||
-                        (xIndex != middleLine && yIndex == middleLine) ||
-                        (xIndex == yIndex && xIndex != middleLine) ||
-                        (xIndex + yIndex == boardSize - 1 && xIndex != middleLine))
-                    grid[xIndex][yIndex] = Type.EMPTY
-            }
-        }
-
-        // mapping della rappresentazione esterna in rappresentazioen interna
+    constructor(state: ExternalState)
+            : this(isWhiteTurn = true) {
+        // mapping della rappresentazione esterna in rappresentazione interna
         state.board.forEach {
-
             val xAxis = it.key.split(Pattern.compile("[0-9]+$"))
             val yAxis = it.key.split(Pattern.compile("^[a-zA-Z]+"))
             if (xAxis.size != 2 && yAxis.size != 2)
@@ -50,9 +38,9 @@ internal class State(val grid: SquareMatrix<Type>,
             // TODO("Aggiungere compatibilità con estensione della board")
             val parsedPosition = Position(xAxis[0].toLowerCase().get(0) - 'a', yAxis[1].toInt() - 1)
             if (parsedPosition.x < 0 || parsedPosition.x >= boardSize
-                    || parsedPosition.y < 0 || parsedPosition.y >= boardSize || grid.get(parsedPosition) == Type.INVALID)
+                    || parsedPosition.y < 0 || parsedPosition.y >= boardSize || grid[parsedPosition] == Type.INVALID)
                 throw IllegalArgumentException("Stai tentando di mettere la pedina dove non dovresti")
-            grid[parsedPosition.x][parsedPosition.y] = when (it.value) {
+            grid[parsedPosition] = when (it.value) {
                 ExternalState.Checker.EMPTY -> Type.EMPTY
                 ExternalState.Checker.WHITE -> Type.WHITE
                 ExternalState.Checker.BLACK -> Type.BLACK
@@ -144,12 +132,10 @@ internal class State(val grid: SquareMatrix<Type>,
 
     // restituisce la griglia, e se ha chiuso un it.unibo.ai.didattica.mulino. Se azione non valida errore
     fun simulateAction(action: Action): ActionResult {
+
+        val newStateGrid = SquareMatrix(boardSize, { xIndex, yIndex -> grid[xIndex, yIndex] })
         var closedMill = false
-        //val prevPrevFrom = previousFrom
-        //val prevPrevTo = previousTo
-        //var previousFrom : Pair<Position,Type>
-        //var previousTo : Pair<Position,Type>
-        //var previousRemove : Pair<Position,Type>
+
         val fromType: Type = when (action.from.isPresent) {
             true -> grid.get(action.from.get())
             false -> Type.INVALID
@@ -170,52 +156,30 @@ internal class State(val grid: SquareMatrix<Type>,
         if (action.remove.isPresent &&
                 ((removeType == Type.WHITE && isWhiteTurn) || (removeType == Type.BLACK && !isWhiteTurn)))
             throw IllegalStateException("La mossa remove non è valida")
-        isWhiteTurn = !isWhiteTurn
 
-        action.from.ifPresent {
-            grid.put(it, Type.EMPTY)
-            /*previousFrom = Pair(it, when (isWhiteTurn) {
-                true -> Type.WHITE
-                false -> Type.BLACK
-            })*/
-        }
+        // rimuovo la pedina nel nuovo stato
+        action.from.ifPresent { newStateGrid[it] = Type.EMPTY }
+
+        // metto la pedina nel nuovo stato
         action.to.ifPresent {
             closedMill = closeAMill(action.to.get())
-            //previousTo = Pair(it, Type.EMPTY)
-            grid.put(action.to.get(), when (isWhiteTurn) {
+            newStateGrid[action.to.get()] = when (isWhiteTurn) {
                 true -> Type.WHITE
                 false -> Type.BLACK
-            })
-        }
-
-        if ((!closedMill && action.remove.isPresent) || (closedMill && when (isWhiteTurn) {
-                    true -> blackCount()
-                    false -> whiteCount()
-                } > 0 && !action.remove.isPresent)
-        ) {
-            // reverse
-            action.from.ifPresent {
-                grid.put(it, when (isWhiteTurn) {
-                    true -> Type.WHITE
-                    else -> Type.BLACK
-                })
             }
-            action.to.ifPresent { grid.put(it, Type.EMPTY) }
-            //previousFrom = prevPrevFrom
-            //previousTo = prevPrevTo
+        }
+
+        // ho fatto un mill ma non ho specificato la remove oppure non ho fatto un mill e ho specificato la remove
+        if ((!closedMill && action.remove.isPresent) || (closedMill && when (isWhiteTurn) {
+                    true -> blackCount
+                    false -> whiteCount
+                } > 0 && !action.remove.isPresent))
             throw IllegalArgumentException("La mossa non è valida")
-        }
 
-        action.remove.ifPresent {
-            grid.put(action.remove.get(), Type.EMPTY)
-            /*
-            previousRemove = Pair(it, when (isWhiteTurn) {
-                true -> Type.BLACK
-                false -> Type.WHITE
-            })*/
-        }
+        // ho fatto mill e devo rimuovere la pedina
+        action.remove.ifPresent { newStateGrid[action.remove.get()] = Type.EMPTY }
 
-        isWhiteTurn = !isWhiteTurn
+        return ActionResult(State(newStateGrid, !isWhiteTurn), closedMill)
     }
 
     private fun rightAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -226,10 +190,10 @@ internal class State(val grid: SquareMatrix<Type>,
         val rightPosition = Position(pos.x + offset, pos.y)
         if (rightPosition.x >= boardSize || (rightPosition.y != middleLine && rightPosition.x >= (boardSize - middleLine + offset)) || rightPosition == midllePoint)
             return Optional.empty()
-        assert(grid[rightPosition.x][rightPosition.y] != Type.INVALID)
-        if (!includeEmpty && grid[rightPosition.x][rightPosition.y] == Type.EMPTY)
+        assert(grid[rightPosition] != Type.INVALID)
+        if (!includeEmpty && grid[rightPosition] == Type.EMPTY)
             return Optional.empty()
-        return Optional.of(Pair(rightPosition, grid[rightPosition.x][rightPosition.y]))
+        return Optional.of(Pair(rightPosition, grid[rightPosition]))
     }
 
     private fun leftAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -240,10 +204,10 @@ internal class State(val grid: SquareMatrix<Type>,
         val leftPosition = Position(pos.x - offset, pos.y)
         if (leftPosition.x < 0 || (leftPosition.y != middleLine && leftPosition.x < (middleLine - offset)) || leftPosition == midllePoint)
             return Optional.empty()
-        assert(grid[leftPosition.x][leftPosition.y] != Type.INVALID)
-        if (!includeEmpty && grid[leftPosition.x][leftPosition.y] == Type.EMPTY)
+        assert(grid[leftPosition] != Type.INVALID)
+        if (!includeEmpty && grid[leftPosition] == Type.EMPTY)
             return Optional.empty()
-        return Optional.of(Pair(leftPosition, grid[leftPosition.x][leftPosition.y]))
+        return Optional.of(Pair(leftPosition, grid[leftPosition]))
     }
 
     private fun topAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -254,10 +218,10 @@ internal class State(val grid: SquareMatrix<Type>,
         val topPosition = Position(pos.x, pos.y + offset)
         if (topPosition.y >= boardSize || (topPosition.x != middleLine && topPosition.y >= (boardSize - middleLine + offset)) || topPosition == midllePoint)
             return Optional.empty()
-        assert(grid[topPosition.x][topPosition.y] != Type.INVALID)
-        if (!includeEmpty && grid[topPosition.x][topPosition.y] == Type.EMPTY)
+        assert(grid[topPosition] != Type.INVALID)
+        if (!includeEmpty && grid[topPosition] == Type.EMPTY)
             return Optional.empty()
-        return Optional.of(Pair(topPosition, grid[topPosition.x][topPosition.y]))
+        return Optional.of(Pair(topPosition, grid[topPosition]))
     }
 
     private fun bottomAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -268,10 +232,10 @@ internal class State(val grid: SquareMatrix<Type>,
         val bottomPosition = Position(pos.x, pos.y - offset)
         if (bottomPosition.y < 0 || (bottomPosition.x != middleLine && bottomPosition.y < (middleLine - offset)) || bottomPosition == midllePoint)
             return Optional.empty()
-        assert(grid[bottomPosition.x][bottomPosition.y] != Type.INVALID)
-        if (!includeEmpty && grid[bottomPosition.x][bottomPosition.y] == Type.EMPTY)
+        assert(grid[bottomPosition] != Type.INVALID)
+        if (!includeEmpty && grid[bottomPosition] == Type.EMPTY)
             return Optional.empty()
-        return Optional.of(Pair(bottomPosition, grid[bottomPosition.x][bottomPosition.y]))
+        return Optional.of(Pair(bottomPosition, grid[bottomPosition]))
     }
 
     fun adjacent(pos: Position, includeEmpty: Boolean = false): Set<Pair<Position, Type>> {
@@ -283,24 +247,6 @@ internal class State(val grid: SquareMatrix<Type>,
         topAdjacent(pos, includeEmpty).ifPresent { adjacentSet.add(it) }
         return adjacentSet
     }
-
-    /*
-    fun undo() {
-        if (previousRemove != null)
-            grid[previousRemove!!.first.x][previousRemove!!.first.y] = previousRemove!!.second
-
-        if (previousTo != null)
-            grid[previousTo!!.first.x][previousTo!!.first.y] = previousTo!!.second
-
-        if (previousFrom != null)
-            grid[previousFrom!!.first.x][previousFrom!!.first.y] = previousFrom!!.second
-
-        previousRemove = null
-        previousFrom = null
-        previousTo = null
-        isWhiteTurn = !isWhiteTurn
-    }
-    */
 
     fun enemyCanMove(): Boolean {
         val enemyType = when (isWhiteTurn) {
@@ -319,14 +265,17 @@ internal class State(val grid: SquareMatrix<Type>,
     }
 
     fun playerCanMove(type: Type): Boolean {
-        grid.forEachIndexed { xIndex, row ->
-            row.forEachIndexed { yIndex, value ->
-                if (value == type &&
-                        adjacent(Position(xIndex, yIndex), true).filter { it.second == Type.EMPTY }.isNotEmpty())
-                    return true
+
+        var playerCanMove = false
+
+        grid.forEachIndexed { xIndex, yIndex, value ->
+            if (value == type &&
+                    adjacent(Position(xIndex, yIndex), true).filter { it.second == Type.EMPTY }.isNotEmpty()) {
+                playerCanMove = true
+                return@forEachIndexed
             }
         }
-        return false
+        return playerCanMove
     }
 
     fun <T> Array<Array<T>>.get(pos: Position): T = this[pos.x][pos.y]
@@ -334,6 +283,7 @@ internal class State(val grid: SquareMatrix<Type>,
         this[pos.x][pos.y] = value
     }
 
+    /*
     override fun toString(): String {
         val sb = StringBuilder()
         grid.forEach {
@@ -351,6 +301,12 @@ internal class State(val grid: SquareMatrix<Type>,
         }
         sb.append(System.lineSeparator())
         return sb.toString()
+    }*/
+
+    operator fun <T> Matrix<T>.get(position: Position) = this[position.x][position.y]
+
+    operator fun <T> Matrix<T>.set(position: Position, value: T) {
+        this[position] = value
     }
 
     enum class Type {

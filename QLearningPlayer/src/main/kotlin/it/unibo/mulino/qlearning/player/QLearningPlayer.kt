@@ -8,6 +8,7 @@ import it.unibo.mulino.qlearning.player.model.Action
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
+import it.unibo.utils.filterCellIndexed
 import java.util.*
 import kotlin.collections.List
 import kotlin.collections.filter
@@ -69,7 +70,7 @@ class QLearningPlayer : AIPlayer {
 
         it.grid.filterCellIndexed { it == myType }
                 .forEach {
-                    state.grid[it.first.first][it.first.second] = State.Type.EMPTY
+                    state.grid[it.first.first, it.first.second] = State.Type.EMPTY
                     val fromCell = Position(it.first.first, it.first.second)
 
                     state.adjacent(fromCell, true)
@@ -85,7 +86,7 @@ class QLearningPlayer : AIPlayer {
                                     }
                                 }
                             }
-                    state.grid[it.first.first][it.first.second] = myType
+                    state.grid[it.first.first, it.first.second] = myType
                 }
         actionList
         /*
@@ -116,7 +117,7 @@ class QLearningPlayer : AIPlayer {
 
         it.grid.filterCellIndexed { it == myType }
                 .forEach {
-                    state.grid[it.first.first][it.first.second] = State.Type.EMPTY
+                    state.grid[it.first.first, it.first.second] = State.Type.EMPTY
                     val fromCell = Position(it.first.first, it.first.second)
                     emptyCell.forEach {
                         val toCell = Position(it.first.first, it.first.second)
@@ -129,7 +130,7 @@ class QLearningPlayer : AIPlayer {
                             }
                         }
                     }
-                    state.grid[it.first.first][it.first.second] = myType
+                    state.grid[it.first.first, it.first.second] = myType
                 }
         actionList
         /*

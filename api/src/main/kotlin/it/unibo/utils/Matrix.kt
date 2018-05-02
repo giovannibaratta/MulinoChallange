@@ -2,7 +2,7 @@ package it.unibo.utils
 
 open class Matrix<T>(val rows: Int,
                      val columns: Int,
-                     private val init: (Int, Int) -> T) : Iterable<T> {
+                     init: (Int, Int) -> T) : Iterable<T> {
 
     private lateinit var matrix: Array<Array<T>>
 
@@ -26,8 +26,8 @@ open class Matrix<T>(val rows: Int,
 
     override fun iterator(): Iterator<T> = object : Iterator<T> {
 
-        var currentRow = 0
-        var currentColumns = 0
+        private var currentRow = 0
+        private var currentColumns = 0
 
         override fun hasNext(): Boolean = currentRow < rows && currentColumns < columns
 
@@ -41,6 +41,14 @@ open class Matrix<T>(val rows: Int,
             return elem
         }
     }
+
+    fun forEachIndexed(action: (Int, Int, T) -> Unit) {
+        matrix.forEachIndexed { rowIndex, column ->
+            column.forEachIndexed { colIndex, value ->
+                action(rowIndex, colIndex, value)
+            }
+        }
+    }
 }
 
 data class SquareMatrix<T>(val size: Int, private val init: (Int, Int) -> T) : Matrix<T>(size, size, init)
@@ -52,23 +60,19 @@ fun <T> Matrix<T>.filterCell(predicate: (T) -> Boolean): List<T> {
     return filtered.toList()
 }
 
-/*
+
 fun <T> Matrix<T>.filterCellIndexed ( predicate : (T) -> Boolean) : List<Pair<Pair<Int,Int>,T>>{
     val filtered = mutableListOf<Pair<Pair<Int,Int>,T>>()
-    this.for
-
-    this.forEachIndexed { xIndex, value ->
-        value.forEachIndexed { yIndex, innerValue ->
-            if(predicate(innerValue))
-                filtered.add(Pair(Pair(xIndex,yIndex),innerValue))
-        }
+    this.forEachIndexed { xIndex, yIndex, value ->
+        if (predicate(value))
+            filtered.add(Pair(Pair(xIndex, yIndex), value))
     }
+
     return filtered.toList()
 }
 
-fun <T> Array<Array<T>>.foreachCell ( action : (T) -> Unit)
-        = this.forEach { it.forEach { action(it) } }
-*/
+// TODO("Da testare, possibile bug sull'iterator")
+fun <T> Matrix<T>.forEachCell(action: (T) -> Unit) = this.forEach { action(it) }
 
 fun <T> Array<Array<T>>.filterCell(predicate: (T) -> Boolean): List<T> {
     val filtered = mutableListOf<T>()
