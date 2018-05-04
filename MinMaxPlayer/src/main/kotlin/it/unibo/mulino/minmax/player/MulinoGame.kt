@@ -1,12 +1,13 @@
 package it.unibo.mulino.minmax.player
 
 import aima.core.search.adversarial.Game
+import it.unibo.ai.didattica.mulino.actions.Action
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 
-abstract class MulinoGame<A> : Game<State, A, Checker> {
+object MulinoGame : Game<State, Action, Checker> {
 
     override fun getInitialState(): State {
         return State(Checker.WHITE)
@@ -27,132 +28,180 @@ abstract class MulinoGame<A> : Game<State, A, Checker> {
         }
     }
 
-    abstract fun isWinningConfiguration(state: State, checker: Checker): Boolean
-
-}
-
-object MulinoGamePhase1 : MulinoGame<Phase1Action>() {
-
-    override fun getActions(state: State?): MutableList<Phase1Action> {
-        val actions = mutableListOf<Phase1Action>()
-        for (possiblePosition in state!!.getEmptyPositions()) {
-            if (state.checkMorris(possiblePosition, state.checker)) {
-                for (adversarialPosition in state.getPositions(state.opposite())) {
-                    val action = Phase1Action()
-                    action.putPosition = "" + possiblePosition.first + possiblePosition.second
-                    action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
-                    actions.add(action)
-                }
-            } else {
-                val action = Phase1Action()
-                action.putPosition = "" + possiblePosition.first + possiblePosition.second
-                actions.add(action)
-            }
+    override fun getActions(state: State?): MutableList<Action> {
+        val actions = mutableListOf<Action>()
+        //println("Current state : $state")
+        var intChecker = -1
+        when(state!!.checker){
+            Checker.WHITE -> intChecker = 0
+            Checker.BLACK -> intChecker = 1
         }
-        return actions
-    }
-
-    override fun getResult(state: State?, action: Phase1Action?): State {
-        val colNewPosition = action!!.putPosition[0]
-        val rowNewPosition = action.putPosition[1].toString().toInt()
-        var newState = State(state!!.opposite())
-        for (whitePosition in state.getPositions(Checker.WHITE)) {
-            newState.addPiece(whitePosition, Checker.WHITE)
-        }
-        for (blackPosition in state.getPositions(Checker.BLACK)) {
-            newState.addPiece(blackPosition, Checker.BLACK)
-        }
-        newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
-        if (action.removeOpponentChecker != null) {
-            val colOpponentToRemove = action.removeOpponentChecker[0]
-            val rowOpponentToRemove = action.removeOpponentChecker[1].toString().toInt()
-            newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
-        }
-
-        return newState
-    }
-
-    override fun isTerminal(state: State?): Boolean {
-        return state!!.isWinner(Checker.WHITE, 1) || state.isWinner(Checker.BLACK, 1)
-    }
-
-    override fun isWinningConfiguration(state: State, checker: Checker): Boolean {
-        var check = false
-        when (checker) {
-            state.checker -> return state.isWinner(checker, 1)
-            else -> {
-                for (action in getActions(state))
-                    if (getResult(state, action).isWinner(checker, 1)) {
-                        check = true
-                        break
-                    }
-            }
-        }
-        return check
-    }
-}
-
-object MulinoGamePhase2 : MulinoGame<Phase2Action>() {
-
-    override fun getActions(state:
-                            State): MutableList<Phase2Action> {
-        val actions = mutableListOf<Phase2Action>()
-        for (actualPosition in state.getPositions(state.checker)) {
-            for (adiacentPosition in state.getAdiacentPositions(actualPosition)) {
-                if (state.getPiece(adiacentPosition) == Checker.EMPTY) {
-                    if (state.checkMorris(actualPosition, adiacentPosition, state.checker)) {
+        when(state.currentPhase){
+            '1' ->{
+                for (possiblePosition in state!!.getEmptyPositions()) {
+                    if (state.checkMorris(possiblePosition, state.checker)) {
                         for (adversarialPosition in state.getPositions(state.opposite())) {
-                            val action = Phase2Action()
-                            action.from = "" + actualPosition.first + actualPosition.second
-                            action.to = "" + adiacentPosition.first + adiacentPosition.second
+                            val action = Phase1Action()
+                            action.putPosition = "" + possiblePosition.first + possiblePosition.second
                             action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
                             actions.add(action)
                         }
                     } else {
-                        val action = Phase2Action()
-                        action.from = "" + actualPosition.first + actualPosition.second
-                        action.to = "" + adiacentPosition.first + adiacentPosition.second
+                        val action = Phase1Action()
+                        action.putPosition = "" + possiblePosition.first + possiblePosition.second
                         actions.add(action)
                     }
                 }
             }
+            '2' ->{
+                for (actualPosition in state.getPositions(state.checker)) {
+                    for (adiacentPosition in state.getAdiacentPositions(actualPosition)) {
+                        if (state.getPiece(adiacentPosition) == Checker.EMPTY) {
+                            if (state.checkMorris(actualPosition, adiacentPosition, state.checker)) {
+                                for (adversarialPosition in state.getPositions(state.opposite())) {
+                                    val action = Phase2Action()
+                                    action.from = "" + actualPosition.first + actualPosition.second
+                                    action.to = "" + adiacentPosition.first + adiacentPosition.second
+                                    action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
+                                    actions.add(action)
+                                }
+                            } else {
+                                val action = Phase2Action()
+                                action.from = "" + actualPosition.first + actualPosition.second
+                                action.to = "" + adiacentPosition.first + adiacentPosition.second
+                                actions.add(action)
+                            }
+                        }
+                    }
+                }
+            }
+            '3'->{
+                for (actualPosition in state.getPositions(state.checker)) {
+                    for (possiblePosition in state.getEmptyPositions()) {
+                        if (state.checkMorris(actualPosition, possiblePosition, state.checker)) {
+                            for (adversarialPosition in state.getPositions(state.opposite())) {
+                                val action = PhaseFinalAction()
+                                action.from = "" + actualPosition.first + actualPosition.second
+                                action.to = "" + possiblePosition.first + possiblePosition.second
+                                action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
+                                actions.add(action)
+                            }
+                        } else {
+                            val action = PhaseFinalAction()
+                            action.from = "" + actualPosition.first + actualPosition.second
+                            action.to = "" + possiblePosition.first + possiblePosition.second
+                            actions.add(action)
+                        }
+                    }
+                }
+            }
         }
+        /*println("Possible actions: ")
+        for(action in actions)
+            println("$action")
+        */
         return actions
     }
 
-    override fun getResult(state: State, action: Phase2Action?): State {
-        val colOldPosition = action!!.from[0]
-        val rowOldPosition = action.from[1].toString().toInt()
-        val colNewPosition = action.to[0]
-        val rowNewPosition = action.to[1].toString().toInt()
-        var newState = State(state.opposite())
+    override fun getResult(state: State?, action: Action): State {
+        var newState = State(state!!.opposite())
+        var current = -1
+        var next = -1
+        when(state.checker){
+            Checker.WHITE -> current = 0
+            Checker.BLACK -> current = 1
+        }
+        when(state.opposite()){
+            Checker.WHITE -> next = 0
+            Checker.BLACK -> next = 1
+        }
+        newState.checkers[next]=state.checkers[next]
+        newState.checkers[current]=state.checkers[current]
         for (whitePosition in state.getPositions(Checker.WHITE)) {
             newState.addPiece(whitePosition, Checker.WHITE)
         }
         for (blackPosition in state.getPositions(Checker.BLACK)) {
             newState.addPiece(blackPosition, Checker.BLACK)
         }
-        newState.removePiece(Pair(colOldPosition, rowOldPosition))
-        newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
-        if (action.removeOpponentChecker != null) {
-            val colOpponentToRemove = action.removeOpponentChecker[0]
-            val rowOpponentToRemove = action.removeOpponentChecker[1].toString().toInt()
-            newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
+        when(action){
+            is Phase1Action ->{
+                var phase1Action : Phase1Action= action
+                val colNewPosition = phase1Action.putPosition[0]
+                val rowNewPosition = phase1Action.putPosition[1].toString().toInt()
+
+                newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
+                newState.checkers[current]--
+
+                if (phase1Action.removeOpponentChecker != null) {
+                    val colOpponentToRemove = phase1Action.removeOpponentChecker[0]
+                    val rowOpponentToRemove = phase1Action.removeOpponentChecker[1].toString().toInt()
+                    newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
+                }
+                if(state.checkers[next]==0)
+                    newState.currentPhase='2'
+                else
+                    newState.currentPhase='1'
+            }
+
+            is Phase2Action ->{
+                var phase2Action : Phase2Action= action
+                val colOldPosition = phase2Action.from[0]
+                val rowOldPosition = phase2Action.from[1].toString().toInt()
+                val colNewPosition = phase2Action.to[0]
+                val rowNewPosition = phase2Action.to[1].toString().toInt()
+
+                newState.removePiece(Pair(colOldPosition, rowOldPosition))
+                newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
+
+                if (action.removeOpponentChecker != null) {
+                    val colOpponentToRemove = phase2Action.removeOpponentChecker[0]
+                    val rowOpponentToRemove = phase2Action.removeOpponentChecker[1].toString().toInt()
+                    newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
+                }
+                if(state.getNumPieces(state.opposite())==3)
+                    newState.currentPhase='3'
+                else
+                    newState.currentPhase='2'
+            }
+            is PhaseFinalAction ->{
+                var phaseFinalAction : PhaseFinalAction= action
+                val colOldPosition = phaseFinalAction.from[0]
+                val rowOldPosition = phaseFinalAction.from[1].toString().toInt()
+                val colNewPosition = phaseFinalAction.to[0]
+                val rowNewPosition = phaseFinalAction.to[1].toString().toInt()
+
+                newState.removePiece(Pair(colOldPosition, rowOldPosition))
+                newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
+                if (action.removeOpponentChecker != null) {
+                    val colOpponentToRemove = phaseFinalAction.removeOpponentChecker[0]
+                    val rowOpponentToRemove = phaseFinalAction.removeOpponentChecker[1].toString().toInt()
+                    newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
+                }
+                if(state.getNumPieces(state.opposite())>3)
+                    newState.currentPhase='2'
+                else
+                    newState.currentPhase='3'
+            }
         }
+        //println("Action ${state.checker}: $action -> State : $newState")
         return newState
     }
 
     override fun isTerminal(state: State?): Boolean {
-        return state!!.isWinner(Checker.WHITE, 2) || state.isWinner(Checker.BLACK, 2)
+        if(state!!.isWinner(Checker.WHITE) || state.isWinner(Checker.BLACK)){
+            println("TERMINAL STATE : $state")
+            return true
+        }
+        return false
     }
 
-    override fun isWinningConfiguration(state: State, checker: Checker): Boolean {
+    fun isWinningConfiguration(state: State, checker: Checker): Boolean {
         var check = false
         when (checker) {
-            state.checker -> return state.isWinner(checker, 2)
-            else -> {
-                for (action in MulinoGamePhase1.getActions(state))
-                    if (MulinoGamePhase1.getResult(state, action).isWinner(checker, 2)) {
+            state.checker->{
+                for (action in getActions(state))
+                    if (getResult(state, action).isWinner(checker)) {
+                        println("WINNING CONFIGURATION FOR $checker : Action $action to state $state")
                         check = true
                         break
                     }
@@ -160,77 +209,12 @@ object MulinoGamePhase2 : MulinoGame<Phase2Action>() {
         }
         return check
     }
-}
 
-object MulinoGamePhaseFinal : MulinoGame<PhaseFinalAction>() {
-
-    override fun getActions(state: State): MutableList<PhaseFinalAction> {
-        val actions = mutableListOf<PhaseFinalAction>()
-        for (actualPosition in state.getPositions(state.checker)) {
-            for (possiblePosition in state.getEmptyPositions()) {
-                if (state.checkMorris(actualPosition, possiblePosition, state.checker)) {
-                    for (adversarialPosition in state.getPositions(state.opposite())) {
-                        val action = PhaseFinalAction()
-                        action.from = "" + actualPosition.first + actualPosition.second
-                        action.to = "" + possiblePosition.first + possiblePosition.second
-                        action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
-                        actions.add(action)
-                    }
-                } else {
-                    val action = PhaseFinalAction()
-                    action.from = "" + actualPosition.first + actualPosition.second
-                    action.to = "" + possiblePosition.first + possiblePosition.second
-                    actions.add(action)
-                }
-            }
-        }
-        return actions
-    }
-
-    override fun getResult(state: State, action: PhaseFinalAction?): State {
-        val colOldPosition = action!!.from[0]
-        val rowOldPosition = action.from[1].toString().toInt()
-        val colNewPosition = action.to[0]
-        val rowNewPosition = action.to[1].toString().toInt()
-        var newState = State(state.opposite())
-        for (whitePosition in state.getPositions(Checker.WHITE)) {
-            newState.addPiece(whitePosition, Checker.WHITE)
-        }
-        for (blackPosition in state.getPositions(Checker.BLACK)) {
-            newState.addPiece(blackPosition, Checker.BLACK)
-        }
-        newState.removePiece(Pair(colOldPosition, rowOldPosition))
-        newState.addPiece(Pair(colNewPosition, rowNewPosition), state.checker)
-        if (action.removeOpponentChecker != null) {
-            val colOpponentToRemove = action.removeOpponentChecker[0]
-            val rowOpponentToRemove = action.removeOpponentChecker[1].toString().toInt()
-            newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
-        }
-
-        return newState
-    }
-
-    override fun isTerminal(state: State?): Boolean {
-        return state!!.isWinner(Checker.WHITE, 3) || state.isWinner(Checker.BLACK, 3)
-    }
-
-    override fun isWinningConfiguration(state: State, checker: Checker): Boolean {
-        var check = false
-        when (checker) {
-            state.checker -> {
-                for (action in MulinoGamePhase1.getActions(state))
-                    if (MulinoGamePhase1.getResult(state, action).isWinner(checker, 3)) {
-                        check = true
-                        break
-                    }
-            }
-        }
-        return check
-    }
 }
 
 fun main(args: Array<String>) {
 
+    /*
     val state = State(Checker.WHITE)
     println("Turno: ${state.checker}")
 
@@ -285,4 +269,5 @@ fun main(args: Array<String>) {
             print("${adiacentPosition.first}${adiacentPosition.second}, ")
         print(")\n")
     }
+    */
 }

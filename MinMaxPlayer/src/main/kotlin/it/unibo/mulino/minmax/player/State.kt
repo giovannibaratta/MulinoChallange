@@ -7,6 +7,8 @@ class State(checker: Checker) {
 
     private val board = Array(8, { CharArray(3, { 'e' }) })
     var checker = checker
+    var checkers = intArrayOf(9,9)
+    var currentPhase : Char = '1'
 
     companion object {
         private val checkersToShort = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
@@ -350,16 +352,28 @@ class State(checker: Checker) {
         return count
     }
 
-    fun isWinner(checker: Checker, phase: Int): Boolean {
+    fun isWinner(checker: Checker): Boolean {
         var opposite = Checker.EMPTY
         if (checker == Checker.WHITE) {
             opposite = Checker.BLACK
         } else
             opposite = Checker.WHITE
-        if (getNumPieces(checker) >= 3 && getNumPieces(opposite) < 3)
-            return true
-        if (phase == 2 && checkNoMoves(opposite))
-            return true
+        var intOpposite = -1
+        when(opposite){
+            Checker.WHITE -> intOpposite = 0
+            Checker.BLACK -> intOpposite = 1
+        }
+        when(currentPhase){
+            '1'->{
+                return checkers[intOpposite]==0 && getNumPieces(opposite) < 3
+            }
+            '2'->{
+                return getNumPieces(opposite) < 3 || checkNoMoves(opposite)
+            }
+            '3'->{
+                return getNumPieces(opposite) < 3
+            }
+        }
         return false
     }
 
@@ -398,6 +412,16 @@ class State(checker: Checker) {
         return arrayOf()
     }
 
+    override fun toString(): String {
+        var out =""
+        for(position in getPositions(Checker.WHITE)){
+            out+=" $position  : W ; "
+        }
+        for(position in getPositions(Checker.BLACK)){
+            out+=" $position  : B ; "
+        }
+        return out
+    }
 }
 
 fun main(args: Array<String>) {
@@ -487,6 +511,6 @@ fun main(args: Array<String>) {
     println("Numero di Morris: ${state.getNumMorrises(Checker.WHITE)}")
     println("Numero di configurazioni da 2: ${state.getNum2Conf(Checker.WHITE)}")
     println("Numero di configurazioni da 3: ${state.getNum3Conf(Checker.WHITE)}")
-    println("Configurazione vincente fase 2: ${state.isWinner(Checker.WHITE, 2)}")
-    println("Configurazione vincente fase 1: ${state.isWinner(Checker.WHITE, 1)}")
+    println("Configurazione vincente fase 2: ${state.isWinner(Checker.WHITE)}")
+    println("Configurazione vincente fase 1: ${state.isWinner(Checker.WHITE)}")
 }
