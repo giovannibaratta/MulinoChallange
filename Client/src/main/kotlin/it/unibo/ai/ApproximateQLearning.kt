@@ -5,7 +5,8 @@ class ApproximateQLearning<T, E>(private val alpha: Double,
                                  private val featureExtractors : Array<(T,E) -> Double>,
                                  val weights : Array<Double> = Array(featureExtractors.size,{0.0}),
                                  private val actionsFromState : (T) -> List<E>,
-                                 private val applyAction : (T, E) -> Pair<Double,T>){
+                                 private val applyAction: (T, E) -> Pair<Double, T> // reward State
+) {
 
     private fun qValue(state : T, agentAction : E) =
         featureExtractors.mapIndexed{index, f -> f(state, agentAction) * weights[index]}.sum()

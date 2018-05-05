@@ -1,5 +1,6 @@
 package it.unibo.mulino.qlearning.player
 
+import it.unibo.ai.ApproximateQLearning
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
@@ -146,8 +147,54 @@ class QLearningPlayer : AIPlayer {
         */
     }
 
+
+    private val applyAction: (State, Action) -> Pair<Double, State> = { state, action ->
+        val reward = when (action.remove.isPresent) {
+            true -> 1.0
+            else -> -0.2
+        }
+        Pair(reward, state.simulateAction(action).newState)
+    }
+
+    private val phase1Features: Array<(State, Action) -> Double> =
+            arrayOf(
+                    { state, action -> state.whiteCount.toDouble() },
+                    { state, action -> state.blackCount.toDouble() },
+                    { state, action ->
+                        when (state.simulateAction(action).mill) {
+                            true -> 1.0
+                            false -> 0.0
+                        }
+                    },
+                    { state, action ->
+                        when (state.enemyCanMove()) {
+                            false -> 1.0
+                            true -> 0.0
+                        }
+                    },
+                    { state, action ->
+                        when (state.iCanMove()) {
+                            true -> 1.0
+                            false -> 0.0
+                        }
+                    }
+            )
+
     override fun playPhase1(state: ExternalState): Phase1Action {
-        //val learner = ApproximateQLearning<State, Action>(0.01, 0.01, { 0 },
+        /*
+        ApproximateQLearning<T, E>(private val alpha: Double,
+                                 private val discount : Double,
+                                 private val featureExtractors : Array<(T,E) -> Double>,
+                                 val weights : Array<Double> = Array(featureExtractors.size,{0.0}),
+                                 private val actionsFromState : (T) -> List<E>,
+                                 private val applyAction : (T, E) -> Pair<Double,T>){
+         */
+        val learner = ApproximateQLearning<State, Action>(0.01,
+                0.01,
+                featureExtractors = phase1Features,
+                actionsFromState = actionFromStatePhase1,
+                applyAction = applyAction)
+        learner.thinkAndExecute()
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
