@@ -173,8 +173,10 @@ class State(checker: Checker) {
         for (position in getPositions(checker)) {
             check = checkNoMoves(position, checker)
             if (check)
-                return true
+                break
         }
+        if(check)
+            println("No moves possible for $checker!")
         return check
     }
 
@@ -364,7 +366,7 @@ class State(checker: Checker) {
         }
         when(currentPhase){
             '1'->{
-                return (checkers[intOpposite]==0) && (getNumPieces(opposite) < 3)
+                return ((checkers[intOpposite]==0) && (getNumPieces(opposite) < 3))
             }
             '2'->{
                 return (getNumPieces(opposite) < 3) || (checkNoMoves(opposite))
