@@ -1,9 +1,6 @@
-package it.unibo
-
 import it.unibo.ai.didattica.mulino.domain.State
+import it.unibo.mulino.minmax.player.MinMaxPlayer
 import it.unibo.mulino.player.AIClient
-import it.unibo.mulino.player.MinMaxPlayer
-import it.unibo.mulino.qlearning.player.QLearningPlayer
 import java.net.ConnectException
 
 enum class Algorithm {
@@ -22,8 +19,7 @@ val errorType = hashMapOf(
 )
 
 val player = hashMapOf(
-        Pair(Algorithm.MINMAX, MinMaxPlayer()),
-        Pair(Algorithm.QLEARNING, QLearningPlayer())
+        Pair(Algorithm.MINMAX, MinMaxPlayer())
 )
 
 fun main(args: Array<String>) {
@@ -37,7 +33,7 @@ fun main(args: Array<String>) {
         else -> exitWithError(ErrorType.PLAYER_TYPE)
     }
 
-    var selectedAlgorithm = Algorithm.QLEARNING
+    var selectedAlgorithm = Algorithm.MINMAX
 
     if (args.size == 2) {
         selectedAlgorithm = when (args[1]) {

@@ -12,13 +12,13 @@ class AIClient(val playerType: State.Checker,
 ) : MulinoClient(playerType) {
 
     constructor(playerType: State.Checker,
-                playPhase1: (State) -> Phase1Action,
-                playPhase2: (State) -> Phase2Action,
-                playPhaseFinal: (State) -> PhaseFinalAction
+                playPhase1: (State, State.Checker) -> Phase1Action,
+                playPhase2: (State, State.Checker) -> Phase2Action,
+                playPhaseFinal: (State, State.Checker) -> PhaseFinalAction
     ) : this(playerType, object : AIPlayer {
-        override fun playPhase1(state: State): Phase1Action = playPhase1(state)
-        override fun playPhase2(state: State): Phase2Action = playPhase2(state)
-        override fun playPhaseFinal(state: State): PhaseFinalAction = playPhaseFinal(state)
+        override fun playPhase1(state: State, player : State.Checker): Phase1Action = playPhase1(state, player)
+        override fun playPhase2(state: State, player : State.Checker): Phase2Action = playPhase2(state, player)
+        override fun playPhaseFinal(state: State, player : State.Checker): PhaseFinalAction = playPhaseFinal(state, player)
     })
 
     fun play() {
@@ -40,7 +40,7 @@ class AIClient(val playerType: State.Checker,
 
         while (true) {
             val playPhase = phaseMethod(state.currentPhase)
-            val action = playPhase(state)
+            val action = playPhase(state, player)
             write(action)
             // mio update
             state = read()
@@ -50,7 +50,7 @@ class AIClient(val playerType: State.Checker,
 
     var count = 0
 
-    private fun phaseMethod(phase: State.Phase): (State) -> Action =
+    private fun phaseMethod(phase: State.Phase): (State, State.Checker) -> Action =
             when (phase) {
                 State.Phase.FIRST -> aiPlayer::playPhase1
                 State.Phase.SECOND -> aiPlayer::playPhase2

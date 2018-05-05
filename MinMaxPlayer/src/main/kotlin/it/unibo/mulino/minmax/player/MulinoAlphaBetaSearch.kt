@@ -3,9 +3,6 @@ package it.unibo.mulino.minmax.player
 
 import aima.core.search.adversarial.IterativeDeepeningAlphaBetaSearch
 import it.unibo.ai.didattica.mulino.actions.Action
-import it.unibo.ai.didattica.mulino.actions.Phase1Action
-import it.unibo.ai.didattica.mulino.actions.Phase2Action
-import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
