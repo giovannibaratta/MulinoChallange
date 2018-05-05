@@ -353,11 +353,10 @@ class State(checker: Checker) {
     }
 
     fun isWinner(checker: Checker): Boolean {
-        var opposite = Checker.EMPTY
-        if (checker == Checker.WHITE) {
+        var opposite = Checker.WHITE
+        if (checker==Checker.WHITE) {
             opposite = Checker.BLACK
-        } else
-            opposite = Checker.WHITE
+        }
         var intOpposite = -1
         when(opposite){
             Checker.WHITE -> intOpposite = 0
@@ -365,13 +364,13 @@ class State(checker: Checker) {
         }
         when(currentPhase){
             '1'->{
-                return checkers[intOpposite]==0 && getNumPieces(opposite) < 3
+                return (checkers[intOpposite]==0) && (getNumPieces(opposite) < 3)
             }
             '2'->{
-                return getNumPieces(opposite) < 3 || checkNoMoves(opposite)
+                return (getNumPieces(opposite) < 3) || (checkNoMoves(opposite))
             }
             '3'->{
-                return getNumPieces(opposite) < 3
+                return (getNumPieces(opposite) < 3)
             }
         }
         return false
@@ -415,10 +414,10 @@ class State(checker: Checker) {
     override fun toString(): String {
         var out =""
         for(position in getPositions(Checker.WHITE)){
-            out+=" $position  : W ; "
+            out+="$position  : W ; "
         }
         for(position in getPositions(Checker.BLACK)){
-            out+=" $position  : B ; "
+            out+="$position  : B ; "
         }
         return out
     }

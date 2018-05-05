@@ -201,7 +201,6 @@ object MulinoGame : Game<State, Action, Checker> {
             state.checker->{
                 for (action in getActions(state))
                     if (getResult(state, action).isWinner(checker)) {
-                        println("WINNING CONFIGURATION FOR $checker : Action $action to state $state")
                         check = true
                         break
                     }

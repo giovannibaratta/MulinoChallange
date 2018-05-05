@@ -106,15 +106,14 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 fun main(args: Array<String>) {
 
     val initialState = State(Checker.WHITE)
-    initialState.checkers[1]=0
-    initialState.checkers[0]=0
-    initialState.currentPhase='3'
+    /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
     initialState.addPiece(Pair('a',4), Checker.WHITE)
     initialState.addPiece(Pair('a',1), Checker.WHITE)
     initialState.addPiece(Pair('g',7), Checker.BLACK)
     initialState.addPiece(Pair('g',4), Checker.BLACK)
     initialState.addPiece(Pair('d',2), Checker.BLACK)
+     */
     val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 10)
     val action = search.makeDecision(initialState)
     println("Azione scelta: $action")
