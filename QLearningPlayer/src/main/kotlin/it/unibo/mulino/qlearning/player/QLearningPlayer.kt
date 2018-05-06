@@ -11,6 +11,7 @@ import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
 import it.unibo.utils.filterCellIndexed
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.collections.List
 import kotlin.collections.filter
 import kotlin.collections.forEach
@@ -180,7 +181,25 @@ class QLearningPlayer : AIPlayer {
                     }
             )
 
-    override fun playPhase1(state: ExternalState): Phase1Action {
+    private val learnerPhase1 = ApproximateQLearning<State, Action>(0.01,
+            0.01,
+            featureExtractors = phase1Features,
+            actionsFromState = actionFromStatePhase1,
+            applyAction = applyAction)
+
+    private val learnerPhase2 = ApproximateQLearning<State, Action>(0.01,
+            0.01,
+            featureExtractors = phase1Features,
+            actionsFromState = actionFromStatePhase2,
+            applyAction = applyAction)
+
+    private val learnerPhase3 = ApproximateQLearning<State, Action>(0.01,
+            0.01,
+            featureExtractors = phase1Features,
+            actionsFromState = actionFromStatePhase3,
+            applyAction = applyAction)
+
+    override fun playPhase1(state: ExternalState, playerType: ExternalState.Checker): Phase1Action =
         /*
         ApproximateQLearning<T, E>(private val alpha: Double,
                                  private val discount : Double,
@@ -189,22 +208,14 @@ class QLearningPlayer : AIPlayer {
                                  private val actionsFromState : (T) -> List<E>,
                                  private val applyAction : (T, E) -> Pair<Double,T>){
          */
-        val learner = ApproximateQLearning<State, Action>(0.01,
-                0.01,
-                featureExtractors = phase1Features,
-                actionsFromState = actionFromStatePhase1,
-                applyAction = applyAction)
-        learner.thinkAndExecute()
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
-    override fun playPhase2(state: ExternalState): Phase2Action {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+            learnerPhase1.think(normalize(state, playerType).remapToInternal()).rempapToExternalPhase1()
+    //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 
-    override fun playPhaseFinal(state: ExternalState): PhaseFinalAction {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+
+    override fun playPhase2(state: ExternalState, playerType: ExternalState.Checker): Phase2Action = learnerPhase2.think(normalize(state, playerType).remapToInternal()).rempapToExternalPhase2()
+
+    override fun playPhaseFinal(state: ExternalState, playerType: ExternalState.Checker): PhaseFinalAction = learnerPhase3.think(normalize(state, playerType).remapToInternal()).rempapToExternalPhaseFinal()
 
     /*
     private fun tunrType(isWhiteTurn : Boolean) : Pair<Type,Type>
@@ -213,5 +224,71 @@ class QLearningPlayer : AIPlayer {
             false -> (Type.BLACK,Type.WHITE)
     }   */
 
-    private fun ExternalState.remap() = it.unibo.mulino.qlearning.player.model.State(this)
+
+    private fun normalize(state: ExternalState, playerType: ExternalState.Checker): ExternalState =
+            when (playerType) {
+                ExternalState.Checker.WHITE -> state
+                ExternalState.Checker.BLACK -> {
+                    val newBoard = HashMap<String, ExternalState.Checker>()
+                    state.board.forEach { key, value ->
+                        newBoard.put(key, when (value) {
+                            ExternalState.Checker.BLACK -> ExternalState.Checker.WHITE
+                            ExternalState.Checker.WHITE -> ExternalState.Checker.BLACK
+                            ExternalState.Checker.EMPTY -> ExternalState.Checker.EMPTY
+                            null -> throw IllegalArgumentException("null checker type")
+                        })
+                    }
+                    state
+                }
+                else -> throw IllegalArgumentException("Tipo di giocatore non valido")
+            }
+
+    // TODO("DA CAMBIARE .METODO SBAGLIATO NON UTILIZZARE")
+    private fun ExternalState.remapToInternal() = it.unibo.mulino.qlearning.player.model.State(this, true)
+
+    private fun Action.rempapToExternalPhase1(): Phase1Action {
+        if (this.from.isPresent || !this.to.isPresent)
+            throw IllegalStateException("La mossa non può essere convertita")
+        val action = Phase1Action()
+        action.putPosition = this.to.get().toExternal()
+        if (this.remove.isPresent)
+            action.removeOpponentChecker = this.remove.get().toExternal()
+        return action
+    }
+
+    private fun Action.rempapToExternalPhase2(): Phase2Action {
+        if (!this.from.isPresent || !this.to.isPresent)
+            throw IllegalStateException("La mossa non può essere convertita")
+        val action = Phase2Action()
+        action.from = this.from.get().toExternal()
+        action.to = this.to.get().toExternal()
+        if (this.remove.isPresent)
+            action.removeOpponentChecker = this.remove.get().toExternal()
+        return action
+    }
+
+    private fun Action.rempapToExternalPhaseFinal(): PhaseFinalAction {
+        if (!this.from.isPresent || !this.to.isPresent)
+            throw IllegalStateException("La mossa non può essere convertita")
+        val action = PhaseFinalAction()
+        action.from = this.from.get().toExternal()
+        action.to = this.to.get().toExternal()
+        if (this.remove.isPresent)
+            action.removeOpponentChecker = this.remove.get().toExternal()
+        return action
+    }
+
+    private fun Position.toExternal(): String {
+        val xPos: Char = 'a' + this.x
+        val yPos: String = this.y.toString()
+        return xPos + yPos
+    }
+
+    override fun matchStart() {
+
+    }
+
+    override fun matchEnd() {
+
+    }
 }

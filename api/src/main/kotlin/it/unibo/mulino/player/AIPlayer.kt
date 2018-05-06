@@ -6,7 +6,9 @@ import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.ai.didattica.mulino.domain.State
 
 interface AIPlayer {
-    fun playPhase1(state: State, player : State.Checker): Phase1Action
-    fun playPhase2(state: State, player : State.Checker): Phase2Action
-    fun playPhaseFinal(state: State, player : State.Checker): PhaseFinalAction
+    fun playPhase1(state: State, playerType: State.Checker): Phase1Action
+    fun playPhase2(state: State, playerType: State.Checker): Phase2Action
+    fun playPhaseFinal(state: State, playerType: State.Checker): PhaseFinalAction
+    fun matchStart()
+    fun matchEnd()
 }

@@ -16,14 +16,16 @@ class AIClient(val playerType: State.Checker,
                 playPhase2: (State, State.Checker) -> Phase2Action,
                 playPhaseFinal: (State, State.Checker) -> PhaseFinalAction
     ) : this(playerType, object : AIPlayer {
-        override fun playPhase1(state: State, player : State.Checker): Phase1Action = playPhase1(state, player)
-        override fun playPhase2(state: State, player : State.Checker): Phase2Action = playPhase2(state, player)
-        override fun playPhaseFinal(state: State, player : State.Checker): PhaseFinalAction = playPhaseFinal(state, player)
+        override fun playPhase1(state: State, playerType: State.Checker): Phase1Action = playPhase1(state, playerType)
+        override fun playPhase2(state: State, playerType: State.Checker): Phase2Action = playPhase2(state, playerType)
+        override fun playPhaseFinal(state: State, playerType: State.Checker): PhaseFinalAction = playPhaseFinal(state, playerType)
+        override fun matchStart() {}
+        override fun matchEnd() {}
     })
 
     fun play() {
         println(playerType)
-
+        aiPlayer.matchStart()
         // lettura stato iniziale
         var state: State = read() ?: throw IllegalStateException("Lo stato è null")
 
@@ -38,13 +40,19 @@ class AIClient(val playerType: State.Checker,
            read (sospensiva, attesa della mossa dell'avversario)
          */
 
-        while (true) {
-            val playPhase = phaseMethod(state.currentPhase)
-            val action = playPhase(state, player)
-            write(action)
-            // mio update
-            state = read()
-            state = read()
+        try {
+            while (true) {
+                val playPhase = phaseMethod(state.currentPhase)
+                val action = playPhase(state, player)
+                write(action)
+                // mio update
+                state = read()
+                state = read()
+            }
+        } catch (e: Exception) {
+            println("Errore : ${e.printStackTrace()}")
+        } finally {
+            aiPlayer.matchEnd()
         }
     }
 

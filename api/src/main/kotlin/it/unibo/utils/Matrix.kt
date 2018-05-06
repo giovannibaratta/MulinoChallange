@@ -4,7 +4,7 @@ open class Matrix<T>(val rows: Int,
                      val columns: Int,
                      init: (Int, Int) -> T) : Iterable<T> {
 
-    private lateinit var matrix: Array<Array<T>>
+    private lateinit var matrix: MutableList<ArrayList<T>>
 
     init {
         val rowsArray = mutableListOf<ArrayList<T>>()
@@ -14,6 +14,7 @@ open class Matrix<T>(val rows: Int,
                 columnElem.add(init(i, y))
             rowsArray.add(columnElem)
         }
+        matrix = rowsArray
     }
 
     fun count(predicate: (T) -> Boolean): Int = matrix.sumBy { it.count(predicate) }

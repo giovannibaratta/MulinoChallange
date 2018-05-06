@@ -11,6 +11,21 @@ class ApproximateQLearning<T, E>(private val alpha: Double,
     private fun qValue(state : T, agentAction : E) =
         featureExtractors.mapIndexed{index, f -> f(state, agentAction) * weights[index]}.sum()
 
+    fun think(state: T): E {
+        val nextActionAndValue = getNextBestAction(state)
+        // fine dei giochi
+        if (nextActionAndValue == null)
+            throw IllegalStateException("Non è possibile effettuare ulteriori mosse")
+        val reward = applyAction(state, nextActionAndValue.first)
+        val difference = (reward.first + (discount * (getNextBestAction(reward.second)?.second
+                ?: 0.0))) - nextActionAndValue.second
+        // aggiorno i pesi
+        for (index in weights.indices)
+            weights[index] += alpha * difference * featureExtractors[index](state, nextActionAndValue.first)
+        return nextActionAndValue.first
+    }
+
+    /*
     fun thinkAndExecute(state : T) : Boolean{
         val nextActionAndValue = getNextBestAction(state)
         // fine dei giochi
@@ -23,6 +38,7 @@ class ApproximateQLearning<T, E>(private val alpha: Double,
             weights[index] += alpha * difference * featureExtractors[index](state, nextActionAndValue.first)
         return false
     }
+    */
 
     private fun getNextBestAction(state : T)
             = actionsFromState(state)

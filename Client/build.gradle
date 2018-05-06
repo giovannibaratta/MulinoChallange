@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.41'
 
     repositories {
         mavenCentral()
@@ -26,6 +26,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile project(':Server')
     compile project(':QLearningPlayer')
+    compile project(':MinMaxPlayer')
 }
 
 compileKotlin {

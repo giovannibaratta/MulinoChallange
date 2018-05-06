@@ -1,6 +1,8 @@
+package it.unibo
+
 import it.unibo.ai.didattica.mulino.domain.State
-import it.unibo.mulino.minmax.player.MinMaxPlayer
 import it.unibo.mulino.player.AIClient
+import it.unibo.mulino.qlearning.player.Trainer
 import java.net.ConnectException
 
 enum class Algorithm {
@@ -19,7 +21,8 @@ val errorType = hashMapOf(
 )
 
 val player = hashMapOf(
-        Pair(Algorithm.MINMAX, MinMaxPlayer())
+        //Pair(Algorithm.MINMAX, MulinoAlphaBetaSearch())
+        Pair(Algorithm.QLEARNING, Trainer())
 )
 
 fun main(args: Array<String>) {
@@ -33,7 +36,7 @@ fun main(args: Array<String>) {
         else -> exitWithError(ErrorType.PLAYER_TYPE)
     }
 
-    var selectedAlgorithm = Algorithm.MINMAX
+    var selectedAlgorithm = Algorithm.QLEARNING
 
     if (args.size == 2) {
         selectedAlgorithm = when (args[1]) {

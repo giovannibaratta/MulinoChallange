@@ -2,6 +2,7 @@ package it.unibo.mulino.qlearning.player.model
 
 import it.unibo.utils.Matrix
 import it.unibo.utils.SquareMatrix
+import it.unibo.utils.filterCellIndexed
 import java.util.*
 import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
@@ -26,8 +27,8 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
         }
     }
 
-    constructor(state: ExternalState)
-            : this(isWhiteTurn = true) {
+    constructor(state: ExternalState, isWhiteTurn: Boolean)
+            : this(isWhiteTurn = isWhiteTurn) {
         // mapping della rappresentazione esterna in rappresentazione interna
         state.board.forEach {
             val xAxis = it.key.split(Pattern.compile("[0-9]+$"))
@@ -117,7 +118,10 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
                 false -> Type.BLACK
             }
         }
-        require(grid.get(position) == type)
+        if (grid.get(position) == Type.EMPTY)
+            return false
+        if (grid.get(position) != type)
+            throw IllegalArgumentException("Casella dell'avversario")
         return millTest(position, type)
     }
 
@@ -132,8 +136,8 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
 
     // restituisce la griglia, e se ha chiuso un it.unibo.ai.didattica.mulino. Se azione non valida errore
     fun simulateAction(action: Action): ActionResult {
-
         val newStateGrid = SquareMatrix(boardSize, { xIndex, yIndex -> grid[xIndex, yIndex] })
+        val newState = State(newStateGrid, !isWhiteTurn)
         var closedMill = false
 
         val fromType: Type = when (action.from.isPresent) {
@@ -143,10 +147,10 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
 
         if (action.from.isPresent &&
                 ((fromType != Type.WHITE && isWhiteTurn) || (fromType == Type.BLACK && !isWhiteTurn) || !action.to.isPresent))
-            throw IllegalStateException("La mossa from non è valida")
+            throw IllegalStateException("La mossa from non è valida. ${action.from} - ${action.to} - ${action.remove}")
 
         if (action.to.isPresent && grid.get(action.to.get()) != Type.EMPTY)
-            throw IllegalStateException("La mossa to non è valida")
+            throw IllegalStateException("La mossa to non è valida. ${action.from} - ${action.to} - ${action.remove}")
 
         val removeType: Type = when (action.remove.isPresent) {
             true -> grid.get(action.remove.get())
@@ -155,31 +159,31 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
 
         if (action.remove.isPresent &&
                 ((removeType == Type.WHITE && isWhiteTurn) || (removeType == Type.BLACK && !isWhiteTurn)))
-            throw IllegalStateException("La mossa remove non è valida")
+            throw IllegalStateException("La mossa remove non è valida. ${action.from} - ${action.to} - ${action.remove}")
 
         // rimuovo la pedina nel nuovo stato
         action.from.ifPresent { newStateGrid[it] = Type.EMPTY }
 
         // metto la pedina nel nuovo stato
         action.to.ifPresent {
-            closedMill = closeAMill(action.to.get())
             newStateGrid[action.to.get()] = when (isWhiteTurn) {
                 true -> Type.WHITE
                 false -> Type.BLACK
             }
+            closedMill = newState.isAClosedMill(action.to.get(), fromType)
         }
 
         // ho fatto un mill ma non ho specificato la remove oppure non ho fatto un mill e ho specificato la remove
         if ((!closedMill && action.remove.isPresent) || (closedMill && when (isWhiteTurn) {
-                    true -> blackCount
-                    false -> whiteCount
-                } > 0 && !action.remove.isPresent))
-            throw IllegalArgumentException("La mossa non è valida")
+                    true -> grid.filterCellIndexed { it == Type.BLACK }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
+                    false -> grid.filterCellIndexed { it == Type.WHITE }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
+                } && !action.remove.isPresent))
+            throw IllegalArgumentException("La mossa ${action.from} - ${action.to} - ${action.remove} non è valida. Closed Mill ${closedMill}")
 
         // ho fatto mill e devo rimuovere la pedina
         action.remove.ifPresent { newStateGrid[action.remove.get()] = Type.EMPTY }
 
-        return ActionResult(State(newStateGrid, !isWhiteTurn), closedMill)
+        return ActionResult(newState, closedMill)
     }
 
     private fun rightAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -306,7 +310,7 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
     operator fun <T> Matrix<T>.get(position: Position) = this[position.x][position.y]
 
     operator fun <T> Matrix<T>.set(position: Position, value: T) {
-        this[position] = value
+        this[position.x, position.y] = value
     }
 
     enum class Type {
