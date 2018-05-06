@@ -19,15 +19,15 @@ import kotlin.collections.List
 import kotlin.collections.filter
 import kotlin.collections.forEach
 import kotlin.collections.indices
+import kotlin.collections.joinToString
 import kotlin.collections.mutableListOf
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
 class Trainer : AIPlayer {
 
-    /*********************
-     *      FEATURES     *
-     *********************/
+    private val previousState = Stack<State>()
 
+    //<editor-fold desc="Features">
     /*********************
      *      FEATURES     *
      *********************/
@@ -103,22 +103,40 @@ class Trainer : AIPlayer {
                     }
             )
 
+    //</editor-fold
+
+    //<editor-fold desc="Pesi">
     /*********************
      *        PESI       *
      *********************/
     private val phase1Weights = Array(phase1Features.size, { 0.0 })
     private val phase2Weights = Array(phase2Features.size, { 0.0 })
     private val phaseFinalWeights = Array(phaseFinalFeatures.size, { 0.0 })
+    //</editor-fold desc="Features">
 
+    //<editor-fold desc="Reward">
     /*********************
      *        REWARD     *
      *********************/
     // TODO("Aggiungere winningState reward")
     private val phase1Reward: (State, Action, State) -> Double = { oldState, action, newState ->
+
+        var reward = 0.0
+        val simulation = oldState.simulateAction(action)
+
+        //if(previousState.peek().whiteCount > oldState)
+
         when (action.remove.isPresent) {
-            true -> 1.0
-            else -> -0.2
+            true -> reward += 1.0
+            else -> reward += -0.2
         }
+
+        if (newState.blackCount <= 2)
+            reward += 100
+        else if (newState.whiteCount <= 2)
+            reward -= 100
+
+        reward
     }
 
     private val phase2Reward: (State, Action, State) -> Double = { oldState, action, newState ->
@@ -134,7 +152,9 @@ class Trainer : AIPlayer {
             else -> -0.2
         }
     }
+    //</editor-fold desc="Reward">
 
+    //<editor-fold desc="Generatore azioni">
     internal val actionFromStatePhase1: (State) -> List<Action> = {
         val state = it
         val actionList = mutableListOf<Action>()
@@ -271,6 +291,8 @@ class Trainer : AIPlayer {
         */
     }
 
+    //</editor-fold desc="Features">
+
     private val applyAction: ((State, Action, State) -> Double) -> (State, Action) -> Pair<Double, State> = {
         val rewardFunction = it
         { state, action ->
@@ -279,8 +301,8 @@ class Trainer : AIPlayer {
         }
     }
 
-    private val learnerPhase1 = ApproximateQLearning<State, Action>(0.9,
-            0.01,
+    private val learnerPhase1 = ApproximateQLearning<State, Action>(0.95,
+            0.1,
             featureExtractors = phase1Features,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase1,
@@ -301,33 +323,31 @@ class Trainer : AIPlayer {
             applyAction = applyAction(phaseFinalReward))
 
     override fun playPhase1(state: ExternalState, playerType: ExternalState.Checker): Phase1Action {
-        val action = learnerPhase1.think(normalize(state, playerType).remapToInternal(playerType)).rempapToExternalPhase1()
-        val weight = StringBuilder()
-        weight.append("[")
-        learnerPhase1.weights.forEach { weight.append("$it ,") }
-        weight.append("]")
-        println("Phase 1 : $weight")
+        val internalState = normalize(state, playerType).remapToInternal(playerType)
+        val action = learnerPhase1.think(internalState).rempapToExternalPhase1()
+        //val weight = StringBuilder()
+        //weight.append("[")
+        //learnerPhase1.weights.forEach { weight.append("$it ,") }
+        //weight.append("]")
+        println("Phase 1 : ${learnerPhase1.weights.joinToString(", ", "[", "]")}")
+        previousState.add(internalState)
         return action
     }
 
 
     override fun playPhase2(state: ExternalState, playerType: ExternalState.Checker): Phase2Action {
-        val action = learnerPhase2.think(normalize(state, playerType).remapToInternal(playerType)).rempapToExternalPhase2()
-        val weight = StringBuilder()
-        weight.append("[")
-        learnerPhase2.weights.forEach { weight.append("$it ,") }
-        weight.append("]")
-        println("Phase 2 : $weight")
+        val internalState = normalize(state, playerType).remapToInternal(playerType)
+        val action = learnerPhase2.think(internalState).rempapToExternalPhase2()
+        previousState.add(internalState)
+        println("Phase 2 : ${learnerPhase2.weights.joinToString(", ", "[", "]")}")
         return action
     }
 
     override fun playPhaseFinal(state: ExternalState, playerType: ExternalState.Checker): PhaseFinalAction {
-        val action = learnerPhase3.think(normalize(state, playerType).remapToInternal(playerType)).rempapToExternalPhaseFinal()
-        val weight = StringBuilder()
-        weight.append("[")
-        learnerPhase3.weights.forEach { weight.append("$it ,") }
-        weight.append("]")
-        println("Phase 3 : $weight")
+        val internalState = normalize(state, playerType).remapToInternal(playerType)
+        val action = learnerPhase3.think(internalState).rempapToExternalPhaseFinal()
+        previousState.add(internalState)
+        println("Phase 3 : ${learnerPhase3.weights.joinToString(", ", "[", "]")}")
         return action
     }
 
@@ -417,20 +437,18 @@ class Trainer : AIPlayer {
             for (i in phase1Weights.indices)
                 phase1Weights[i] = lines[1 + i].toDouble()
             for (i in phase2Weights.indices)
-                phase1Weights[i] = lines[1 + i + phase1Weights.size].toDouble()
+                phase2Weights[i] = lines[1 + i + phase1Weights.size].toDouble()
             for (i in phaseFinalWeights.indices)
-                phase1Weights[i] = lines[1 + i + phase1Weights.size + phase2Weights.size].toDouble()
+                phaseFinalWeights[i] = lines[1 + i + phase1Weights.size + phase2Weights.size].toDouble()
 
         } catch (e: Exception) {
             throw IllegalStateException("File non valido")
         }
 
         println("Cariati \n")
-        println("ph 1 " + phase1Weights)
-
-        println("ph 2 " + phase2Weights)
-
-        println("ph 3 " + phaseFinalWeights)
+        println("ph 1 " + phase1Weights.joinToString(", ", "[", "]"))
+        println("ph 2 " + phase2Weights.joinToString(", ", "[", "]"))
+        println("ph 3 " + phaseFinalWeights.joinToString(", ", "[", "]"))
     }
 
     fun save() {
