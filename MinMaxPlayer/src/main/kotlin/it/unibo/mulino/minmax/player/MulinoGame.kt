@@ -79,20 +79,46 @@ object MulinoGame : Game<State, Action, Checker> {
             }
             '3'->{
                 for (actualPosition in state.getPositions(state.checker)) {
-                    for (possiblePosition in state.getEmptyPositions()) {
-                        if (state.checkMorris(actualPosition, possiblePosition, state.checker)) {
-                            for (adversarialPosition in state.getPositions(state.opposite())) {
-                                val action = PhaseFinalAction()
-                                action.from = "" + actualPosition.first + actualPosition.second
-                                action.to = "" + possiblePosition.first + possiblePosition.second
-                                action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
-                                actions.add(action)
+                    when(state.getNumPieces(state.checker)){
+                        3 ->{
+                            for (possiblePosition in state.getEmptyPositions()) {
+                                if (state.checkMorris(actualPosition, possiblePosition, state.checker)) {
+                                    for (adversarialPosition in state.getPositions(state.opposite())) {
+                                        val action = PhaseFinalAction()
+                                        action.from = "" + actualPosition.first + actualPosition.second
+                                        action.to = "" + possiblePosition.first + possiblePosition.second
+                                        action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
+                                        actions.add(action)
+                                    }
+                                } else {
+                                    val action = PhaseFinalAction()
+                                    action.from = "" + actualPosition.first + actualPosition.second
+                                    action.to = "" + possiblePosition.first + possiblePosition.second
+                                    actions.add(action)
+                                }
                             }
-                        } else {
-                            val action = PhaseFinalAction()
-                            action.from = "" + actualPosition.first + actualPosition.second
-                            action.to = "" + possiblePosition.first + possiblePosition.second
-                            actions.add(action)
+                        }
+                        else ->{
+                            for (actualPosition in state.getPositions(state.checker)) {
+                                for (adiacentPosition in state.getAdiacentPositions(actualPosition)) {
+                                    if (state.getPiece(adiacentPosition) == Checker.EMPTY) {
+                                        if (state.checkMorris(actualPosition, adiacentPosition, state.checker)) {
+                                            for (adversarialPosition in state.getPositions(state.opposite())) {
+                                                val action = PhaseFinalAction()
+                                                action.from = "" + actualPosition.first + actualPosition.second
+                                                action.to = "" + adiacentPosition.first + adiacentPosition.second
+                                                action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
+                                                actions.add(action)
+                                            }
+                                        } else {
+                                            val action = PhaseFinalAction()
+                                            action.from = "" + actualPosition.first + actualPosition.second
+                                            action.to = "" + adiacentPosition.first + adiacentPosition.second
+                                            actions.add(action)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -178,10 +204,6 @@ object MulinoGame : Game<State, Action, Checker> {
                     val rowOpponentToRemove = phaseFinalAction.removeOpponentChecker[1].toString().toInt()
                     newState.removePiece(Pair(colOpponentToRemove, rowOpponentToRemove))
                 }
-                if(state.getNumPieces(state.opposite())>3)
-                    newState.currentPhase='2'
-                else
-                    newState.currentPhase='3'
             }
         }
         //println("Action ${state.checker}: $action -> State : $newState")

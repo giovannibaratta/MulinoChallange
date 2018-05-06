@@ -9,21 +9,20 @@ import it.unibo.mulino.player.AIPlayer
 
 class MinMaxPlayer : AIPlayer {
     override fun playPhase1(state: State, player : State.Checker): Phase1Action {
-        return play(state, player, '1') as Phase1Action
+        return play(state, player) as Phase1Action
     }
 
     override fun playPhase2(state: State, player : State.Checker): Phase2Action {
-        return play(state, player, '2') as Phase2Action
+        return play(state, player) as Phase2Action
     }
 
     override fun playPhaseFinal(state: State, player : State.Checker): PhaseFinalAction {
-        return play(state, player, '3') as PhaseFinalAction
+        return play(state, player) as PhaseFinalAction
     }
 
-    private fun play(state: State, player : State.Checker, phase : Char): Action {
+    private fun play(state: State, player : State.Checker): Action {
 
         var clientState = State(player)
-        clientState.currentPhase = phase
         clientState.checkers[0]=state.whiteCheckers
         clientState.checkers[1]=state.blackCheckers
         for(position in state.board.keys){
@@ -40,7 +39,11 @@ class MinMaxPlayer : AIPlayer {
                 }
             }
         }
-
+        clientState.currentPhase = when{
+            state.currentPhase==State.Phase.SECOND -> '2'
+            state.currentPhase==State.Phase.FINAL -> '3'
+            else -> '1'
+        }
         val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 55)
         return search.makeDecision(clientState)
     }

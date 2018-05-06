@@ -60,17 +60,18 @@ class AIClient(val playerType: State.Checker,
 
     private fun phaseMethod(state: State, playerType: State.Checker): (State, State.Checker) -> Action {
 
+        /*
         val checkersCount = when (playerType) {
             State.Checker.WHITE -> state.whiteCheckersOnBoard
             State.Checker.BLACK -> state.blackCheckersOnBoard
             else -> throw IllegalArgumentException("playerType not valid")
         }
+        */
 
         return when {
             state.currentPhase == State.Phase.FIRST -> aiPlayer::playPhase1
-            state.currentPhase == State.Phase.SECOND
-                    || (state.currentPhase == State.Phase.FINAL && checkersCount > 3) -> aiPlayer::playPhase2
-            state.currentPhase == State.Phase.FINAL && checkersCount <= 3 -> aiPlayer::playPhaseFinal
+            state.currentPhase == State.Phase.SECOND -> aiPlayer::playPhase2
+            state.currentPhase == State.Phase.FINAL -> aiPlayer::playPhaseFinal
             else -> throw IllegalStateException("Fase non riconosciuta")
         }
     }
