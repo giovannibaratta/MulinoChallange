@@ -24,7 +24,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         var amount = super.eval(state, player)
         when(amount){
             10000.00, -10000.00 ->{
-                //println("TERMINAL STATE PHASE ${state!!.currentPhase}: $state ")
+                println("TERMINAL STATE PHASE ${state!!.currentPhase}: $state ")
                 return amount
             }
         }
@@ -94,6 +94,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
         }
         amount += amountPlayer + amountOpposite
+        println("Evaluation state $state -> $amount")
         return amount
     }
 
