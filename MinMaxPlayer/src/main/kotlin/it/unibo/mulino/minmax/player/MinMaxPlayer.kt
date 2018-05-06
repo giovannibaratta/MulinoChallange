@@ -21,6 +21,7 @@ class MinMaxPlayer : AIPlayer {
     }
 
     private fun play(state: State, player : State.Checker, phase : Char): Action {
+
         var clientState = State(player)
         clientState.currentPhase = phase
         clientState.checkers[0]=state.whiteCheckers
