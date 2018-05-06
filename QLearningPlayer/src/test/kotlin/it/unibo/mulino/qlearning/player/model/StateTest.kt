@@ -20,7 +20,7 @@ class StateTest {
         )
 
         val state = ExternalState()
-        val parsed = State(state)
+        val parsed = State(state, true)
         Assert.assertEquals(expectedGrid.size, parsed.grid.size)
         Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
@@ -44,7 +44,7 @@ class StateTest {
 
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
-        val parsed = State(state)
+        val parsed = State(state, true)
         Assert.assertEquals(expectedGrid.size, parsed.grid.size)
         Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
@@ -70,7 +70,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("d2", ExternalState.Checker.WHITE)
         state.board.put("d3", ExternalState.Checker.BLACK)
-        val parsed = State(state)
+        val parsed = State(state, true)
         Assert.assertEquals(expectedGrid.size, parsed.grid.size)
         Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
@@ -84,7 +84,7 @@ class StateTest {
     fun ParsingWithException() {
         val state = ExternalState()
         state.board.put("a2", ExternalState.Checker.WHITE)
-        State(state)
+        State(state, true)
     }
 
     @Test
@@ -93,7 +93,7 @@ class StateTest {
         state.board = hashMapOf(
                 Pair("a1", ExternalState.Checker.WHITE)
         )
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         val adjacentTo00 = remappedState.adjacent(Position(0, 0))
         Assert.assertEquals(0, adjacentTo00.size)
     }
@@ -104,7 +104,7 @@ class StateTest {
         state.board = hashMapOf(
                 Pair("a4", ExternalState.Checker.WHITE)
         )
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         val adjacentTo03 = remappedState.adjacent(Position(0, 3))
         Assert.assertEquals(0, adjacentTo03.size)
     }
@@ -115,7 +115,7 @@ class StateTest {
         state.board = hashMapOf(
                 Pair("d1", ExternalState.Checker.WHITE)
         )
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         val adjacentTo30 = remappedState.adjacent(Position(3, 0))
         Assert.assertEquals(0, adjacentTo30.size)
     }
@@ -126,7 +126,7 @@ class StateTest {
         state.board = hashMapOf(
                 Pair("d3", ExternalState.Checker.WHITE)
         )
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         val adjacentTo03 = remappedState.adjacent(Position(3, 2))
         Assert.assertEquals(0, adjacentTo03.size)
     }
@@ -137,7 +137,7 @@ class StateTest {
         state.board = hashMapOf(
                 Pair("b4", ExternalState.Checker.WHITE)
         )
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         val adjacentTo13 = remappedState.adjacent(Position(1, 3))
         Assert.assertEquals(0, adjacentTo13.size)
     }
@@ -145,7 +145,7 @@ class StateTest {
     @Test
     fun MillTestNegative() {
         val state = ExternalState()
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertFalse(remappedState.closeAMill(Position(0, 0)))
     }
 
@@ -153,7 +153,7 @@ class StateTest {
     fun MillTestNegative2() {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
     }
 
@@ -162,7 +162,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.BLACK)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
     }
 
@@ -171,7 +171,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.closeAMill(Position(0, 3)))
     }
 
@@ -180,7 +180,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("g1", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.closeAMill(Position(3, 0)))
     }
 
@@ -189,7 +189,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("c3", ExternalState.Checker.WHITE)
         state.board.put("e3", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.closeAMill(Position(3, 2)))
     }
 
@@ -198,7 +198,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("d3", ExternalState.Checker.WHITE)
         state.board.put("d1", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.closeAMill(Position(3, 1)))
     }
 
@@ -207,7 +207,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("b4", ExternalState.Checker.WHITE)
         state.board.put("b2", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.closeAMill(Position(1, 5)))
     }
 
@@ -217,7 +217,7 @@ class StateTest {
         state.board.put("b4", ExternalState.Checker.WHITE)
         state.board.put("b2", ExternalState.Checker.WHITE)
         state.board.put("b6", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertTrue(remappedState.isAClosedMill(Position(1, 5)))
         Assert.assertTrue(remappedState.isAClosedMill(Position(1, 3)))
         Assert.assertTrue(remappedState.isAClosedMill(Position(1, 1)))
@@ -228,7 +228,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("b4", ExternalState.Checker.WHITE)
         state.board.put("b2", ExternalState.Checker.WHITE)
-        val remappedState = State(state)
+        val remappedState = State(state, true)
         Assert.assertFalse(remappedState.isAClosedMill(Position(1, 5)))
         Assert.assertFalse(remappedState.isAClosedMill(Position(1, 3)))
         Assert.assertFalse(remappedState.isAClosedMill(Position(1, 1)))

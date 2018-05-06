@@ -4,7 +4,7 @@ open class Matrix<T>(val rows: Int,
                      val columns: Int,
                      init: (Int, Int) -> T) : Iterable<T> {
 
-    private lateinit var matrix: MutableList<ArrayList<T>>
+    private var matrix: MutableList<ArrayList<T>>
 
     init {
         val rowsArray = mutableListOf<ArrayList<T>>()

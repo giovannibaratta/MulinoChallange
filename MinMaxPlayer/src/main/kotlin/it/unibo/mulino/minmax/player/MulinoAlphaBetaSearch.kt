@@ -24,7 +24,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         var amount = super.eval(state, player)
         when(amount){
             10000.00, -10000.00 ->{
-                println("TERMINAL STATE PHASE ${state!!.currentPhase}: $state ")
+                //println("TERMINAL STATE PHASE ${state!!.currentPhase}: $state ")
                 return amount
             }
         }
@@ -37,7 +37,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         var amountOpposite = 0.0
         when(state!!.currentPhase){
             '1'->{
-                amountPlayer = morrisesNumberCoeff * state!!.getNumMorrises(player!!) +
+                amountPlayer = morrisesNumberCoeff * state.getNumMorrises(player!!) +
                         blockedOppPiecesCoeff * state.getBlockedPieces(player) +
                         piecesNumberCoeff * state.getNumPieces(player) +
                         num2PiecesCoeff * state.getNum2Conf(player) +
@@ -53,7 +53,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     amountOpposite -= closedMorrisCoeff
             }
             '2'->{
-                amountPlayer = morrisesNumberCoeff * state!!.getNumMorrises(player!!) +
+                amountPlayer = morrisesNumberCoeff * state.getNumMorrises(player!!) +
                         blockedOppPiecesCoeff * state.getBlockedPieces(player) +
                         piecesNumberCoeff * state.getNumPieces(player)
                 if (state.hasClosedMorris(player))
@@ -78,7 +78,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     amountOpposite -= winningConfCoeff
             }
             '3'->{
-                amountPlayer = num2PiecesCoeff * state!!.getNum2Conf(player!!) +
+                amountPlayer = num2PiecesCoeff * state.getNum2Conf(player!!) +
                         num3PiecesCoeff * state.getNum3Conf(player)
                 if (state.hasClosedMorris(player))
                     amountPlayer += closedMorrisCoeff
@@ -112,6 +112,6 @@ fun main(args: Array<String>) {
 
     val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
     val action = search.makeDecision(initialState)
-    println("Azione scelta: $action")
+    //println("Azione scelta: $action")
 
 }

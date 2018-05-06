@@ -1,6 +1,9 @@
 package it.unibo.mulino.minmax.player
 
-import it.unibo.ai.didattica.mulino.actions.*
+import it.unibo.ai.didattica.mulino.actions.Action
+import it.unibo.ai.didattica.mulino.actions.Phase1Action
+import it.unibo.ai.didattica.mulino.actions.Phase2Action
+import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.ai.didattica.mulino.domain.State
 import it.unibo.mulino.player.AIPlayer
 
@@ -42,5 +45,13 @@ class MinMaxPlayer : AIPlayer {
 
         val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 5)
         return search.makeDecision(clientState)
+    }
+
+    override fun matchStart() {
+
+    }
+
+    override fun matchEnd() {
+
     }
 }

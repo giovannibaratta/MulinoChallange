@@ -42,7 +42,7 @@ class AIClient(val playerType: State.Checker,
 
         try {
             while (true) {
-                val playPhase = phaseMethod(state.currentPhase)
+                val playPhase = phaseMethod(state, playerType)
                 val action = playPhase(state, player)
                 write(action)
                 // mio update
@@ -58,11 +58,22 @@ class AIClient(val playerType: State.Checker,
 
     var count = 0
 
-    private fun phaseMethod(phase: State.Phase): (State, State.Checker) -> Action =
-            when (phase) {
-                State.Phase.FIRST -> aiPlayer::playPhase1
-                State.Phase.SECOND -> aiPlayer::playPhase2
-                State.Phase.FINAL -> aiPlayer::playPhaseFinal
-            }
+    private fun phaseMethod(state: State, playerType: State.Checker): (State, State.Checker) -> Action {
+
+        val checkersCount = when (playerType) {
+            State.Checker.WHITE -> state.whiteCheckers
+            State.Checker.BLACK -> state.blackCheckers
+            else -> throw IllegalArgumentException("playerType not valid")
+        }
+
+        return when {
+            state.currentPhase == State.Phase.FIRST -> aiPlayer::playPhase1
+            state.currentPhase == State.Phase.SECOND
+                    || (state.currentPhase == State.Phase.FINAL && checkersCount > 3) -> aiPlayer::playPhase2
+            state.currentPhase == State.Phase.FINAL && checkersCount <= 3 -> aiPlayer::playPhaseFinal
+            else -> throw IllegalStateException("Fase non riconosciuta")
+        }
+    }
+
 
 }

@@ -7,25 +7,38 @@ import java.util.*
 import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y -> Type.INVALID }),
+internal class State(externalGrid: SquareMatrix<Type>? = null,
                      val isWhiteTurn: Boolean) {
 
-    val boardSize = grid.size
-    private val middleLine = (boardSize - 1) / 2
-    private val midllePoint = Position(middleLine, middleLine)
-    val blackCount = grid.count { it == Type.BLACK }
-    val whiteCount = grid.count { it == Type.WHITE }
+    var grid: SquareMatrix<Type>
+    val boardSize: Int
+    val middleLine: Int
+    val midllePoint: Position
 
     init {
-        // Inserisco le caselle vuote valide
-        grid.forEachIndexed { xIndex, yIndex, _ ->
-            if ((xIndex == middleLine && yIndex != middleLine) ||
-                    (xIndex != middleLine && yIndex == middleLine) ||
-                    (xIndex == yIndex && xIndex != middleLine) ||
-                    (xIndex + yIndex == boardSize - 1 && xIndex != middleLine))
-                grid[xIndex, yIndex] = Type.EMPTY
+        if (externalGrid == null) {
+            grid = SquareMatrix<Type>(7, { x, y -> Type.INVALID })
+            boardSize = grid.size
+            middleLine = (boardSize - 1) / 2
+            midllePoint = Position(middleLine, middleLine)
+            // Inserisco le caselle vuote valide
+            grid.forEachIndexed { xIndex, yIndex, _ ->
+                if ((xIndex == middleLine && yIndex != middleLine) ||
+                        (xIndex != middleLine && yIndex == middleLine) ||
+                        (xIndex == yIndex && xIndex != middleLine) ||
+                        (xIndex + yIndex == boardSize - 1 && xIndex != middleLine))
+                    grid[xIndex, yIndex] = Type.EMPTY
+            }
+        } else {
+            grid = externalGrid
+            boardSize = grid.size
+            middleLine = (boardSize - 1) / 2
+            midllePoint = Position(middleLine, middleLine)
         }
     }
+
+    val blackCount = grid.count { it == Type.BLACK }
+    val whiteCount = grid.count { it == Type.WHITE }
 
     constructor(state: ExternalState, isWhiteTurn: Boolean)
             : this(isWhiteTurn = isWhiteTurn) {
@@ -111,6 +124,7 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
     }
 
     fun isAClosedMill(position: Position, typeToMill: Type? = null): Boolean {
+        require(typeToMill != Type.INVALID)
         val type = when (typeToMill != null) {
             true -> typeToMill
             false -> when (isWhiteTurn) {
@@ -146,11 +160,11 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
         }
 
         if (action.from.isPresent &&
-                ((fromType != Type.WHITE && isWhiteTurn) || (fromType == Type.BLACK && !isWhiteTurn) || !action.to.isPresent))
-            throw IllegalStateException("La mossa from non è valida. ${action.from} - ${action.to} - ${action.remove}")
+                ((fromType != Type.WHITE && isWhiteTurn) || (fromType != Type.BLACK && !isWhiteTurn) || !action.to.isPresent))
+            dumpAndThrow(this, action, Optional.empty(), IllegalStateException("La mossa from non è valida"))
 
         if (action.to.isPresent && grid.get(action.to.get()) != Type.EMPTY)
-            throw IllegalStateException("La mossa to non è valida. ${action.from} - ${action.to} - ${action.remove}")
+            dumpAndThrow(this, action, Optional.empty(), IllegalStateException("La mossa to non è valida"))
 
         val removeType: Type = when (action.remove.isPresent) {
             true -> grid.get(action.remove.get())
@@ -159,18 +173,19 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
 
         if (action.remove.isPresent &&
                 ((removeType == Type.WHITE && isWhiteTurn) || (removeType == Type.BLACK && !isWhiteTurn)))
-            throw IllegalStateException("La mossa remove non è valida. ${action.from} - ${action.to} - ${action.remove}")
+            dumpAndThrow(this, action, Optional.empty(), IllegalStateException("La mossa remove non è valida"))
 
         // rimuovo la pedina nel nuovo stato
         action.from.ifPresent { newStateGrid[it] = Type.EMPTY }
 
         // metto la pedina nel nuovo stato
         action.to.ifPresent {
-            newStateGrid[action.to.get()] = when (isWhiteTurn) {
+            val typeToInsert = when (isWhiteTurn) {
                 true -> Type.WHITE
                 false -> Type.BLACK
             }
-            closedMill = newState.isAClosedMill(action.to.get(), fromType)
+            newStateGrid[action.to.get()] = typeToInsert
+            closedMill = newState.isAClosedMill(action.to.get(), typeToInsert)
         }
 
         // ho fatto un mill ma non ho specificato la remove oppure non ho fatto un mill e ho specificato la remove
@@ -178,7 +193,7 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
                     true -> grid.filterCellIndexed { it == Type.BLACK }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
                     false -> grid.filterCellIndexed { it == Type.WHITE }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
                 } && !action.remove.isPresent))
-            throw IllegalArgumentException("La mossa ${action.from} - ${action.to} - ${action.remove} non è valida. Closed Mill ${closedMill}")
+            dumpAndThrow(this, action, Optional.of(newState), IllegalStateException("La mossa non è valida. Closed Mill ${closedMill}"))
 
         // ho fatto mill e devo rimuovere la pedina
         action.remove.ifPresent { newStateGrid[action.remove.get()] = Type.EMPTY }
@@ -311,6 +326,42 @@ internal class State(val grid: SquareMatrix<Type> = SquareMatrix<Type>(7, { x, y
 
     operator fun <T> Matrix<T>.set(position: Position, value: T) {
         this[position.x, position.y] = value
+    }
+
+    private fun dumpAndThrow(oldState: State, action: Action, newState: Optional<State>, ex: Throwable): Nothing {
+        val sb = StringBuilder()
+        sb.append(System.lineSeparator() + " !! DUMP !! " + System.lineSeparator())
+        sb.append("    OLD STATE" + System.lineSeparator())
+        sb.append(oldState.toString())
+        sb.append(System.lineSeparator() + "Action : ${action}" + System.lineSeparator())
+        if (newState.isPresent) {
+            sb.append("    NEW STATE " + System.lineSeparator())
+            sb.append(newState.get().toString())
+        }
+        println(sb.toString())
+        throw ex
+    }
+
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append(System.lineSeparator())
+        sb.append("White Turn : $isWhiteTurn" + System.lineSeparator())
+        sb.append(" 0\t1\t2\t3\t4\t5\t6" + System.lineSeparator())
+        for (cIndex in boardSize - 1 downTo 0) {
+            sb.append("$cIndex ")
+            for (rIndex in 0 until boardSize) {
+                sb.append(when (grid[rIndex, cIndex]) {
+                    Type.WHITE -> "W"
+                    Type.BLACK -> "B"
+                    Type.EMPTY -> "O"
+                    else -> " "
+                } + "\t")
+            }
+            sb.append(System.lineSeparator())
+        }
+        sb.append(" 0\t1\t2\t3\t4\t5\t6" + System.lineSeparator())
+        sb.append(System.lineSeparator())
+        return sb.toString()
     }
 
     enum class Type {

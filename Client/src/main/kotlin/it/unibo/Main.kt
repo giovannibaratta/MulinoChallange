@@ -1,6 +1,7 @@
 package it.unibo
 
 import it.unibo.ai.didattica.mulino.domain.State
+import it.unibo.mulino.minmax.player.MinMaxPlayer
 import it.unibo.mulino.player.AIClient
 import it.unibo.mulino.qlearning.player.Trainer
 import java.net.ConnectException
@@ -21,7 +22,7 @@ val errorType = hashMapOf(
 )
 
 val player = hashMapOf(
-        //Pair(Algorithm.MINMAX, MulinoAlphaBetaSearch())
+        Pair(Algorithm.MINMAX, MinMaxPlayer()),
         Pair(Algorithm.QLEARNING, Trainer())
 )
 

@@ -351,11 +351,11 @@ class Trainer : AIPlayer {
             }
 
     private fun ExternalState.remapToInternal(checker: ExternalState.Checker) =
-            State(this, when (checker) {
+            State(this, true/*when (checker) {
                 Type.WHITE -> true
                 Type.BLACK -> false
                 else -> throw IllegalArgumentException("Tipo non valido")
-            })
+            }*/)
 
     private fun Action.rempapToExternalPhase1(): Phase1Action {
         if (this.from.isPresent || !this.to.isPresent)
@@ -424,6 +424,13 @@ class Trainer : AIPlayer {
         } catch (e: Exception) {
             throw IllegalStateException("File non valido")
         }
+
+        println("Cariati \n")
+        println("ph 1 " + phase1Weights)
+
+        println("ph 2 " + phase2Weights)
+
+        println("ph 3 " + phaseFinalWeights)
     }
 
     fun save() {

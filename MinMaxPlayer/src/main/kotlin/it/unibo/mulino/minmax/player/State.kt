@@ -173,8 +173,8 @@ class State(checker: Checker) {
         for (position in getPositions(checker)) {
             check = check && checkNoMoves(position, checker)
         }
-        if(check)
-            println("No moves possible for $checker!")
+        //if(check)
+        //println("No moves possible for $checker!")
         return check
     }
 
@@ -427,7 +427,7 @@ class State(checker: Checker) {
 fun main(args: Array<String>) {
 
     val state = State(Checker.WHITE)
-    println("Turno: ${state.checker}")
+    //println("Turno: ${state.checker}")
 
     /*state.addPiece(Pair('a',1),Checker.WHITE)
     state.addPiece(Pair('a',4),Checker.WHITE)
@@ -436,8 +436,8 @@ fun main(args: Array<String>) {
     state.addPiece(Pair('d',2),Checker.WHITE)
     state.addPiece(Pair('e',3),Checker.WHITE)
     state.addPiece(Pair('d',7),Checker.WHITE)
-    println("Numero di pedine bianche: ${state.getNumPieces(Checker.WHITE)}")
-    println("Pedine bianche(adiacenti): ")
+    //println("Numero di pedine bianche: ${state.getNumPieces(Checker.WHITE)}")
+    //println("Pedine bianche(adiacenti): ")
     for(position in state.getPositions(Checker.WHITE)){
         print("${position.first}${position.second} (")
         for(adiacentPosition in state.getAdiacentPositions(position))
@@ -447,8 +447,8 @@ fun main(args: Array<String>) {
 
     state.addPiece(Pair('g',4),Checker.BLACK)
     state.addPiece(Pair('b',2),Checker.BLACK)
-    println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK )}")
-    println("Pedine nere(adiacenti): ")
+    //println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK )}")
+    //println("Pedine nere(adiacenti): ")
     for(position in state.getPositions(Checker.BLACK)){
         print("${position.first}${position.second} (")
         for(adiacentPosition in state.getAdiacentPositions(position))
@@ -456,10 +456,10 @@ fun main(args: Array<String>) {
         print(")\n")
     }
 
-    println("Rimozione pedina nera g4...")
+    //println("Rimozione pedina nera g4...")
     state.removePiece(Pair('g',4))
-    println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK )}")
-    println("Pedine nere(adiacenti): ")
+    //println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK )}")
+    //println("Pedine nere(adiacenti): ")
     for(position in state.getPositions(Checker.BLACK)){
         print("${position.first}${position.second} (")
         for(adiacentPosition in state.getAdiacentPositions(position))
@@ -467,27 +467,27 @@ fun main(args: Array<String>) {
         print(")\n")
     }
 
-    println("Posizioni libere: ")
+    //println("Posizioni libere: ")
     for(emptyPosition in state.getEmptyPositions()){
-        println("${emptyPosition.first}${emptyPosition.second}")
+        //println("${emptyPosition.first}${emptyPosition.second}")
     }
 
-    println("Giocatore bianco bloccato: ${state.checkNoMoves(Checker.WHITE)}")
-    println("Giocatore nero bloccato: ${state.checkNoMoves(Checker.BLACK)}")
+    //println("Giocatore bianco bloccato: ${state.checkNoMoves(Checker.WHITE)}")
+    //println("Giocatore nero bloccato: ${state.checkNoMoves(Checker.BLACK)}")
 
-    println("Morris bianco con a7: ${state.checkMorris(Pair('a',7),Checker.WHITE)}")
-    println("Morris bianco con c4: ${state.checkMorris(Pair('c',4),Checker.WHITE)}")
-    println("Morris bianco con g1: ${state.checkMorris(Pair('g',1),Checker.WHITE)}")
-    println("Morris bianco con d3: ${state.checkMorris(Pair('d',3),Checker.WHITE)}")
-    println("Morris bianco con b6: ${state.checkMorris(Pair('b',6),Checker.WHITE)}")
-    println("Morris bianco con f2: ${state.checkMorris(Pair('f',2),Checker.WHITE)}")
-    println("Morris nero con b6: ${state.checkMorris(Pair('b',6),Checker.BLACK)}")
+    //println("Morris bianco con a7: ${state.checkMorris(Pair('a',7),Checker.WHITE)}")
+    //println("Morris bianco con c4: ${state.checkMorris(Pair('c',4),Checker.WHITE)}")
+    //println("Morris bianco con g1: ${state.checkMorris(Pair('g',1),Checker.WHITE)}")
+    //println("Morris bianco con d3: ${state.checkMorris(Pair('d',3),Checker.WHITE)}")
+    //println("Morris bianco con b6: ${state.checkMorris(Pair('b',6),Checker.WHITE)}")
+    //println("Morris bianco con f2: ${state.checkMorris(Pair('f',2),Checker.WHITE)}")
+    //println("Morris nero con b6: ${state.checkMorris(Pair('b',6),Checker.BLACK)}")
 
-    println("Morris bianco con d7->a7: ${state.checkMorris(Pair('d',7),Pair('a',7),Checker.WHITE)}")
-    println("Morris bianco con e3->d3: ${state.checkMorris(Pair('e',3),Pair('d',3),Checker.WHITE)}")
-    println("Morris bianco con d7->g7: ${state.checkMorris(Pair('d',7),Pair('g',7),Checker.WHITE)}")
+    //println("Morris bianco con d7->a7: ${state.checkMorris(Pair('d',7),Pair('a',7),Checker.WHITE)}")
+    //println("Morris bianco con e3->d3: ${state.checkMorris(Pair('e',3),Pair('d',3),Checker.WHITE)}")
+    //println("Morris bianco con d7->g7: ${state.checkMorris(Pair('d',7),Pair('g',7),Checker.WHITE)}")
 
-    println("Morris bianco con b4->a7: ${state.checkMorris(Pair('b',4),Pair('a',7),Checker.WHITE)}")
+    //println("Morris bianco con b4->a7: ${state.checkMorris(Pair('b',4),Pair('a',7),Checker.WHITE)}")
     */
 
     state.addPiece(Pair('a', 1), Checker.WHITE)
@@ -504,13 +504,13 @@ fun main(args: Array<String>) {
     state.addPiece(Pair('e', 3), Checker.WHITE)
     state.addPiece(Pair('g', 4), Checker.BLACK)
 
-    println("Morris chiuso: ${state.hasClosedMorris(Checker.WHITE)}")
-    println("Morris aperto: ${state.hasOpenedMorris(Checker.WHITE)}")
-    println("Double Morris: ${state.hasDoubleMorris(Checker.WHITE)}")
-    println("Numero di pedine avversarie bloccate: ${state.getBlockedPieces(Checker.BLACK)}")
-    println("Numero di Morris: ${state.getNumMorrises(Checker.WHITE)}")
-    println("Numero di configurazioni da 2: ${state.getNum2Conf(Checker.WHITE)}")
-    println("Numero di configurazioni da 3: ${state.getNum3Conf(Checker.WHITE)}")
-    println("Configurazione vincente fase 2: ${state.isWinner(Checker.WHITE)}")
-    println("Configurazione vincente fase 1: ${state.isWinner(Checker.WHITE)}")
+    //println("Morris chiuso: ${state.hasClosedMorris(Checker.WHITE)}")
+    //println("Morris aperto: ${state.hasOpenedMorris(Checker.WHITE)}")
+    //println("Double Morris: ${state.hasDoubleMorris(Checker.WHITE)}")
+    //println("Numero di pedine avversarie bloccate: ${state.getBlockedPieces(Checker.BLACK)}")
+    //println("Numero di Morris: ${state.getNumMorrises(Checker.WHITE)}")
+    //println("Numero di configurazioni da 2: ${state.getNum2Conf(Checker.WHITE)}")
+    //println("Numero di configurazioni da 3: ${state.getNum3Conf(Checker.WHITE)}")
+    //println("Configurazione vincente fase 2: ${state.isWinner(Checker.WHITE)}")
+    //println("Configurazione vincente fase 1: ${state.isWinner(Checker.WHITE)}")
 }

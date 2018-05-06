@@ -30,7 +30,7 @@ object MulinoGame : Game<State, Action, Checker> {
 
     override fun getActions(state: State?): MutableList<Action> {
         val actions = mutableListOf<Action>()
-        println("Current state (phase ${state!!.currentPhase}: $state")
+        //println("Current state (phase ${state!!.currentPhase}: $state")
         var intChecker = -1
         when(state!!.checker){
             Checker.WHITE -> intChecker = 0
@@ -38,7 +38,7 @@ object MulinoGame : Game<State, Action, Checker> {
         }
         when(state.currentPhase){
             '1' ->{
-                for (possiblePosition in state!!.getEmptyPositions()) {
+                for (possiblePosition in state.getEmptyPositions()) {
                     if (state.checkMorris(possiblePosition, state.checker)) {
                         for (adversarialPosition in state.getPositions(state.opposite())) {
                             val action = Phase1Action()
@@ -98,9 +98,9 @@ object MulinoGame : Game<State, Action, Checker> {
                 }
             }
         }
-        println("Possible actions: ")
-        for(action in actions)
-            println("$action")
+        //println("Possible actions: ")
+        //for(action in actions)
+        //println("$action")
         return actions
     }
 
@@ -184,7 +184,7 @@ object MulinoGame : Game<State, Action, Checker> {
                     newState.currentPhase='3'
             }
         }
-        println("Action ${state.checker}: $action -> State : $newState")
+        //println("Action ${state.checker}: $action -> State : $newState")
         return newState
     }
 
@@ -215,7 +215,7 @@ fun main(args: Array<String>) {
 
     /*
     val state = State(Checker.WHITE)
-    println("Turno: ${state.checker}")
+    //println("Turno: ${state.checker}")
 
     state.addPiece(Pair('a', 1), Checker.WHITE)
     state.addPiece(Pair('a', 4), Checker.WHITE)
@@ -224,8 +224,8 @@ fun main(args: Array<String>) {
     state.addPiece(Pair('d', 2), Checker.WHITE)
     state.addPiece(Pair('e', 3), Checker.WHITE)
     state.addPiece(Pair('d', 7), Checker.WHITE)
-    println("Numero di pedine bianche: ${state.getNumPieces(Checker.WHITE)}")
-    println("Pedine bianche(adiacenti): ")
+    //println("Numero di pedine bianche: ${state.getNumPieces(Checker.WHITE)}")
+    //println("Pedine bianche(adiacenti): ")
     for (position in state.getPositions(Checker.WHITE)) {
         print("${position.first}${position.second} (")
         for (adiacentPosition in state.getAdiacentPositions(position))
@@ -235,8 +235,8 @@ fun main(args: Array<String>) {
 
     state.addPiece(Pair('g', 4), Checker.BLACK)
     state.addPiece(Pair('b', 2), Checker.BLACK)
-    println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK)}")
-    println("Pedine nere(adiacenti): ")
+    //println("Numero di pedine nere: ${state.getNumPieces(Checker.BLACK)}")
+    //println("Pedine nere(adiacenti): ")
     for (position in state.getPositions(Checker.BLACK)) {
         print("${position.first}${position.second} (")
         for (adiacentPosition in state.getAdiacentPositions(position))
@@ -244,24 +244,24 @@ fun main(args: Array<String>) {
         print(")\n")
     }
 
-    println("Starting phase 1..")
+    //println("Starting phase 1..")
     for (action in MulinoGamePhase1.getActions(state))
-        println("Possible action: ${action}")
+        //println("Possible action: ${action}")
 
-    println("Starting phase 2..")
+    //println("Starting phase 2..")
     for (action in MulinoGamePhase2.getActions(state))
-        println("Possible action: ${action}")
+        //println("Possible action: ${action}")
 
-    println("Starting phase 3..")
+    //println("Starting phase 3..")
     for (action in MulinoGamePhaseFinal.getActions(state))
-        println("Possible action: ${action}")
+        //println("Possible action: ${action}")
 
     val action2 = Phase2Action()
-    println("Action phase 2: d7a7b2")
+    //println("Action phase 2: d7a7b2")
     action2.from = "d7"
     action2.to = "a7"
     action2.removeOpponentChecker = "b2"
-    println("Pedine bianche(adiacenti): ")
+    //println("Pedine bianche(adiacenti): ")
     for (position in MulinoGamePhase2.getResult(state, action2).getPositions(Checker.WHITE)) {
         print("${position.first}${position.second} (")
         for (adiacentPosition in state.getAdiacentPositions(position))

@@ -14,7 +14,7 @@ class QLearningPlayerTest {
     fun actionPhase1Test() {
         // tutte le caselle libere
         val externalState = it.unibo.ai.didattica.mulino.domain.State()
-        val state = it.unibo.mulino.qlearning.player.model.State(externalState)
+        val state = it.unibo.mulino.qlearning.player.model.State(externalState, true)
         val actionList = player.actionFromStatePhase1(state)
         val emptyCell = state.grid.filterCellIndexed { it == State.Type.EMPTY }.toMutableList()
         actionList.forEach {
@@ -31,7 +31,7 @@ class QLearningPlayerTest {
     fun actionPhase1Test2() {
         // una sola casella libera, no mill
         val externalState = it.unibo.ai.didattica.mulino.domain.State()
-        val state = it.unibo.mulino.qlearning.player.model.State(externalState)
+        val state = it.unibo.mulino.qlearning.player.model.State(externalState, true)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
             state.grid[it.first.first, it.first.second] = State.Type.BLACK
@@ -51,7 +51,7 @@ class QLearningPlayerTest {
     fun actionPhase1Test3() {
         // una sola casella libera, chiusura mill
         val externalState = it.unibo.ai.didattica.mulino.domain.State()
-        val state = it.unibo.mulino.qlearning.player.model.State(externalState)
+        val state = it.unibo.mulino.qlearning.player.model.State(externalState, true)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
             state.grid[it.first.first, it.first.second] = State.Type.WHITE
@@ -74,7 +74,7 @@ class QLearningPlayerTest {
     fun actionPhase1Test4() {
         // una sola casella libera, chiusura mill ma nessuna possibile pedina da rimuovere
         val externalState = it.unibo.ai.didattica.mulino.domain.State()
-        val state = it.unibo.mulino.qlearning.player.model.State(externalState)
+        val state = it.unibo.mulino.qlearning.player.model.State(externalState, true)
 
         state.grid.filterCellIndexed { it == State.Type.EMPTY }.forEach {
             state.grid[it.first.first, it.first.second] = State.Type.WHITE
