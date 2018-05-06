@@ -44,7 +44,7 @@ class MinMaxPlayer : AIPlayer {
             state.currentPhase==State.Phase.FINAL -> '3'
             else -> '1'
         }
-        val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 55)
+        val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 15)
         return search.makeDecision(clientState)
     }
 

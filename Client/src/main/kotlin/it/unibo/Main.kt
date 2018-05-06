@@ -8,7 +8,8 @@ import java.net.ConnectException
 
 enum class Algorithm {
     QLEARNING,
-    MINMAX
+    MINMAX,
+    QLEARNINGNOSAVE
 }
 
 enum class ErrorType {
@@ -23,7 +24,8 @@ val errorType = hashMapOf(
 
 val player = hashMapOf(
         Pair(Algorithm.MINMAX, MinMaxPlayer()),
-        Pair(Algorithm.QLEARNING, Trainer())
+        Pair(Algorithm.QLEARNING, Trainer()),
+        Pair(Algorithm.QLEARNINGNOSAVE, Trainer(false))
 )
 
 fun main(args: Array<String>) {
@@ -42,6 +44,7 @@ fun main(args: Array<String>) {
     if (args.size == 2) {
         selectedAlgorithm = when (args[1]) {
             "qLearning" -> Algorithm.QLEARNING
+            "qLearningNoSave" -> Algorithm.QLEARNINGNOSAVE
             "MinMax" -> Algorithm.MINMAX
             else -> exitWithError(ErrorType.ALGORITHM)
         }

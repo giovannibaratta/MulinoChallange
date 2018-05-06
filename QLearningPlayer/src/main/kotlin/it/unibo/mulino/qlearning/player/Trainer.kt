@@ -23,7 +23,7 @@ import kotlin.collections.joinToString
 import kotlin.collections.mutableListOf
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-class Trainer : AIPlayer {
+class Trainer(private val save: Boolean = true) : AIPlayer {
 
     private val previousState = Stack<State>()
 
@@ -42,7 +42,7 @@ class Trainer : AIPlayer {
                         }
                     },
                     { state, action ->
-                        when (state.enemyCanMove()) {
+                        when (!state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
@@ -72,7 +72,7 @@ class Trainer : AIPlayer {
                         }
                     },
                     { state, action ->
-                        when (state.iCanMove()) {
+                        when (!state.iCanMove()) {
                             true -> 1.0
                             false -> 0.0
                         }
@@ -90,7 +90,7 @@ class Trainer : AIPlayer {
                         }
                     },
                     { state, action ->
-                        when (state.enemyCanMove()) {
+                        when (!state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
@@ -122,9 +122,13 @@ class Trainer : AIPlayer {
     private val phase1Reward: (State, Action, State) -> Double = { oldState, action, newState ->
 
         var reward = 0.0
-        val simulation = oldState.simulateAction(action)
+        //val simulation = oldState.simulateAction(action)
 
         //if(previousState.peek().whiteCount > oldState)
+
+        if (newState.whiteCount > newState.blackCount) {
+            reward += 0.5
+        }
 
         when (action.remove.isPresent) {
             true -> reward += 1.0
@@ -301,23 +305,26 @@ class Trainer : AIPlayer {
         }
     }
 
-    private val learnerPhase1 = ApproximateQLearning<State, Action>(0.95,
-            0.1,
+    private val discount = 0.2
+    private val alpha = 0.95
+
+    private val learnerPhase1 = ApproximateQLearning<State, Action>({ alpha },
+            { discount },
             featureExtractors = phase1Features,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase1,
             applyAction = applyAction(phase1Reward))
 
-    private val learnerPhase2 = ApproximateQLearning<State, Action>(0.9,
-            0.01,
+    private val learnerPhase2 = ApproximateQLearning<State, Action>({ alpha },
+            { discount },
             featureExtractors = phase2Features,
-            weights = phase2Weights,
+            weights = phase1Weights,
             actionsFromState = actionFromStatePhase2,
             applyAction = applyAction(phase2Reward))
 
-    private val learnerPhase3 = ApproximateQLearning<State, Action>(0.9,
-            0.01,
-            weights = phaseFinalWeights,
+    private val learnerPhase3 = ApproximateQLearning<State, Action>({ alpha },
+            { discount },
+            weights = phase1Weights,
             featureExtractors = phaseFinalFeatures,
             actionsFromState = actionFromStatePhase3,
             applyAction = applyAction(phaseFinalReward))
@@ -476,6 +483,7 @@ class Trainer : AIPlayer {
     }
 
     override fun matchEnd() {
-        save()
+        if (save)
+            save()
     }
 }

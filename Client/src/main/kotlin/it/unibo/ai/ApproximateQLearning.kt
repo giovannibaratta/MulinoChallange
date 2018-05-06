@@ -1,7 +1,8 @@
 package it.unibo.ai
 
-class ApproximateQLearning<T, E>(private val alpha: Double,
-                                 private val discount : Double,
+class ApproximateQLearning<T, E>(private val alpha: () -> Double,
+                                 private val discount: () -> Double,
+                                 private val explorationRate: () -> Double = { 0.0 },
                                  private val featureExtractors : Array<(T,E) -> Double>,
                                  val weights : Array<Double> = Array(featureExtractors.size,{0.0}),
                                  private val actionsFromState : (T) -> List<E>,
@@ -17,11 +18,11 @@ class ApproximateQLearning<T, E>(private val alpha: Double,
         if (nextActionAndValue == null)
             throw IllegalStateException("Non è possibile effettuare ulteriori mosse")
         val reward = applyAction(state, nextActionAndValue.first)
-        val difference = (reward.first + (discount * (getNextBestAction(reward.second)?.second
+        val difference = (reward.first + (discount() * (getNextBestAction(reward.second)?.second
                 ?: 0.0))) - nextActionAndValue.second
         // aggiorno i pesi
         for (index in weights.indices)
-            weights[index] += alpha * difference * featureExtractors[index](state, nextActionAndValue.first)
+            weights[index] += alpha() * difference * featureExtractors[index](state, nextActionAndValue.first)
         return nextActionAndValue.first
     }
 

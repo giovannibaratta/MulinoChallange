@@ -181,20 +181,20 @@ class QLearningPlayer : AIPlayer {
                     }
             )
 
-    private val learnerPhase1 = ApproximateQLearning<State, Action>(0.01,
-            0.01,
+    private val learnerPhase1 = ApproximateQLearning<State, Action>({ 0.01 },
+            { 0.01 },
             featureExtractors = phase1Features,
             actionsFromState = actionFromStatePhase1,
             applyAction = applyAction)
 
-    private val learnerPhase2 = ApproximateQLearning<State, Action>(0.01,
-            0.01,
+    private val learnerPhase2 = ApproximateQLearning<State, Action>({ 0.01 },
+            { 0.01 },
             featureExtractors = phase1Features,
             actionsFromState = actionFromStatePhase2,
             applyAction = applyAction)
 
-    private val learnerPhase3 = ApproximateQLearning<State, Action>(0.01,
-            0.01,
+    private val learnerPhase3 = ApproximateQLearning<State, Action>({ 0.01 },
+            { 0.01 },
             featureExtractors = phase1Features,
             actionsFromState = actionFromStatePhase3,
             applyAction = applyAction)
