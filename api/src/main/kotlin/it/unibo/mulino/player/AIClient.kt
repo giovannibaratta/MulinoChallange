@@ -61,8 +61,8 @@ class AIClient(val playerType: State.Checker,
     private fun phaseMethod(state: State, playerType: State.Checker): (State, State.Checker) -> Action {
 
         val checkersCount = when (playerType) {
-            State.Checker.WHITE -> state.whiteCheckers
-            State.Checker.BLACK -> state.blackCheckers
+            State.Checker.WHITE -> state.whiteCheckersOnBoard
+            State.Checker.BLACK -> state.blackCheckersOnBoard
             else -> throw IllegalArgumentException("playerType not valid")
         }
 
