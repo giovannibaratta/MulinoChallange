@@ -70,13 +70,21 @@ class AIClient(val playerType: State.Checker,
 
         return when {
             state.currentPhase == State.Phase.FIRST -> aiPlayer::playPhase1
-            state.currentPhase == State.Phase.SECOND
-                    || (state.currentPhase == State.Phase.FINAL && checkersCount > 3) -> aiPlayer::playPhase2
-            state.currentPhase == State.Phase.FINAL && checkersCount <= 3 -> aiPlayer::playPhaseFinal
             state.currentPhase == State.Phase.SECOND -> aiPlayer::playPhase2
-            state.currentPhase == State.Phase.FINAL -> aiPlayer::playPhaseFinal
+            state.currentPhase == State.Phase.FINAL && checkersCount > 3 -> { curState: State, checker: State.Checker ->
+                aiPlayer.playPhase2(curState, checker).remapToPhaseFinal()
+            }
+            state.currentPhase == State.Phase.FINAL && checkersCount <= 3 -> aiPlayer::playPhaseFinal
             else -> throw IllegalStateException("Fase non riconosciuta")
         }
+    }
+
+    private fun Phase2Action.remapToPhaseFinal(): PhaseFinalAction {
+        val action = PhaseFinalAction()
+        action.from = this.from
+        action.to = this.to
+        action.removeOpponentChecker = this.removeOpponentChecker
+        return action
     }
 
 

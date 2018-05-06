@@ -218,9 +218,9 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
             reward += 200.0
         }
 
-        if (newState.blackBoardCount <= 2)
+        if (newState.blackBoardCount <= 2 && newState.blackHandCount == 0)
             reward += 200.0
-        else if (newState.whiteBoardCount <= 2)
+        else if (newState.whiteBoardCount <= 2 && newState.whiteHandCount == 0)
             reward -= 200.0
 
         reward
@@ -354,14 +354,15 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
                     emptyCell.forEach {
                         val toCell = Position(it.first.first, it.first.second)
                         if (!state.closeAMill(toCell, myType)) {
-                            actionList.add(Action.buildPhase2(fromCell, toCell, Optional.empty()))
+                            actionList.add(Action.buildPhase3(fromCell, toCell, Optional.empty()))
                         } else {
+                            // chiuso mill
                             if (possibleRemove.isEmpty())
-                                actionList.add(Action.buildPhase2(fromCell, toCell, Optional.empty()))
+                                actionList.add(Action.buildPhase3(fromCell, toCell, Optional.empty()))
                             else {
                                 possibleRemove.forEach {
                                     val removeCell = Position(it.first.first, it.first.second)
-                                    actionList.add(Action.buildPhase2(fromCell, toCell, Optional.of(removeCell)))
+                                    actionList.add(Action.buildPhase3(fromCell, toCell, Optional.of(removeCell)))
                                 }
                             }
                         }
@@ -428,7 +429,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
         //learnerPhase1.weights.forEach { weight.append("$it ,") }
         //weight.append("]")
         println("Phase 1 : ${learnerPhase1.weights.joinToString(", ", "[", "]")}")
-        previousState.add(internalState)
+        //previousState.add(internalState)
         return action
     }
 
@@ -436,7 +437,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     override fun playPhase2(state: ExternalState, playerType: ExternalState.Checker): Phase2Action {
         val internalState = normalize(state, playerType).remapToInternal(playerType)
         val action = learnerPhase2.think(internalState).rempapToExternalPhase2()
-        previousState.add(internalState)
+        //previousState.add(internalState)
         println("Phase 2 : ${learnerPhase2.weights.joinToString(", ", "[", "]")}")
         return action
     }
@@ -444,7 +445,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     override fun playPhaseFinal(state: ExternalState, playerType: ExternalState.Checker): PhaseFinalAction {
         val internalState = normalize(state, playerType).remapToInternal(playerType)
         val action = learnerPhase3.think(internalState).rempapToExternalPhaseFinal()
-        previousState.add(internalState)
+        //previousState.add(internalState)
         println("Phase 3 : ${learnerPhase3.weights.joinToString(", ", "[", "]")}")
         return action
     }
