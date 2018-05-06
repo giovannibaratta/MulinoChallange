@@ -30,7 +30,7 @@ object MulinoGame : Game<State, Action, Checker> {
 
     override fun getActions(state: State?): MutableList<Action> {
         val actions = mutableListOf<Action>()
-        //println("Current state : $state")
+        println("Current state (phase ${state!!.currentPhase}: $state")
         var intChecker = -1
         when(state!!.checker){
             Checker.WHITE -> intChecker = 0
@@ -59,11 +59,13 @@ object MulinoGame : Game<State, Action, Checker> {
                         if (state.getPiece(adiacentPosition) == Checker.EMPTY) {
                             if (state.checkMorris(actualPosition, adiacentPosition, state.checker)) {
                                 for (adversarialPosition in state.getPositions(state.opposite())) {
-                                    val action = Phase2Action()
-                                    action.from = "" + actualPosition.first + actualPosition.second
-                                    action.to = "" + adiacentPosition.first + adiacentPosition.second
-                                    action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
-                                    actions.add(action)
+                                    if(!state.checkMorris(adversarialPosition, state.opposite())) {
+                                        val action = Phase2Action()
+                                        action.from = "" + actualPosition.first + actualPosition.second
+                                        action.to = "" + adiacentPosition.first + adiacentPosition.second
+                                        action.removeOpponentChecker = "" + adversarialPosition.first + adversarialPosition.second
+                                        actions.add(action)
+                                    }
                                 }
                             } else {
                                 val action = Phase2Action()
@@ -96,10 +98,9 @@ object MulinoGame : Game<State, Action, Checker> {
                 }
             }
         }
-        /*println("Possible actions: ")
+        println("Possible actions: ")
         for(action in actions)
             println("$action")
-        */
         return actions
     }
 
@@ -183,13 +184,12 @@ object MulinoGame : Game<State, Action, Checker> {
                     newState.currentPhase='3'
             }
         }
-        //println("Action ${state.checker}: $action -> State : $newState")
+        println("Action ${state.checker}: $action -> State : $newState")
         return newState
     }
 
     override fun isTerminal(state: State?): Boolean {
         if(state!!.isWinner(Checker.WHITE) || state.isWinner(Checker.BLACK)){
-            println("TERMINAL STATE : $state")
             return true
         }
         return false

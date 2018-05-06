@@ -169,12 +169,12 @@ class State(checker: Checker) {
     }
 
     fun checkNoMoves(checker: Checker): Boolean {
-        var check = false
+        var check = true
         for (position in getPositions(checker)) {
-            check = checkNoMoves(position, checker)
-            if (check)
-                return true
+            check = check && checkNoMoves(position, checker)
         }
+        if(check)
+            println("No moves possible for $checker!")
         return check
     }
 
@@ -186,11 +186,12 @@ class State(checker: Checker) {
         } else
             opposite = Checker.WHITE
         val (vertex, level) = internalPositions.getValue(position)
-        check = ((board[nextVertex(vertex)][level] == checkersToShort.getValue(opposite)) &&
-                (board[precVertex(vertex)][level] == checkersToShort.getValue(opposite)))
+        check = ((board[nextVertex(vertex)][level] == 'w' || (board[nextVertex(vertex)][level] == 'b')) &&
+                ((board[precVertex(vertex)][level] == 'w') || (board[precVertex(vertex)][level] == 'b')))
         when (vertex) {
             1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels(level)) {
-                check = check && (board[vertex][adiacentLevel] == checkersToShort.getValue(opposite))
+                check = check && ((board[vertex][adiacentLevel] == 'w') ||
+                        (board[vertex][adiacentLevel] == 'b'))
             }
         }
         return check
@@ -364,7 +365,7 @@ class State(checker: Checker) {
         }
         when(currentPhase){
             '1'->{
-                return (checkers[intOpposite]==0) && (getNumPieces(opposite) < 3)
+                return ((checkers[intOpposite]==0) && (getNumPieces(opposite) < 3))
             }
             '2'->{
                 return (getNumPieces(opposite) < 3) || (checkNoMoves(opposite))
