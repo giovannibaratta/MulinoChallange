@@ -10,15 +10,15 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                                   utilMax: Double,
                                   time: Int) : IterativeDeepeningAlphaBetaSearch<State, Action, Checker>(MulinoGame, utilMin, utilMax, time) {
 
-    private val closedMorrisCoeff = coefficients[0]
-    private val morrisesNumberCoeff = coefficients[1]
-    private val blockedOppPiecesCoeff = coefficients[2]
-    private val piecesNumberCoeff = coefficients[3]
-    private val num2PiecesCoeff = coefficients[4]
-    private val num3PiecesCoeff = coefficients[5]
-    private val openedMorrisCoeff = coefficients[6]
-    private val doubleMorrisCoeff = coefficients[7]
-    private val winningConfCoeff = coefficients[8]
+    private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
+    private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])
+    private val blockedOppPiecesCoeff = doubleArrayOf(coefficients[2],coefficients[8])
+    private val piecesNumberCoeff = doubleArrayOf(coefficients[3],coefficients[9])
+    private val num2PiecesCoeff = doubleArrayOf(coefficients[4],coefficients[13])
+    private val num3PiecesCoeff =doubleArrayOf(coefficients[5],coefficients[14])
+    private val openedMorrisCoeff = coefficients[10]
+    private val doubleMorrisCoeff = coefficients[11]
+    private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
     override fun eval(state: State?, player: Checker?): Double {
         var amount = super.eval(state, player)
@@ -37,66 +37,73 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         var amountOpposite = 0.0
         when(state!!.currentPhase){
             '1'->{
-                amountPlayer = morrisesNumberCoeff * state.getNumMorrises(player!!) +
-                        blockedOppPiecesCoeff * state.getBlockedPieces(player) +
-                        piecesNumberCoeff * state.getNumPieces(player) +
-                        num2PiecesCoeff * state.getNum2Conf(player) +
-                        num3PiecesCoeff * state.getNum3Conf(player)
+                amountPlayer = morrisesNumberCoeff[0] * state.getNumMorrises(player!!) +
+                        blockedOppPiecesCoeff[0] * state.getBlockedPieces(player) +
+                        piecesNumberCoeff[0] * state.getNumPieces(player) +
+                        num2PiecesCoeff[0] * state.getNum2Conf(player) +
+                        num3PiecesCoeff[0] * state.getNum3Conf(player)
                 if (state.hasClosedMorris(player))
-                    amountPlayer += closedMorrisCoeff
-                amountOpposite = -(morrisesNumberCoeff * state.getNumMorrises(opposite) +
-                        blockedOppPiecesCoeff * state.getBlockedPieces(opposite) +
-                        piecesNumberCoeff * state.getNumPieces(opposite) +
-                        num2PiecesCoeff * state.getNum2Conf(opposite) +
-                        num3PiecesCoeff * state.getNum3Conf(opposite))
+                    amountPlayer += closedMorrisCoeff[0]
+                amountOpposite = -(morrisesNumberCoeff[0] * state.getNumMorrises(opposite) +
+                        blockedOppPiecesCoeff[0] * state.getBlockedPieces(opposite) +
+                        piecesNumberCoeff[0] * state.getNumPieces(opposite) +
+                        num2PiecesCoeff[0] * state.getNum2Conf(opposite) +
+                        num3PiecesCoeff[0] * state.getNum3Conf(opposite))
                 if (state.hasClosedMorris(opposite))
-                    amountOpposite -= closedMorrisCoeff
+                    amountOpposite -= closedMorrisCoeff[0]
             }
             '2'->{
-                amountPlayer = morrisesNumberCoeff * state.getNumMorrises(player!!) +
-                        blockedOppPiecesCoeff * state.getBlockedPieces(player) +
-                        piecesNumberCoeff * state.getNumPieces(player)
+                amountPlayer = morrisesNumberCoeff[1] * state.getNumMorrises(player!!) +
+                        blockedOppPiecesCoeff[1] * state.getBlockedPieces(player) +
+                        piecesNumberCoeff[1] * state.getNumPieces(player)
                 if (state.hasClosedMorris(player))
-                    amountPlayer += closedMorrisCoeff
+                    amountPlayer += closedMorrisCoeff[1]
                 if (state.hasOpenedMorris(player))
                     amountPlayer += openedMorrisCoeff
                 if (state.hasDoubleMorris(player))
                     amountPlayer += doubleMorrisCoeff
                 if (MulinoGame.isWinningConfiguration(state, player))
-                    amountPlayer += winningConfCoeff
+                    amountPlayer += winningConfCoeff[0]
 
-                amountOpposite = -(morrisesNumberCoeff * state.getNumMorrises(opposite) +
-                        blockedOppPiecesCoeff * state.getBlockedPieces(opposite) +
-                        piecesNumberCoeff * state.getNumPieces(opposite))
+                amountOpposite = -(morrisesNumberCoeff[1] * state.getNumMorrises(opposite) +
+                        blockedOppPiecesCoeff[1] * state.getBlockedPieces(opposite) +
+                        piecesNumberCoeff[1] * state.getNumPieces(opposite))
                 if (state.hasClosedMorris(opposite))
-                    amountOpposite -= closedMorrisCoeff
+                    amountOpposite -= closedMorrisCoeff[1]
                 if (state.hasOpenedMorris(opposite))
                     amountOpposite -= openedMorrisCoeff
                 if (state.hasDoubleMorris(opposite))
                     amountOpposite -= doubleMorrisCoeff
                 if (MulinoGame.isWinningConfiguration(state, opposite))
-                    amountOpposite -= winningConfCoeff
+                    amountOpposite -= winningConfCoeff[0]
             }
             '3'->{
-                amountPlayer = num2PiecesCoeff * state.getNum2Conf(player!!) +
-                        num3PiecesCoeff * state.getNum3Conf(player)
+                amountPlayer = num2PiecesCoeff[1] * state.getNum2Conf(player!!) +
+                        num3PiecesCoeff[1] * state.getNum3Conf(player)
                 if (state.hasClosedMorris(player))
-                    amountPlayer += closedMorrisCoeff
+                    amountPlayer += closedMorrisCoeff[2]
                 if (MulinoGame.isWinningConfiguration(state, player))
-                    amountPlayer += winningConfCoeff
+                    amountPlayer += winningConfCoeff[1]
 
-                amountOpposite = -(num2PiecesCoeff * state.getNum2Conf(opposite) +
-                        num3PiecesCoeff * state.getNum3Conf(opposite))
+                amountOpposite = -(num2PiecesCoeff[1] * state.getNum2Conf(opposite) +
+                        num3PiecesCoeff[1] * state.getNum3Conf(opposite))
                 if (state.hasClosedMorris(opposite))
-                    amountOpposite -= closedMorrisCoeff
+                    amountOpposite -= closedMorrisCoeff[2]
                 if (MulinoGame.isWinningConfiguration(state, opposite))
-                    amountOpposite -= winningConfCoeff
+                    amountOpposite -= winningConfCoeff[1]
             }
         }
         amount += amountPlayer + amountOpposite
         //println("Evaluation state $state -> $amount")
         return amount
     }
+
+    /*
+    override fun orderActions(state: State?, actions: MutableList<Action>?, player: Checker?, depth: Int): MutableList<Action> {
+        actions!!.sortBy { action -> eval(game.getResult(state, action), player) }
+        return actions
+    }
+    */
 
 }
 
