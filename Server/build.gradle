@@ -3,6 +3,12 @@ version '0.01'
 
 apply plugin: 'java'
 
+jar {
+    manifest {
+        attributes("Main-Class": "it.unibo.ai.didattica.mulino.engine.Engine")
+    }
+}
+
 sourceCompatibility = 1.8
 
 repositories {

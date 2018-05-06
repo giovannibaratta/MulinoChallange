@@ -159,21 +159,21 @@ class QLearningPlayer : AIPlayer {
 
     private val phase1Features: Array<(State, Action) -> Double> =
             arrayOf(
-                    { state, action -> state.whiteCount.toDouble() },
-                    { state, action -> state.blackCount.toDouble() },
+                    { state, _ -> state.whiteBoardCount.toDouble() },
+                    { state, _ -> state.blackBoardCount.toDouble() },
                     { state, action ->
                         when (state.simulateAction(action).mill) {
                             true -> 1.0
                             false -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (state.iCanMove()) {
                             true -> 1.0
                             false -> 0.0

@@ -8,7 +8,9 @@ import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
 internal class State(externalGrid: SquareMatrix<Type>? = null,
-                     val isWhiteTurn: Boolean) {
+                     val isWhiteTurn: Boolean,
+                     val whiteHandCount: Int,
+                     val blackHandCount: Int) {
 
     var grid: SquareMatrix<Type>
     val boardSize: Int
@@ -17,7 +19,7 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
 
     init {
         if (externalGrid == null) {
-            grid = SquareMatrix<Type>(7, { x, y -> Type.INVALID })
+            grid = SquareMatrix<Type>(7, { _, _ -> Type.INVALID })
             boardSize = grid.size
             middleLine = (boardSize - 1) / 2
             midllePoint = Position(middleLine, middleLine)
@@ -37,11 +39,11 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         }
     }
 
-    val blackCount = grid.count { it == Type.BLACK }
-    val whiteCount = grid.count { it == Type.WHITE }
+    val blackBoardCount = grid.count { it == Type.BLACK }
+    val whiteBoardCount = grid.count { it == Type.WHITE }
 
     constructor(state: ExternalState, isWhiteTurn: Boolean)
-            : this(isWhiteTurn = isWhiteTurn) {
+            : this(isWhiteTurn = isWhiteTurn, whiteHandCount = state.whiteCheckers, blackHandCount = state.blackCheckers) {
         // mapping della rappresentazione esterna in rappresentazione interna
         state.board.forEach {
             val xAxis = it.key.split(Pattern.compile("[0-9]+$"))
@@ -151,7 +153,21 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
     // restituisce la griglia, e se ha chiuso un it.unibo.ai.didattica.mulino. Se azione non valida errore
     fun simulateAction(action: Action): ActionResult {
         val newStateGrid = SquareMatrix(boardSize, { xIndex, yIndex -> grid[xIndex, yIndex] })
-        val newState = State(newStateGrid, !isWhiteTurn)
+        val newState: State
+        if (!action.from.isPresent) {
+            // fase 1
+            if (isWhiteTurn) {
+                // diminuisco i bianchi
+                newState = State(newStateGrid, !isWhiteTurn, whiteHandCount - 1, blackHandCount)
+            } else {
+                //diminuisco i neri
+                newState = State(newStateGrid, !isWhiteTurn, whiteHandCount, blackHandCount - 1)
+            }
+        } else {
+            // fase 2
+            newState = State(newStateGrid, !isWhiteTurn, whiteHandCount, blackHandCount)
+        }
+
         var closedMill = false
 
         val fromType: Type = when (action.from.isPresent) {
@@ -287,13 +303,30 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
 
         var playerCanMove = false
 
-        grid.forEachIndexed { xIndex, yIndex, value ->
-            if (value == type &&
-                    adjacent(Position(xIndex, yIndex), true).filter { it.second == Type.EMPTY }.isNotEmpty()) {
-                playerCanMove = true
-                return@forEachIndexed
-            }
+        val (handCount, boardCount) = when (isWhiteTurn) {
+            true -> Pair(whiteHandCount, whiteBoardCount)
+            false -> Pair(blackHandCount, blackBoardCount)
         }
+        // TODO("Metodo per sapere la fase")
+
+
+        if (handCount > 0) {
+            // fase 1
+            playerCanMove = true
+        } else if (handCount <= 0 && boardCount > 3) {
+            // fase 2
+            grid.forEachIndexed { xIndex, yIndex, value ->
+                if (value == type &&
+                        adjacent(Position(xIndex, yIndex), true).filter { it.second == Type.EMPTY }.isNotEmpty()) {
+                    playerCanMove = true
+                    return@forEachIndexed
+                }
+            }
+        } else if (handCount <= 0 && boardCount <= 3) {
+            // fase 3
+            playerCanMove = true
+        }
+
         return playerCanMove
     }
 

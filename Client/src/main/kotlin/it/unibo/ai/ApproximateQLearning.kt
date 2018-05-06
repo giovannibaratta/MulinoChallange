@@ -13,11 +13,16 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         featureExtractors.mapIndexed{index, f -> f(state, agentAction) * weights[index]}.sum()
 
     fun think(state: T): E {
-        val nextActionAndValue = getNextBestAction(state)
+        printActionValue(state)
+        val nextActionAndValue = when (Math.random() < explorationRate()) {
+            true -> getRandomACtion(state)
+            false -> getNextBestAction(state)
+        }
         // fine dei giochi
         if (nextActionAndValue == null)
             throw IllegalStateException("Non è possibile effettuare ulteriori mosse")
         val reward = applyAction(state, nextActionAndValue.first)
+        println("Reward : " + reward.first)
         val difference = (reward.first + (discount() * (getNextBestAction(reward.second)?.second
                 ?: 0.0))) - nextActionAndValue.second
         // aggiorno i pesi
@@ -26,24 +31,23 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         return nextActionAndValue.first
     }
 
-    /*
-    fun thinkAndExecute(state : T) : Boolean{
-        val nextActionAndValue = getNextBestAction(state)
-        // fine dei giochi
-        if(nextActionAndValue == null)
-            return true
-        val reward = applyAction(state, nextActionAndValue.first)
-        val difference = (reward.first + (discount * (getNextBestAction(reward.second)?.second ?: 0.0))) - nextActionAndValue.second
-        // aggiorno i pesi
-        for (index in weights.indices)
-            weights[index] += alpha * difference * featureExtractors[index](state, nextActionAndValue.first)
-        return false
+    //debug
+    private fun printActionValue(state: T) {
+        val actions = actionsFromState(state)
+        actions.forEach { println("Action " + it + " - value " + qValue(state, it)) }
     }
-    */
 
     private fun getNextBestAction(state : T)
             = actionsFromState(state)
                     .map { Pair(it, qValue(state,it)) }
                     .maxBy { it.second }
+
+    private fun getRandomACtion(state: T): Pair<E, Double>? {
+        val actions = actionsFromState(state)
+        if (actions.size <= 0)
+            return null
+        val random = Math.random() * actions.size - 1
+        return Pair(actions[random.toInt()], qValue(state, actions[random.toInt()]))
+    }
 
 }

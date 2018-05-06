@@ -16,6 +16,7 @@ import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.*
 import kotlin.collections.List
+import kotlin.collections.any
 import kotlin.collections.filter
 import kotlin.collections.forEach
 import kotlin.collections.indices
@@ -31,47 +32,111 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     /*********************
      *      FEATURES     *
      *********************/
+
+    private val miePedineFeature = { state: State, _: Action -> state.whiteBoardCount.toDouble() }
+    private val enemyPedineFeature = { state: State, _: Action -> state.blackBoardCount.toDouble() }
+    private val chiudoUnMill = { state: State, action: Action ->
+        when (state.simulateAction(action).mill) {
+            true -> 1.0
+            false -> 0.0
+        }
+    }
+    private val avversarioNonSiPuoMuovere = { state: State, _: Action ->
+        when (!state.enemyCanMove()) {
+            false -> 1.0
+            true -> 0.0
+        }
+    }
+
+    private val ioNonMiPossoMuovere = { state: State, _: Action ->
+        when (state.iCanMove()) {
+            true -> 1.0
+            false -> 0.0
+        }
+    }
+
+    private val deniedEnemyMill = { state: State, action: Action ->
+        val enemyType = when (state.isWhiteTurn) {
+            true -> Type.BLACK
+            false -> Type.WHITE
+        }
+        if (state.closeAMill(action.to.get(), enemyType))
+            1.0
+        else
+            0.0
+    }
+
+    private val rimuovoPedinaChePuoChiudereUnMill = { state: State, action: Action ->
+        var featureValue = 0.0
+        val newState = state.simulateAction(action).newState
+        if (action.remove.isPresent) {
+            // posso rimuove pedina. Controllo che negli spazi adiacenti alla pedina da rimuovere si poteva formare un mill
+            // TODO("Nella versione in stato 3 dell'avversario dovrei controllare tutti i possibili mill")
+            val enemyType = when (state.isWhiteTurn) {
+                true -> Type.BLACK
+                false -> Type.WHITE
+            }
+
+            val adjs = newState.adjacent(action.remove.get(), true)
+                    .filter {
+                        it.second == Type.EMPTY
+                                && newState.closeAMill(it.first, enemyType)
+                    }
+            if (adjs.any())
+                featureValue += 1.0
+        }
+        featureValue
+    }
+
+    private val mettoLaPedinaInUnPostoChePuoGenerareUnMill = { state: State, action: Action ->
+        val myType = when (state.isWhiteTurn) {
+            true -> Type.WHITE
+            false -> Type.BLACK
+        }
+
+        if (state.adjacent(action.to.get(), false).filter { it.second == myType }.any())
+            1.0
+        else
+            0.0
+    }
+
     private val phase1Features: Array<(State, Action) -> Double> =
             arrayOf(
-                    { state, action -> state.whiteCount.toDouble() },
-                    { state, action -> state.blackCount.toDouble() },
-                    { state, action ->
-                        when (state.simulateAction(action).mill) {
-                            true -> 1.0
-                            false -> 0.0
-                        }
-                    },
-                    { state, action ->
-                        when (!state.enemyCanMove()) {
-                            false -> 1.0
-                            true -> 0.0
-                        }
-                    },
-                    { state, action ->
-                        when (state.iCanMove()) {
-                            true -> 1.0
-                            false -> 0.0
-                        }
-                    }
+                    // [0] numero di pedine mie
+                    miePedineFeature,
+                    // [1] numero di pedine avversarie
+                    enemyPedineFeature,
+                    // [2] faccio un mill
+                    chiudoUnMill,
+                    // [3] l'avversario non si può muovere
+                    avversarioNonSiPuoMuovere,
+                    // [4] io non mi posso muovere
+                    ioNonMiPossoMuovere,
+                    // [5] impedisco all'avversario di chiudere un mill nel suo turno
+                    deniedEnemyMill,
+                    // [6] rimozione tattica
+                    rimuovoPedinaChePuoChiudereUnMill,
+                    // [7] smartPlacing
+                    mettoLaPedinaInUnPostoChePuoGenerareUnMill
             )
 
     private val phase2Features: Array<(State, Action) -> Double> =
             arrayOf(
-                    { state, action -> state.whiteCount.toDouble() },
-                    { state, action -> state.blackCount.toDouble() },
+                    { state, _ -> state.whiteBoardCount.toDouble() },
+                    { state, _ -> state.blackBoardCount.toDouble() },
                     { state, action ->
                         when (state.simulateAction(action).mill) {
                             true -> 1.0
                             false -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (!state.iCanMove()) {
                             true -> 1.0
                             false -> 0.0
@@ -79,23 +144,25 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
                     }
             )
 
+    // TODO("Rimuovo una pedina avversaria che potrebbe chiudere un mill")
+
     private val phaseFinalFeatures: Array<(State, Action) -> Double> =
             arrayOf(
-                    { state, action -> state.whiteCount.toDouble() },
-                    { state, action -> state.blackCount.toDouble() },
+                    { state, _ -> state.whiteBoardCount.toDouble() },
+                    { state, _ -> state.blackBoardCount.toDouble() },
                     { state, action ->
                         when (state.simulateAction(action).mill) {
                             true -> 1.0
                             false -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (!state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
                     },
-                    { state, action ->
+                    { state, _ ->
                         when (state.iCanMove()) {
                             true -> 1.0
                             false -> 0.0
@@ -121,28 +188,45 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     // TODO("Aggiungere winningState reward")
     private val phase1Reward: (State, Action, State) -> Double = { oldState, action, newState ->
 
+        //println(oldState.toString())
+        //println(newState.toString())
+
         var reward = 0.0
         //val simulation = oldState.simulateAction(action)
 
-        //if(previousState.peek().whiteCount > oldState)
+        //if(previousState.peek().whiteBoardCount > oldState)
 
-        if (newState.whiteCount > newState.blackCount) {
-            reward += 0.5
+        if (newState.whiteBoardCount > newState.blackBoardCount) {
+            reward += 5.0
         }
 
         when (action.remove.isPresent) {
-            true -> reward += 1.0
-            else -> reward += -0.2
+            true -> reward += 10.0
+            else -> reward += -1.0
         }
 
-        if (newState.blackCount <= 2)
-            reward += 100
-        else if (newState.whiteCount <= 2)
-            reward -= 100
+        val (playerType, enemyType) = when (oldState.isWhiteTurn) {
+            true -> Pair(Type.WHITE, Type.BLACK)
+            false -> Pair(Type.BLACK, Type.WHITE)
+        }
+
+        if (!newState.playerCanMove(playerType)) {
+            reward -= 200.0
+        }
+
+        if (!newState.playerCanMove(enemyType)) {
+            reward += 200.0
+        }
+
+        if (newState.blackBoardCount <= 2)
+            reward += 200.0
+        else if (newState.whiteBoardCount <= 2)
+            reward -= 200.0
 
         reward
     }
 
+    /*
     private val phase2Reward: (State, Action, State) -> Double = { oldState, action, newState ->
         when (action.remove.isPresent) {
             true -> 1.0
@@ -155,11 +239,12 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
             true -> 1.0
             else -> -0.2
         }
-    }
+    }*/
     //</editor-fold desc="Reward">
 
     //<editor-fold desc="Generatore azioni">
     internal val actionFromStatePhase1: (State) -> List<Action> = {
+        //println("Azione tipo 1")
         val state = it
         val actionList = mutableListOf<Action>()
         val (myType, enemyType) = when (state.isWhiteTurn) {
@@ -175,7 +260,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
 
         emptyCell.forEach {
             val toPos = Position(it.first.first, it.first.second)
-            var removePos = Optional.empty<Position>()
+            //var removePos = Optional.empty<Position>()
             if (state.closeAMill(toPos, myType)) {
                 // 1.a
                 if (possibleRemove.isEmpty())
@@ -198,6 +283,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     }
 
     internal val actionFromStatePhase2: (State) -> List<Action> = {
+        //println("Azione tipo 2")
         val state = it
         val actionList = mutableListOf<Action>()
         val (myType, enemyType) = when (state.isWhiteTurn) {
@@ -247,6 +333,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     }
 
     internal val actionFromStatePhase3: (State) -> List<Action> = {
+        //println("Azione tipo 3")
         val state = it
         val actionList = mutableListOf<Action>()
         val (myType, enemyType) = when (state.isWhiteTurn) {
@@ -306,10 +393,12 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
     }
 
     private val discount = 0.2
-    private val alpha = 0.95
+    private val alpha = 0.5
+    private val explorationRate = 0.0
 
     private val learnerPhase1 = ApproximateQLearning<State, Action>({ alpha },
             { discount },
+            explorationRate = { explorationRate },
             featureExtractors = phase1Features,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase1,
@@ -317,17 +406,19 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
 
     private val learnerPhase2 = ApproximateQLearning<State, Action>({ alpha },
             { discount },
-            featureExtractors = phase2Features,
+            explorationRate = { explorationRate },
+            featureExtractors = phase1Features,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase2,
-            applyAction = applyAction(phase2Reward))
+            applyAction = applyAction(phase1Reward))
 
     private val learnerPhase3 = ApproximateQLearning<State, Action>({ alpha },
             { discount },
+            explorationRate = { explorationRate },
             weights = phase1Weights,
-            featureExtractors = phaseFinalFeatures,
+            featureExtractors = phase1Features,
             actionsFromState = actionFromStatePhase3,
-            applyAction = applyAction(phaseFinalReward))
+            applyAction = applyAction(phase1Reward))
 
     override fun playPhase1(state: ExternalState, playerType: ExternalState.Checker): Phase1Action {
         val internalState = normalize(state, playerType).remapToInternal(playerType)
@@ -372,6 +463,9 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
                         })
                     }
                     state.board = newBoard
+                    val temp = state.whiteCheckers
+                    state.whiteCheckers = state.blackCheckers
+                    state.blackCheckers = temp
                     state
                 }
                 else -> throw IllegalArgumentException("Tipo di giocatore non valido")
@@ -474,7 +568,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
 
 
     companion object {
-        const val version: Long = 1L
+        const val version: Long = 2L
     }
 
 
