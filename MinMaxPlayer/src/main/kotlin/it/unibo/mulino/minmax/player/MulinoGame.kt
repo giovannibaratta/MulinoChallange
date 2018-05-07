@@ -148,6 +148,7 @@ object MulinoGame : Game<State, String, Checker> {
             Checker.WHITE -> next = 0
             Checker.BLACK -> next = 1
         }
+        newState.closedMorris = false
         /*
         newState.checkers[next]=state.checkers[next]
         newState.checkers[current]=state.checkers[current]
