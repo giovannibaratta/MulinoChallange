@@ -3,10 +3,9 @@ package it.unibo.mulino.minmax.player
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 import java.util.*
 
-class State(checker: Checker) {
+data class State(var checker: Checker) {
 
     private val board = Array(8, { CharArray(3, { 'e' }) })
-    var checker = checker
     var checkers = intArrayOf(9,9)
     var currentPhase : Char = '1'
     var closedMorris = false
@@ -15,34 +14,34 @@ class State(checker: Checker) {
         private val checkersToShort = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
                 Pair<Checker, Char>(Checker.WHITE, 'w'),
                 Pair<Checker, Char>(Checker.BLACK, 'b'))
-        private val internalPositions = hashMapOf(Pair(Pair('a', 1), Pair(0, 0)),
-                Pair(Pair('a', 4), Pair(1, 0)),
-                Pair(Pair('a', 7), Pair(2, 0)),
-                Pair(Pair('b', 2), Pair(0, 1)),
-                Pair(Pair('b', 4), Pair(1, 1)),
-                Pair(Pair('b', 6), Pair(2, 1)),
-                Pair(Pair('c', 3), Pair(0, 2)),
-                Pair(Pair('c', 4), Pair(1, 2)),
-                Pair(Pair('c', 5), Pair(2, 2)),
-                Pair(Pair('d', 5), Pair(3, 2)),
-                Pair(Pair('d', 6), Pair(3, 1)),
-                Pair(Pair('d', 7), Pair(3, 0)),
-                Pair(Pair('d', 1), Pair(7, 0)),
-                Pair(Pair('d', 2), Pair(7, 1)),
-                Pair(Pair('d', 3), Pair(7, 2)),
-                Pair(Pair('e', 3), Pair(6, 2)),
-                Pair(Pair('e', 4), Pair(5, 2)),
-                Pair(Pair('e', 5), Pair(4, 2)),
-                Pair(Pair('f', 2), Pair(6, 1)),
-                Pair(Pair('f', 4), Pair(5, 1)),
-                Pair(Pair('f', 6), Pair(4, 1)),
-                Pair(Pair('g', 1), Pair(6, 0)),
-                Pair(Pair('g', 4), Pair(5, 0)),
-                Pair(Pair('g', 7), Pair(4, 0))
+        private val internalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
+                Pair("a4", Pair(1, 0)),
+                Pair("a7", Pair(2, 0)),
+                Pair("b2", Pair(0, 1)),
+                Pair("b4", Pair(1, 1)),
+                Pair("b6", Pair(2, 1)),
+                Pair("c3", Pair(0, 2)),
+                Pair("c4", Pair(1, 2)),
+                Pair("c5", Pair(2, 2)),
+                Pair("d5", Pair(3, 2)),
+                Pair("d6", Pair(3, 1)),
+                Pair("d7", Pair(3, 0)),
+                Pair("d1", Pair(7, 0)),
+                Pair("d2", Pair(7, 1)),
+                Pair("d3", Pair(7, 2)),
+                Pair("e3", Pair(6, 2)),
+                Pair("e4", Pair(5, 2)),
+                Pair("e5", Pair(4, 2)),
+                Pair("f2", Pair(6, 1)),
+                Pair("f4", Pair(5, 1)),
+                Pair("f6", Pair(4, 1)),
+                Pair("g1", Pair(6, 0)),
+                Pair("g4", Pair(5, 0)),
+                Pair("g7", Pair(4, 0))
         )
     }
 
-    fun getPiece(position: Pair<Char, Int>): Checker {
+    fun getPiece(position: String): Checker {
         val (vertex, level) = internalPositions.getValue(position)
         val shortChecker = board[vertex][level]
         when (shortChecker) {
@@ -52,12 +51,12 @@ class State(checker: Checker) {
         return Checker.EMPTY
     }
 
-    fun addPiece(position: Pair<Char, Int>, checker: Checker) {
+    fun addPiece(position: String, checker: Checker) {
         val (vertex, level) = internalPositions.getValue(position)
         board[vertex][level] = checkersToShort.getValue(checker)
     }
 
-    fun removePiece(position: Pair<Char, Int>) {
+    fun removePiece(position: String) {
         val (vertex, level) = internalPositions.getValue(position)
         board[vertex][level] = 'e'
     }
@@ -73,8 +72,8 @@ class State(checker: Checker) {
         return count
     }
 
-    fun getPositions(checker: Checker): List<Pair<Char, Int>> {
-        val positions = LinkedList<Pair<Char, Int>>()
+    fun getPositions(checker: Checker): List<String> {
+        val positions = LinkedList<String>()
         for (position in internalPositions.keys) {
             val (vertex, level) = internalPositions.getValue(position)
             if (board[vertex][level] == checkersToShort.getValue(checker))
@@ -83,8 +82,8 @@ class State(checker: Checker) {
         return positions
     }
 
-    fun getEmptyPositions(): List<Pair<Char, Int>> {
-        val positions = LinkedList<Pair<Char, Int>>()
+    fun getEmptyPositions(): List<String> {
+        val positions = LinkedList<String>()
         for (position in internalPositions.keys) {
             val (vertex, level) = internalPositions.getValue(position)
             if (board[vertex][level] == 'e')
@@ -93,8 +92,8 @@ class State(checker: Checker) {
         return positions
     }
 
-    fun getAdiacentPositions(position: Pair<Char, Int>): List<Pair<Char, Int>> {
-        val positions = LinkedList<Pair<Char, Int>>()
+    fun getAdiacentPositions(position: String): List<String> {
+        val positions = LinkedList<String>()
         val (vertex, level) = internalPositions.getValue(position)
         positions.add(retrievePosition(Pair(nextVertex(vertex), level))!!)
         positions.add(retrievePosition(Pair(precVertex(vertex), level))!!)
@@ -106,7 +105,7 @@ class State(checker: Checker) {
         return positions
     }
 
-    private fun retrievePosition(internalPosition: Pair<Int, Int>): Pair<Char, Int>? {
+    private fun retrievePosition(internalPosition: Pair<Int, Int>): String? {
 
         for (key in internalPositions.keys) {
             if (internalPositions[key] == internalPosition)
@@ -115,7 +114,7 @@ class State(checker: Checker) {
         return null
     }
 
-    fun checkMorris(position: Pair<Char, Int>, checker: Checker): Boolean {
+    fun checkMorris(position: String, checker: Checker): Boolean {
         val (vertex, level) = internalPositions.getValue(position)
         var check = false
         when (vertex) {
@@ -131,7 +130,7 @@ class State(checker: Checker) {
         return check
     }
 
-    fun checkMorris(oldPosition: Pair<Char, Int>, newPosition: Pair<Char, Int>, checker: Checker): Boolean {
+    fun checkMorris(oldPosition: String, newPosition: String, checker: Checker): Boolean {
         val (oldVertex, oldLevel) = internalPositions.getValue(oldPosition)
         val (newVertex, newLevel) = internalPositions.getValue(newPosition)
         var check = false
@@ -179,7 +178,7 @@ class State(checker: Checker) {
         return check
     }
 
-    fun checkNoMoves(position: Pair<Char, Int>, checker: Checker): Boolean {
+    fun checkNoMoves(position: String, checker: Checker): Boolean {
         var check = false
         var opposite = Checker.EMPTY
         if (checker == Checker.WHITE) {
@@ -493,6 +492,7 @@ fun main(args: Array<String>) {
     //println("Morris bianco con b4->a7: ${state.checkMorris(Pair('b',4),Pair('a',7),Checker.WHITE)}")
     */
 
+    /*
     state.addPiece(Pair('a', 1), Checker.WHITE)
     state.addPiece(Pair('a', 4), Checker.WHITE)
     state.addPiece(Pair('a', 7), Checker.WHITE)
@@ -506,6 +506,7 @@ fun main(args: Array<String>) {
     state.addPiece(Pair('d', 7), Checker.WHITE)
     state.addPiece(Pair('e', 3), Checker.WHITE)
     state.addPiece(Pair('g', 4), Checker.BLACK)
+    */
 
     //println("Morris chiuso: ${state.hasClosedMorris(Checker.WHITE)}")
     //println("Morris aperto: ${state.hasOpenedMorris(Checker.WHITE)}")

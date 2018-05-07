@@ -46,14 +46,10 @@ class MinMaxPlayer(val time: Int = 58) : AIPlayer {
         for(position in state.board.keys){
             when(state.board[position]){
                 State.Checker.WHITE ->{
-                    val column = position[0]
-                    val raw = position[1].toString().toInt()
-                    clientState.addPiece(Pair(column, raw), State.Checker.WHITE)
+                    clientState.addPiece(position, State.Checker.WHITE)
                 }
                 State.Checker.BLACK -> {
-                    val column = position[0]
-                    val raw = position[1].toString().toInt()
-                    clientState.addPiece(Pair(column, raw), State.Checker.BLACK)
+                    clientState.addPiece(position, State.Checker.BLACK)
                 }
             }
         }
@@ -63,7 +59,33 @@ class MinMaxPlayer(val time: Int = 58) : AIPlayer {
             else -> '1'
         }
         val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -10000.00, 10000.00, time)
-        return search.makeDecision(clientState)
+        val actionString = search.makeDecision(clientState)
+        when(actionString.get(0)){
+            '1'->{
+                val action = Phase1Action()
+                action.putPosition=actionString.substring(1,3)
+                if(actionString.length>3)
+                    action.removeOpponentChecker=actionString.substring(3,5)
+                return action
+            }
+            '2'->{
+                val action = Phase2Action()
+                action.from=actionString.substring(1,3)
+                action.to=actionString.substring(3,5)
+                if(actionString.length>5)
+                    action.removeOpponentChecker=actionString.substring(5,7)
+                return action
+            }
+            '3'->{
+                val action = PhaseFinalAction()
+                action.from=actionString.substring(1,3)
+                action.to=actionString.substring(3,5)
+                if(actionString.length>5)
+                    action.removeOpponentChecker=actionString.substring(5,7)
+                return action
+            }
+        }
+        return Phase1Action()
     }
 
     override fun matchStart() {

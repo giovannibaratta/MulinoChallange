@@ -8,7 +8,7 @@ import it.unibo.ai.didattica.mulino.domain.State.Checker
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                                   utilMin: Double,
                                   utilMax: Double,
-                                  time: Int) : IterativeDeepeningAlphaBetaSearch<State, Action, Checker>(MulinoGame, utilMin, utilMax, time) {
+                                  time: Int) : IterativeDeepeningAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
 
     private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
     private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])
@@ -44,11 +44,11 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         num3PiecesCoeff[0] * state.getNum3Conf(player)
                 if (state.closedMorris && state.opposite()==player)
                     amountPlayer += closedMorrisCoeff[0]
-                amountOpposite = -(morrisesNumberCoeff[0] * state.getNumMorrises(opposite) +
-                        blockedOppPiecesCoeff[0] * state.getBlockedPieces(opposite) +
-                        piecesNumberCoeff[0] * state.getNumPieces(opposite) +
-                        num2PiecesCoeff[0] * state.getNum2Conf(opposite) +
-                        num3PiecesCoeff[0] * state.getNum3Conf(opposite))
+                amountOpposite = -(morrisesNumberCoeff[0] * state.getNumMorrises(opposite)) -
+                        (blockedOppPiecesCoeff[0] * state.getBlockedPieces(opposite)) -
+                        (piecesNumberCoeff[0] * state.getNumPieces(opposite)) -
+                        (num2PiecesCoeff[0] * state.getNum2Conf(opposite)) -
+                        (num3PiecesCoeff[0] * state.getNum3Conf(opposite))
                 if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[0]
             }
@@ -65,9 +65,9 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 if (MulinoGame.isWinningConfiguration(state, player))
                     amountPlayer += winningConfCoeff[0]
 
-                amountOpposite = -(morrisesNumberCoeff[1] * state.getNumMorrises(opposite) +
-                        blockedOppPiecesCoeff[1] * state.getBlockedPieces(opposite) +
-                        piecesNumberCoeff[1] * state.getNumPieces(opposite))
+                amountOpposite = -(morrisesNumberCoeff[1] * state.getNumMorrises(opposite)) -
+                        (blockedOppPiecesCoeff[1] * state.getBlockedPieces(opposite)) -
+                        (piecesNumberCoeff[1] * state.getNumPieces(opposite))
                 if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[1]
                 if (state.hasOpenedMorris(opposite))
@@ -85,8 +85,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 if (MulinoGame.isWinningConfiguration(state, player))
                     amountPlayer += winningConfCoeff[1]
 
-                amountOpposite = -(num2PiecesCoeff[1] * state.getNum2Conf(opposite) +
-                        num3PiecesCoeff[1] * state.getNum3Conf(opposite))
+                amountOpposite = -(num2PiecesCoeff[1] * state.getNum2Conf(opposite)) -
+                        (num3PiecesCoeff[1] * state.getNum3Conf(opposite))
                 if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[2]
                 if (MulinoGame.isWinningConfiguration(state, opposite))
@@ -109,12 +109,14 @@ fun main(args: Array<String>) {
 
     val initialState = State(Checker.WHITE)
 
+    /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
     initialState.addPiece(Pair('a',4), Checker.WHITE)
     initialState.addPiece(Pair('a',1), Checker.WHITE)
     initialState.addPiece(Pair('g',7), Checker.BLACK)
     initialState.addPiece(Pair('g',4), Checker.BLACK)
     initialState.addPiece(Pair('d',2), Checker.BLACK)
+    */
 
     val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
     val action = search.makeDecision(initialState)
