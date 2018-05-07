@@ -42,21 +42,21 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         piecesNumberCoeff[0] * state.getNumPieces(player) +
                         num2PiecesCoeff[0] * state.getNum2Conf(player) +
                         num3PiecesCoeff[0] * state.getNum3Conf(player)
-                if (state.hasClosedMorris(player))
+                if (state.closedMorris && state.opposite()==player)
                     amountPlayer += closedMorrisCoeff[0]
                 amountOpposite = -(morrisesNumberCoeff[0] * state.getNumMorrises(opposite) +
                         blockedOppPiecesCoeff[0] * state.getBlockedPieces(opposite) +
                         piecesNumberCoeff[0] * state.getNumPieces(opposite) +
                         num2PiecesCoeff[0] * state.getNum2Conf(opposite) +
                         num3PiecesCoeff[0] * state.getNum3Conf(opposite))
-                if (state.hasClosedMorris(opposite))
+                if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[0]
             }
             '2'->{
                 amountPlayer = morrisesNumberCoeff[1] * state.getNumMorrises(player!!) +
                         blockedOppPiecesCoeff[1] * state.getBlockedPieces(player) +
                         piecesNumberCoeff[1] * state.getNumPieces(player)
-                if (state.hasClosedMorris(player))
+                if (state.closedMorris && state.opposite()==player)
                     amountPlayer += closedMorrisCoeff[1]
                 if (state.hasOpenedMorris(player))
                     amountPlayer += openedMorrisCoeff
@@ -68,7 +68,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 amountOpposite = -(morrisesNumberCoeff[1] * state.getNumMorrises(opposite) +
                         blockedOppPiecesCoeff[1] * state.getBlockedPieces(opposite) +
                         piecesNumberCoeff[1] * state.getNumPieces(opposite))
-                if (state.hasClosedMorris(opposite))
+                if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[1]
                 if (state.hasOpenedMorris(opposite))
                     amountOpposite -= openedMorrisCoeff
@@ -80,14 +80,14 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             '3'->{
                 amountPlayer = num2PiecesCoeff[1] * state.getNum2Conf(player!!) +
                         num3PiecesCoeff[1] * state.getNum3Conf(player)
-                if (state.hasClosedMorris(player))
+                if (state.closedMorris && state.opposite()==player)
                     amountPlayer += closedMorrisCoeff[2]
                 if (MulinoGame.isWinningConfiguration(state, player))
                     amountPlayer += winningConfCoeff[1]
 
                 amountOpposite = -(num2PiecesCoeff[1] * state.getNum2Conf(opposite) +
                         num3PiecesCoeff[1] * state.getNum3Conf(opposite))
-                if (state.hasClosedMorris(opposite))
+                if (state.closedMorris && state.opposite()==opposite)
                     amountOpposite -= closedMorrisCoeff[2]
                 if (MulinoGame.isWinningConfiguration(state, opposite))
                     amountOpposite -= winningConfCoeff[1]
@@ -98,12 +98,10 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return amount
     }
 
-    /*
-    override fun orderActions(state: State?, actions: MutableList<Action>?, player: Checker?, depth: Int): MutableList<Action> {
-        actions!!.sortBy { action -> eval(game.getResult(state, action), player) }
-        return actions
+    override fun incrementDepthLimit() {
+        super.incrementDepthLimit()
+        println("Profondità attuale: $currDepthLimit")
     }
-    */
 
 }
 

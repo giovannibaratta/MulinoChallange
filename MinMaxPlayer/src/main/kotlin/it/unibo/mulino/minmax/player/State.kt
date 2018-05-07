@@ -9,6 +9,7 @@ class State(checker: Checker) {
     var checker = checker
     var checkers = intArrayOf(9,9)
     var currentPhase : Char = '1'
+    var closedMorris = false
 
     companion object {
         private val checkersToShort = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
@@ -227,6 +228,7 @@ class State(checker: Checker) {
         return count
     }
 
+    /*
     fun hasClosedMorris(checker: Checker): Boolean {
         for (position in getPositions(checker)) {
             val (vertex, level) = internalPositions.getValue(position)
@@ -247,6 +249,7 @@ class State(checker: Checker) {
         }
         return false
     }
+    */
 
     fun hasOpenedMorris(checker: Checker): Boolean {
         for (position in getPositions(checker)) {
