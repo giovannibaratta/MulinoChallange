@@ -3,13 +3,18 @@ package it.unibo.mulino.minmax.player
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 import java.util.*
 
-data class State(var checker: Checker) {
+data class State(var checker: Checker,
+                 var board : Array<CharArray> = Array(8, { CharArray(3, { 'e' }) }),
+                 var checkers : IntArray = intArrayOf(9,9),
+                 var currentPhase : Char = '1',
+                 var closedMorris : Boolean = false) {
 
-    private val board = Array(8, { CharArray(3, { 'e' }) })
-    var checkers = intArrayOf(9,9)
-    var currentPhase : Char = '1'
-    var closedMorris = false
+    //var board = Array(8, { CharArray(3, { 'e' }) })
+    //var checkers = intArrayOf(9,9)
+    //var currentPhase : Char = '1'
+    //var closedMorris = false
 
+    /*
     companion object {
         private val checkersToShort = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
                 Pair<Checker, Char>(Checker.WHITE, 'w'),
@@ -43,8 +48,8 @@ data class State(var checker: Checker) {
 
     fun getPiece(position: String): Checker {
         val (vertex, level) = internalPositions.getValue(position)
-        val shortChecker = board[vertex][level]
-        when (shortChecker) {
+        val charChecker = board[vertex][level]
+        when (charChecker) {
             'w' -> return Checker.WHITE
             'b' -> return Checker.BLACK
         }
@@ -413,17 +418,8 @@ data class State(var checker: Checker) {
         }
         return arrayOf()
     }
+    */
 
-    override fun toString(): String {
-        var out =""
-        for(position in getPositions(Checker.WHITE)){
-            out+="$position  : W ; "
-        }
-        for(position in getPositions(Checker.BLACK)){
-            out+="$position  : B ; "
-        }
-        return out
-    }
 }
 
 fun main(args: Array<String>) {

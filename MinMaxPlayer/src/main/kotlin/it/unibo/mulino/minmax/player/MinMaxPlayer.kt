@@ -40,16 +40,16 @@ class MinMaxPlayer(val time: Int = 58) : AIPlayer {
 
     private fun play(state: State, player : State.Checker): Action {
 
-        var clientState = State(player)
+        var clientState = State(player )
         clientState.checkers[0]=state.whiteCheckers
         clientState.checkers[1]=state.blackCheckers
         for(position in state.board.keys){
             when(state.board[position]){
                 State.Checker.WHITE ->{
-                    clientState.addPiece(position, State.Checker.WHITE)
+                    MulinoGame.addPiece(clientState, position, State.Checker.WHITE)
                 }
                 State.Checker.BLACK -> {
-                    clientState.addPiece(position, State.Checker.BLACK)
+                    MulinoGame.addPiece(clientState, position, State.Checker.BLACK)
                 }
             }
         }
