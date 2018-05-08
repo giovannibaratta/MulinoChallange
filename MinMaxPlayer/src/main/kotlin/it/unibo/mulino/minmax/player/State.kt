@@ -6,6 +6,7 @@ import java.util.*
 data class State(var checker: Checker,
                  var board : Array<IntArray> = Array(8, { IntArray(3, { 0 }) }),
                  var checkers : IntArray = intArrayOf(9,9),
+                 var checkersOnBoard : IntArray = intArrayOf(0,0),
                  var currentPhase : Int = 1,
                  var closedMorris : Boolean = false) {
 

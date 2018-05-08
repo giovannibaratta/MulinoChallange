@@ -33,26 +33,36 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 return amount
             }
         }
+        val game = game as MulinoGame
         var opposite = Checker.EMPTY
         if (player == Checker.WHITE) {
             opposite = Checker.BLACK
         } else
             opposite = Checker.WHITE
+        val intPlayer = when(player){
+            Checker.WHITE->0
+            Checker.BLACK->1
+            else -> -1
+        }
+        val intOpposite = when(opposite){
+            Checker.WHITE->0
+            Checker.BLACK->1
+            else -> -1
+        }
         var amountPlayer = 0.0
         var amountOpposite = 0.0
-        val game = game as MulinoGame
         when(state!!.currentPhase){
             1->{
                 amountPlayer = morrisesNumberCoeff[0] * game.getNumMorrises(state, player!!) +
                         blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, player) +
-                        piecesNumberCoeff[0] * game.getNumPieces(state, player) +
+                        piecesNumberCoeff[0] * state.checkersOnBoard[intPlayer] +
                         num2PiecesCoeff[0] * game.getNum2Conf(state, player) +
                         num3PiecesCoeff[0] * game.getNum3Conf(state, player)
                 if (state.closedMorris && game.opposite(state)==player)
                     amountPlayer += closedMorrisCoeff[0]
                 amountOpposite = -(morrisesNumberCoeff[0] * game.getNumMorrises(state, opposite)) -
                         (blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, opposite)) -
-                        (piecesNumberCoeff[0] * game.getNumPieces(state, opposite)) -
+                        (piecesNumberCoeff[0] * state.checkersOnBoard[intOpposite]) -
                         (num2PiecesCoeff[0] * game.getNum2Conf(state, opposite)) -
                         (num3PiecesCoeff[0] * game.getNum3Conf(state, opposite))
                 if (state.closedMorris && game.opposite(state)==opposite)
@@ -61,7 +71,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             2->{
                 amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player!!) +
                         blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player) +
-                        piecesNumberCoeff[1] * game.getNumPieces(state, player)
+                        piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
                 if (state.closedMorris && game.opposite(state)==player)
                     amountPlayer += closedMorrisCoeff[1]
                 if (game.hasOpenedMorris(state, player))
@@ -73,7 +83,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
                 amountOpposite = -(morrisesNumberCoeff[1] * game.getNumMorrises(state, opposite)) -
                         (blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, opposite)) -
-                        (piecesNumberCoeff[1] * game.getNumPieces(state, opposite))
+                        (piecesNumberCoeff[1] * state.checkersOnBoard[intOpposite])
                 if (state.closedMorris && game.opposite(state)==opposite)
                     amountOpposite -= closedMorrisCoeff[1]
                 if (game.hasOpenedMorris(state, opposite))
@@ -100,14 +110,16 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
         }
         amount += amountPlayer + amountOpposite
-        //println("Evaluation state $state -> $amount")
+        println("Evaluation state ${game.printState(state)} -> $amount")
         return amount
     }
 
+    /*
     override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
         actions!!.sortBy{ eval(game.getResult(state, it), player) }
         return actions
     }
+    */
 
     override fun incrementDepthLimit() {
         super.incrementDepthLimit()

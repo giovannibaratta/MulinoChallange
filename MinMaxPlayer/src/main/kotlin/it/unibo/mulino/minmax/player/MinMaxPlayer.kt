@@ -40,7 +40,7 @@ class MinMaxPlayer(val time: Int = 58) : AIPlayer {
 
     private fun play(state: State, player : State.Checker): Action {
 
-        var clientState = State(player )
+        var clientState = State(checker = player, checkers = intArrayOf(state.whiteCheckers, state.blackCheckers), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
         clientState.checkers[0]=state.whiteCheckers
         clientState.checkers[1]=state.blackCheckers
         for(position in state.board.keys){

@@ -63,6 +63,32 @@ object MulinoGame : Game<State, String, Checker> {
             Pair(Pair(4, 0), "g7")
     )
 
+    private val adiacentPositions = hashMapOf(Pair("a1", arrayOf("d1", "a4")),
+            Pair("a4", arrayOf("a1", "a7", "b4")),
+            Pair("a7", arrayOf("a4", "d7")),
+            Pair("b2", arrayOf("d2", "b4")),
+            Pair("b4", arrayOf("b2", "b6", "c4", "a4")),
+            Pair("b6", arrayOf("b4", "d6")),
+            Pair("c3", arrayOf("d3", "c4")),
+            Pair("c4", arrayOf("c3", "c5", "b4")),
+            Pair("c5", arrayOf("c4", "d5")),
+            Pair("d5", arrayOf("c5", "e5", "d6")),
+            Pair("d6", arrayOf("b6", "f6", "d5", "d7")),
+            Pair("d7", arrayOf("a7", "g7", "d6")),
+            Pair("d1", arrayOf("a1", "g1", "d2")),
+            Pair("d2", arrayOf("b2", "f2", "d1", "d3")),
+            Pair("d3", arrayOf("c3", "e3", "d2")),
+            Pair("e3", arrayOf("d3", "e4")),
+            Pair("e4", arrayOf("e3", "e5", "f4")),
+            Pair("e5", arrayOf("e4", "d5")),
+            Pair("f2", arrayOf("d2", "f4")),
+            Pair("f4", arrayOf("f2", "f6", "e4", "g4")),
+            Pair("f6", arrayOf("d6", "f4")),
+            Pair("g1", arrayOf("d1", "g4")),
+            Pair("g4", arrayOf("g1", "g7", "f4")),
+            Pair("g7", arrayOf("d7", "g4"))
+    )
+
     override fun getInitialState(): State {
         return State(Checker.WHITE)
     }
@@ -86,8 +112,9 @@ object MulinoGame : Game<State, String, Checker> {
         val actions = mutableListOf<String>()
         //println("Current state : ${printState(state!!)}")
         val player = state!!.checker
-        var intChecker = checkersToInt[player]!! -1
         val opposite = opposite(state)
+        val intChecker = checkersToInt[player]!! -1
+        val intOpposite = checkersToInt[opposite]!! - 1
         when(state.currentPhase){
             1 ->{
                 var numMorrises = 0
@@ -98,7 +125,7 @@ object MulinoGame : Game<State, String, Checker> {
                                 actions.add("1$possiblePosition$adversarialPosition")
                             }else numMorrises++
                         }
-                        if(numMorrises == getNumPieces(state, opposite)){
+                        if(numMorrises == state.checkersOnBoard[intOpposite]){
                             for (adversarialPosition in getPositions(state, opposite)) {
                                 actions.add("1$possiblePosition$adversarialPosition")
                             }
@@ -111,7 +138,7 @@ object MulinoGame : Game<State, String, Checker> {
             2 ->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
-                    for (adiacentPosition in getAdiacentPositions(actualPosition)) {
+                    for (adiacentPosition in adiacentPositions[actualPosition]!!) {
                         if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
                             if (checkMorris(state, actualPosition, adiacentPosition, player)) {
                                 for (adversarialPosition in getPositions(state, opposite)) {
@@ -119,7 +146,7 @@ object MulinoGame : Game<State, String, Checker> {
                                         actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
                                     }else numMorrises++
                                 }
-                                if(numMorrises == getNumPieces(state, opposite)){
+                                if(numMorrises == state.checkersOnBoard[intOpposite]){
                                     for (adversarialPosition in getPositions(state, opposite)) {
                                         actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
                                     }
@@ -134,7 +161,7 @@ object MulinoGame : Game<State, String, Checker> {
             3->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
-                    when(getNumPieces(state, player)){
+                    when(state.checkersOnBoard[intChecker]){
                         3 ->{
                             for (possiblePosition in getEmptyPositions(state)) {
                                 if (checkMorris(state, actualPosition, possiblePosition, player)) {
@@ -143,7 +170,7 @@ object MulinoGame : Game<State, String, Checker> {
                                             actions.add("3$actualPosition$possiblePosition$adversarialPosition")
                                         }else numMorrises++
                                     }
-                                    if(numMorrises == getNumPieces(state, opposite)){
+                                    if(numMorrises == state.checkersOnBoard[intOpposite]){
                                         for (adversarialPosition in getPositions(state, opposite)) {
                                             actions.add("3$actualPosition$possiblePosition$adversarialPosition")
                                         }
@@ -155,7 +182,7 @@ object MulinoGame : Game<State, String, Checker> {
                         }
                         else ->{
                             for (actualPosition in getPositions(state, player)) {
-                                for (adiacentPosition in getAdiacentPositions(actualPosition)) {
+                                for (adiacentPosition in adiacentPositions[actualPosition]!!) {
                                     if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
                                         if (checkMorris(state, actualPosition, adiacentPosition, player)) {
                                             for (adversarialPosition in getPositions(state, opposite)) {
@@ -163,7 +190,7 @@ object MulinoGame : Game<State, String, Checker> {
                                                     actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
                                                 }else numMorrises++
                                             }
-                                            if(numMorrises == getNumPieces(state, opposite)){
+                                            if(numMorrises == state.checkersOnBoard[intOpposite]){
                                                 for (adversarialPosition in getPositions(state, opposite)) {
                                                     actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
                                                 }
@@ -192,7 +219,7 @@ object MulinoGame : Game<State, String, Checker> {
         val player = state!!.checker
         val opposite = opposite(state)
         //System.arraycopy(state.board, 0, newBoard, 0, state.board.size )
-        var newState = State(checker = opposite, checkers = intArrayOf(state.checkers[0],state.checkers[1]), currentPhase = state.currentPhase)
+        var newState = State(checker = opposite, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
         var current = checkersToInt[player]!! - 1
         var next = checkersToInt[opposite]!! - 1
         for(vertex in 0..7)
@@ -202,9 +229,11 @@ object MulinoGame : Game<State, String, Checker> {
             '1' ->{
                 addPiece(newState, action.substring(1, 3), player)
                 newState.checkers[current]--
+                newState.checkersOnBoard[current]++
 
                 if (action.length>3) {
                     removePiece(newState, action.substring(3, 5))
+                    newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
                 if(state.checkers[next]==0)
@@ -219,9 +248,10 @@ object MulinoGame : Game<State, String, Checker> {
 
                 if (action.length>5) {
                     removePiece(newState, action.substring(5, 7))
+                    newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
-                if(getNumPieces(newState, opposite)==3)
+                if(state.checkersOnBoard[next]==3)
                     newState.currentPhase=3
                 else
                     newState.currentPhase=2
@@ -231,6 +261,7 @@ object MulinoGame : Game<State, String, Checker> {
                 addPiece(newState, action.substring(3, 5), player)
                 if (action.length>5) {
                     removePiece(newState, action.substring(5, 7))
+                    newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
             }
@@ -253,15 +284,17 @@ object MulinoGame : Game<State, String, Checker> {
         if (checker==Checker.WHITE) {
             opposite = Checker.BLACK
         }
-        if(checker!=state.checker || getNumPieces(state, opposite)>3) return false
-        when(getNumPieces(state, checker)){
+        val intChecker = checkersToInt[checker]!! -1
+        val intOpposite = checkersToInt[opposite]!! - 1
+        if(checker!=state.checker || state.checkersOnBoard[intOpposite]>3) return false
+        when(state.checkersOnBoard[intChecker]){
             3 ->{
                 if(hasOpenedMorris(state, checker))
                     return true
             }
             else ->{
                 for(position in getPositions(state, checker))
-                    for(adiacentPosition in getAdiacentPositions(position))
+                    for(adiacentPosition in adiacentPositions[position]!!)
                         if(getPiece(state, adiacentPosition)==Checker.EMPTY && checkMorris(state, position, adiacentPosition, checker))
                             return true
             }
@@ -284,17 +317,6 @@ object MulinoGame : Game<State, String, Checker> {
         state.board[vertex][level] = 0
     }
 
-    fun getNumPieces(state : State,player: Checker): Int {
-        var count = 0
-        val intChecker = checkersToInt[player]
-        for (diagonal in state.board) {
-            for (position in diagonal) {
-                if (position == intChecker) count++
-            }
-        }
-        return count
-    }
-
     private fun getPositions(state : State, checker: Checker): List<String> {
         val positions = LinkedList<String>()
         for (position in toInternalPositions.keys) {
@@ -311,19 +333,6 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             if (state.board[vertex][level] == 0)
                 positions.add(position)
-        }
-        return positions
-    }
-
-    private fun getAdiacentPositions(position: String): List<String> {
-        val positions = LinkedList<String>()
-        val (vertex, level) = toInternalPositions[position]!!
-        positions.add(toExternalPositions[Pair(nextVertex(vertex), level)]!!)
-        positions.add(toExternalPositions[Pair(precVertex(vertex), level)]!!)
-        when (vertex) {
-            1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels(level)) {
-                positions.add(toExternalPositions[Pair(vertex, adiacentLevel)]!!)
-            }
         }
         return positions
     }
@@ -348,7 +357,7 @@ object MulinoGame : Game<State, String, Checker> {
         val (oldVertex, oldLevel) = toInternalPositions[oldPosition]!!
         val (newVertex, newLevel) = toInternalPositions[newPosition]!!
         var check = false
-        if (getAdiacentPositions(newPosition).contains(oldPosition)) {
+        if (adiacentPositions[newPosition]!!.contains(oldPosition)) {
             when (newVertex) {
                 1, 3, 5, 7 -> when (oldVertex) {
                     newVertex -> check = ((state.board[precVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
@@ -464,7 +473,7 @@ object MulinoGame : Game<State, String, Checker> {
 
     fun hasOpenedMorris(state: State, checker: Checker): Boolean {
         for (position in getPositions(state, checker)) {
-            for (adiacentPosition in getAdiacentPositions(position)) {
+            for (adiacentPosition in adiacentPositions[position]!!) {
                 val (vertex, level) = toInternalPositions[adiacentPosition]!!
                 if (state.board[vertex][level] == 0 && checkMorris(state, position, adiacentPosition, checker))
                     return true
@@ -572,13 +581,13 @@ object MulinoGame : Game<State, String, Checker> {
         var intOpposite = checkersToInt[opposite]!! - 1
         when(state.currentPhase){
             1->{
-                return ((state.checkers[intOpposite]==0) && (getNumPieces(state, opposite) < 3))
+                return ((state.checkers[intOpposite]==0) && (state.checkersOnBoard[intOpposite] < 3))
             }
             2->{
-                return (getNumPieces(state, opposite) < 3) || (checkNoMoves(state, opposite))
+                return (state.checkersOnBoard[intOpposite] < 3) || (checkNoMoves(state, opposite))
             }
             3->{
-                return (getNumPieces(state, opposite) < 3)
+                return (state.checkersOnBoard[intOpposite] < 3)
             }
         }
         return false
