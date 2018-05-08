@@ -20,6 +20,11 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val doubleMorrisCoeff = coefficients[11]
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
+    override fun makeDecision(state: State?): String {
+        currDepthLimit=6
+        return super.makeDecision(state)
+    }
+
     override fun eval(state: State?, player: Checker?): Double {
         var amount = super.eval(state, player)
         when(amount){
@@ -37,7 +42,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         var amountOpposite = 0.0
         val game = game as MulinoGame
         when(state!!.currentPhase){
-            '1'->{
+            1->{
                 amountPlayer = morrisesNumberCoeff[0] * game.getNumMorrises(state, player!!) +
                         blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, player) +
                         piecesNumberCoeff[0] * game.getNumPieces(state, player) +
@@ -53,7 +58,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 if (state.closedMorris && game.opposite(state)==opposite)
                     amountOpposite -= closedMorrisCoeff[0]
             }
-            '2'->{
+            2->{
                 amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player!!) +
                         blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player) +
                         piecesNumberCoeff[1] * game.getNumPieces(state, player)
@@ -78,7 +83,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 if (game.isWinningConfiguration(state, opposite))
                     amountOpposite -= winningConfCoeff[0]
             }
-            '3'->{
+            3->{
                 amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player!!) +
                         num3PiecesCoeff[1] * game.getNum3Conf(state, player)
                 if (state.closedMorris && game.opposite(state)==player)
@@ -99,10 +104,10 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return amount
     }
 
-    /*override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
+    override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
         actions!!.sortBy{ eval(game.getResult(state, it), player) }
         return actions
-    }*/
+    }
 
     override fun incrementDepthLimit() {
         super.incrementDepthLimit()

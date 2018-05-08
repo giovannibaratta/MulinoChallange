@@ -4,9 +4,9 @@ import it.unibo.ai.didattica.mulino.domain.State.Checker
 import java.util.*
 
 data class State(var checker: Checker,
-                 var board : Array<CharArray> = Array(8, { CharArray(3, { 'e' }) }),
+                 var board : Array<IntArray> = Array(8, { IntArray(3, { 0 }) }),
                  var checkers : IntArray = intArrayOf(9,9),
-                 var currentPhase : Char = '1',
+                 var currentPhase : Int = 1,
                  var closedMorris : Boolean = false) {
 
     //var board = Array(8, { CharArray(3, { 'e' }) })
