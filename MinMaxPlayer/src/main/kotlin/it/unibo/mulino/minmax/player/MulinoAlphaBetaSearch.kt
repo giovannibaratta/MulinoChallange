@@ -1,14 +1,12 @@
 package it.unibo.mulino.minmax.player
 
-
-import aima.core.search.adversarial.IterativeDeepeningAlphaBetaSearch
 import it.unibo.ai.didattica.mulino.domain.State.Checker
-import it.unibo.utils.FibonacciHeap
+import it.unibo.utils.*
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                                   utilMin: Double,
                                   utilMax: Double,
-                                  time: Int) : IterativeDeepeningAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
+                                  time: Int) : IterariveDeepingAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
 
     private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
     private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])

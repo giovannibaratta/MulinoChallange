@@ -1,7 +1,7 @@
 package it.unibo.mulino.minmax.player
 
-import aima.core.search.adversarial.Game
 import it.unibo.ai.didattica.mulino.domain.State.Checker
+import it.unibo.utils.Game
 import java.util.*
 
 object MulinoGame : Game<State, String, Checker> {
