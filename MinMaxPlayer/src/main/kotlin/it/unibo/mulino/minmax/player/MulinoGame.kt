@@ -6,10 +6,10 @@ import java.util.*
 
 object MulinoGame : Game<State, String, Checker> {
 
-    private val checkersToInt = hashMapOf(Pair<Checker, Int>(Checker.EMPTY, 0),
+    val checkersToInt = hashMapOf(Pair<Checker, Int>(Checker.EMPTY, 0),
             Pair<Checker, Int>(Checker.WHITE, 1),
             Pair<Checker, Int>(Checker.BLACK, 2))
-    private val intToCheckers = hashMapOf(Pair<Int, Checker>(0, Checker.EMPTY),
+    val intToCheckers = hashMapOf(Pair<Int, Checker>(0, Checker.EMPTY),
             Pair<Int, Checker>(1, Checker.WHITE),
             Pair<Int, Checker>(2, Checker.BLACK))
     private val toInternalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
@@ -89,6 +89,35 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("g7", arrayOf("d7", "g4"))
     )
 
+    private val nextVertex = hashMapOf(Pair(0,1),
+            Pair(1,2),
+            Pair(2,3),
+            Pair(3,4),
+            Pair(4,5),
+            Pair(5,6),
+            Pair(6,7),
+            Pair(7,0))
+
+    private val precVertex = hashMapOf(Pair(0,7),
+            Pair(1,0),
+            Pair(2,1),
+            Pair(3,2),
+            Pair(4,3),
+            Pair(5,4),
+            Pair(6,5),
+            Pair(7,6))
+
+    private val nextLevel = hashMapOf(Pair(0,1),
+            Pair(1,2),
+            Pair(2,0))
+
+    private val adiacentLevels = hashMapOf(Pair(0,arrayOf(1)),
+            Pair(1,arrayOf(0,2)),
+            Pair(2,arrayOf(1)))
+
+    val opposite = hashMapOf(Pair(Checker.BLACK, Checker.WHITE),
+            Pair(Checker.WHITE, Checker.BLACK))
+
     override fun getInitialState(): State {
         return State(Checker.WHITE)
     }
@@ -112,7 +141,7 @@ object MulinoGame : Game<State, String, Checker> {
         val actions = mutableListOf<String>()
         //println("Current state : ${printState(state!!)}")
         val player = state!!.checker
-        val opposite = opposite(state)
+        val opposite = opposite[state.checker]!!
         val intChecker = checkersToInt[player]!! -1
         val intOpposite = checkersToInt[opposite]!! - 1
         when(state.currentPhase){
@@ -217,7 +246,7 @@ object MulinoGame : Game<State, String, Checker> {
 
     override fun getResult(state: State?, action: String): State {
         val player = state!!.checker
-        val opposite = opposite(state)
+        val opposite = opposite[state.checker]!!
         //System.arraycopy(state.board, 0, newBoard, 0, state.board.size )
         var newState = State(checker = opposite, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
         var current = checkersToInt[player]!! - 1
@@ -280,10 +309,7 @@ object MulinoGame : Game<State, String, Checker> {
     //MIGLIORABILE
     fun isWinningConfiguration(state: State, checker: Checker): Boolean {
         var check = false
-        var opposite = Checker.WHITE
-        if (checker==Checker.WHITE) {
-            opposite = Checker.BLACK
-        }
+        var opposite = opposite[checker]
         val intChecker = checkersToInt[checker]!! -1
         val intOpposite = checkersToInt[opposite]!! - 1
         if(checker!=state.checker || state.checkersOnBoard[intOpposite]>3) return false
@@ -341,14 +367,14 @@ object MulinoGame : Game<State, String, Checker> {
         val (vertex, level) = toInternalPositions[position]!!
         var check = false
         check = when (vertex) {
-            1, 3, 5, 7 -> ((state.board[precVertex(vertex)][level] == checkersToInt[checker]) &&
-                    (state.board[nextVertex(vertex)][level] == checkersToInt[checker])) ||
-                    ((state.board[vertex][nextLevel(level)] == checkersToInt[checker]) &&
-                            (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker]))
-            else -> ((state.board[nextVertex(vertex)][level] == checkersToInt[checker]) &&
-                    (state.board[nextVertex(nextVertex(vertex))][level] == checkersToInt[checker])) ||
-                    ((state.board[precVertex(vertex)][level] == checkersToInt[checker]) &&
-                            (state.board[precVertex(precVertex(vertex))][level] == checkersToInt[checker]))
+            1, 3, 5, 7 -> ((state.board[precVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                    (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker])) ||
+                    ((state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]) &&
+                            ((state.board[vertex][nextLevel[nextLevel[level]!!]!!]) == checkersToInt[checker]))
+            else -> ((state.board[nextVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                    (state.board[nextVertex[nextVertex[vertex]!!]!!][level] == checkersToInt[checker])) ||
+                    ((state.board[precVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                            (state.board[precVertex[precVertex[vertex]!!]!!][level] == checkersToInt[checker]))
         }
         return check
     }
@@ -360,58 +386,51 @@ object MulinoGame : Game<State, String, Checker> {
         if (adiacentPositions[newPosition]!!.contains(oldPosition)) {
             when (newVertex) {
                 1, 3, 5, 7 -> when (oldVertex) {
-                    newVertex -> check = ((state.board[precVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                            (state.board[nextVertex(newVertex)][newLevel] == checkersToInt[checker]))
-                    else -> check = ((state.board[newVertex][nextLevel(newLevel)] == checkersToInt[checker]) &&
-                            (state.board[newVertex][nextLevel(nextLevel(newLevel))] == checkersToInt[checker]))
+                    newVertex -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                            (state.board[nextVertex[newVertex]!!][newLevel] == checkersToInt[checker]))
+                    else -> check = ((state.board[newVertex][nextLevel[newLevel]!!] == checkersToInt[checker]) &&
+                            (state.board[newVertex][nextLevel[nextLevel[newLevel]!!]!!] == checkersToInt[checker]))
                 }
                 0, 2, 4, 6 -> when (oldVertex) {
-                    nextVertex(newVertex) -> check = ((state.board[precVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                            (state.board[precVertex(precVertex(newVertex))][newLevel] == checkersToInt[checker]))
-                    else -> check = ((state.board[nextVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                            (state.board[nextVertex(nextVertex(nextVertex(newVertex)))][newLevel] == checkersToInt[checker]))
+                    nextVertex[newVertex] -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                            (state.board[precVertex[precVertex[newVertex]!!]!!][newLevel] == checkersToInt[checker]))
+                    else -> check = ((state.board[nextVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                            (state.board[nextVertex[nextVertex[newVertex]!!]!!][newLevel] == checkersToInt[checker]))
                 }
             }
         } else {
             when (newVertex) {
-                1, 3, 5, 7 -> check = ((state.board[precVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                        (state.board[nextVertex(newVertex)][newLevel] == checkersToInt[checker])) ||
-                        ((state.board[newVertex][nextLevel(newLevel)] == checkersToInt[checker]) &&
-                                (state.board[newVertex][nextLevel(nextLevel(newLevel))] == checkersToInt[checker]) &&
-                                (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel(newLevel)) &&
-                                        (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel(nextLevel(newLevel))))))
-                0, 2, 4, 6 -> check = ((toInternalPositions[oldPosition] != Pair(nextVertex(nextVertex(newVertex)), newLevel)) &&
-                        (state.board[nextVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                        (state.board[nextVertex(nextVertex(nextVertex(newVertex)))][newLevel] == checkersToInt[checker])) ||
-                        ((toInternalPositions[oldPosition] != Pair(precVertex(precVertex(newVertex)), newLevel)) &&
-                                (state.board[precVertex(newVertex)][newLevel] == checkersToInt[checker]) &&
-                                (state.board[precVertex(precVertex(newVertex))][newLevel] == checkersToInt[checker]))
+                1, 3, 5, 7 -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                        (state.board[nextVertex[newVertex]!!][newLevel] == checkersToInt[checker])) ||
+                        ((state.board[newVertex][nextLevel[newLevel]!!] == checkersToInt[checker]) &&
+                                (state.board[newVertex][nextLevel[nextLevel[newLevel]!!]!!] == checkersToInt[checker]) &&
+                                (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel[newLevel]!!) &&
+                                        (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel[nextLevel[newLevel]!!]!!))))
+                0, 2, 4, 6 -> check = ((toInternalPositions[oldPosition] != Pair(nextVertex[nextVertex[newVertex]!!]!!, newLevel)) &&
+                        (state.board[nextVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                        (state.board[nextVertex[nextVertex[newVertex]!!]!!][newLevel] == checkersToInt[checker])) ||
+                        ((toInternalPositions[oldPosition] != Pair(precVertex[precVertex[newVertex]!!]!!, newLevel)) &&
+                                (state.board[precVertex[newVertex]!!][newLevel] == checkersToInt[checker]) &&
+                                (state.board[precVertex[precVertex[newVertex]!!]!!][newLevel] == checkersToInt[checker]))
             }
         }
         return check
     }
 
     private fun checkNoMoves(state: State, checker: Checker): Boolean {
-        var check = true
-        for (position in getPositions(state, checker)) {
-            check = check && checkNoMoves(state, position, checker)
-        }
-        //if(check)
-        //println("No moves possible for $checker!")
-        return check
+        val intChecker = checkersToInt[checker]!!-1
+        return getBlockedPieces(state, checker)==state.checkersOnBoard[intChecker]
     }
 
     private fun checkNoMoves(state: State, position: String, checker: Checker): Boolean {
         var check = false
-        var opposite = when(checker){
-            Checker.WHITE -> Checker.BLACK
-            else -> Checker.BLACK
-        }
+        var opposite = opposite[checker]
         val (vertex, level) = toInternalPositions[position]!!
-        check = (state.board[nextVertex(vertex)][level] != 0 &&
-                state.board[precVertex(vertex)][level] != 0)
-        when (vertex) {
-            1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels(level)) {
+        check = (state.board[nextVertex[vertex]!!][level] != 0 &&
+                state.board[precVertex[vertex]!!][level] != 0)
+        if(check)
+            when (vertex) {
+            1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels[level]!!) {
                 check = check && (state.board[vertex][adiacentLevel] !=0)
             }
         }
@@ -432,15 +451,13 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[precVertex(vertex)][level] == checkersToInt[checker]) {
+                    if (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[precVertex[vertex]!!][level] == checkersToInt[checker]) {
                         count++
                     }
-                    when (level) {
-                        1 -> if ((state.board[vertex][nextLevel(level)] == checkersToInt[checker]) &&
-                                (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker])) {
-                            count++
-                        }
+                    if(level==1 && (state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]) &&
+                            (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker])){
+                        count++
                     }
                 }
             }
@@ -488,18 +505,18 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (state.board[nextVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[nextVertex(nextVertex(vertex))][level] == checkersToInt[checker] &&
-                            state.board[precVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[precVertex(precVertex(vertex))][level] == checkersToInt[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[nextVertex[nextVertex[vertex]!!]!!][level] == checkersToInt[checker] &&
+                            state.board[precVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[precVertex[precVertex[vertex]!!]!!][level] == checkersToInt[checker])
                         return true
 
                 }
                 else -> {
-                    if (state.board[nextVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[precVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[vertex][nextLevel(level)] == checkersToInt[checker] &&
-                            state.board[vertex][nextLevel(level)] == checkersToInt[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[precVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[vertex][nextLevel[level]!!] == checkersToInt[checker] &&
+                            state.board[vertex][nextLevel[level]!!] == checkersToInt[checker])
                         return true
                 }
             }
@@ -513,11 +530,11 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex(vertex)][level] == checkersToInt[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker])
                         count++
-                    if (state.board[precVertex(vertex)][level] == checkersToInt[checker])
+                    if (state.board[precVertex[vertex]!!][level] == checkersToInt[checker])
                         count++
-                    for(adiacentLevel in adiacentLevels(level)){
+                    for(adiacentLevel in adiacentLevels[level]!!){
                         if (state.board[vertex][adiacentLevel] == checkersToInt[checker])
                             count++
                     }
@@ -533,37 +550,37 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (state.board[nextVertex(vertex)][level] == checkersToInt[checker] &&
-                            state.board[precVertex(vertex)][level] == checkersToInt[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == checkersToInt[checker] &&
+                            state.board[precVertex[vertex]!!][level] == checkersToInt[checker])
                         count++
 
                 }
                 else -> {
                     when (level) {
                         1 -> {
-                            if ((state.board[nextVertex(vertex)][nextLevel(level)] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(level)] == checkersToInt[checker]))
+                            if ((state.board[nextVertex[vertex]!!][nextLevel[level]!!] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[nextVertex(vertex)][nextLevel(nextLevel(level))] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker]))
+                            if ((state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[precVertex(vertex)][nextLevel(level)] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(level)] == checkersToInt[checker]))
+                            if ((state.board[precVertex[vertex]!!][nextLevel[level]!!] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[precVertex(vertex)][nextLevel(nextLevel(level))] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker]))
+                            if ((state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[nextVertex(vertex)][level] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(level)] == checkersToInt[checker]))
+                            if ((state.board[nextVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[nextVertex(vertex)][level] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker]))
+                            if ((state.board[nextVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[precVertex(vertex)][level] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(level)] == checkersToInt[checker]))
+                            if ((state.board[precVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToInt[checker]))
                                 count++
-                            if ((state.board[precVertex(vertex)][level] == checkersToInt[checker]) &&
-                                    (state.board[vertex][nextLevel(nextLevel(level))] == checkersToInt[checker]))
+                            if ((state.board[precVertex[vertex]!!][level] == checkersToInt[checker]) &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToInt[checker]))
                                 count++
                         }
                     }
@@ -574,10 +591,7 @@ object MulinoGame : Game<State, String, Checker> {
     }
 
     fun isWinner(state: State, checker: Checker): Boolean {
-        var opposite = Checker.WHITE
-        if (checker==Checker.WHITE) {
-            opposite = Checker.BLACK
-        }
+        var opposite = opposite[checker]!!
         var intOpposite = checkersToInt[opposite]!! - 1
         when(state.currentPhase){
             1->{
@@ -591,40 +605,6 @@ object MulinoGame : Game<State, String, Checker> {
             }
         }
         return false
-    }
-
-    fun opposite(state : State): Checker {
-        return when(state.checker) {
-            Checker.WHITE -> Checker.BLACK
-            Checker.BLACK -> Checker.WHITE
-            Checker.EMPTY -> Checker.EMPTY
-        }
-    }
-
-    private fun nextVertex(vertex: Int): Int {
-        if (vertex == 7)
-            return 0
-        else return vertex + 1
-    }
-
-    private fun precVertex(vertex: Int): Int {
-        if (vertex == 0)
-            return 7
-        else return vertex - 1
-    }
-
-    private fun nextLevel(level: Int): Int {
-        if (level == 2)
-            return 0
-        else return level + 1
-    }
-
-    private fun adiacentLevels(level: Int): Array<Int> {
-        return when (level) {
-            0,2 -> arrayOf(1)
-            1 -> arrayOf(0, 2)
-            else -> arrayOf()
-        }
     }
 
     fun printState(state : State): String {
