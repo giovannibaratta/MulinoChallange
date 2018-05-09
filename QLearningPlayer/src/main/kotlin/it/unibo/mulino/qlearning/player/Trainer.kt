@@ -9,7 +9,7 @@ import it.unibo.mulino.qlearning.player.model.Action
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
-import it.unibo.utils.filterCellIndexed
+import it.unibo.filterCellIndexed
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream

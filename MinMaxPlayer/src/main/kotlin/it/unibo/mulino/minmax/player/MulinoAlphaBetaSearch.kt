@@ -2,8 +2,8 @@ package it.unibo.mulino.minmax.player
 
 
 import aima.core.search.adversarial.IterativeDeepeningAlphaBetaSearch
-import it.unibo.ai.didattica.mulino.actions.Action
 import it.unibo.ai.didattica.mulino.domain.State.Checker
+import it.unibo.utils.FibonacciHeap
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                                   utilMin: Double,
@@ -35,8 +35,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         }
         val game = game as MulinoGame
         var opposite = game.opposite[player]!!
-        val intPlayer = game.checkersToInt[player]!! - 1
-        val intOpposite =  game.checkersToInt[opposite]!! - 1
+        val intPlayer = game.checkersToInt[player]!!
+        val intOpposite =  game.checkersToInt[opposite]!!
         when(state!!.currentPhase){
             1->{
                 amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
@@ -90,12 +90,12 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return amount
     }
 
-    /*
     override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
-        actions!!.sortBy{ eval(game.getResult(state, it), player) }
-        return actions
+        val orderedActions = FibonacciHeap<String>()
+        for(action in actions!!)
+            orderedActions.enqueue(action, action.length.toDouble())
+        return orderedActions.dequeueAll()
     }
-    */
 
     override fun incrementDepthLimit() {
         super.incrementDepthLimit()
@@ -104,9 +104,31 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
 }
 
+fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
+    val mutableList = arrayListOf<T>()
+    while(!this.isEmpty){
+        mutableList.add(this.dequeueMin().value)
+    }
+    return mutableList
+}
+
 fun main(args: Array<String>) {
 
-    val initialState = State(Checker.WHITE)
+    val heap = FibonacciHeap<String>()
+val prova1 = "prova"
+    val prova2 = "Prova2"
+    val co = "co"
+
+    heap.enqueue(prova1,prova1.length.toDouble())
+
+    heap.enqueue(prova2,prova2.length.toDouble())
+    heap.enqueue(co,co.length.toDouble())
+
+    heap.dequeueAll().forEach {
+        println(it)
+    }
+
+    //val initialState = State(Checker.WHITE)
 
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
@@ -118,8 +140,8 @@ fun main(args: Array<String>) {
     */
 
 
-    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
-    val action = search.makeDecision(initialState)
+    //val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
+    //val action = search.makeDecision(initialState)
     //println("Azione scelta: $action")
 
 }

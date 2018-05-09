@@ -1,8 +1,8 @@
 package it.unibo.mulino.qlearning.player.model
 
-import it.unibo.utils.Matrix
-import it.unibo.utils.SquareMatrix
-import it.unibo.utils.filterCellIndexed
+import it.unibo.Matrix
+import it.unibo.SquareMatrix
+import it.unibo.filterCellIndexed
 import java.util.*
 import java.util.regex.Pattern
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState

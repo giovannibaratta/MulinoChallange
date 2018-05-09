@@ -1,4 +1,4 @@
-package it.unibo.utils
+package it.unibo
 
 open class Matrix<T>(val rows: Int,
                      val columns: Int,
@@ -62,7 +62,7 @@ fun <T> Matrix<T>.filterCell(predicate: (T) -> Boolean): List<T> {
 }
 
 
-fun <T> Matrix<T>.filterCellIndexed ( predicate : (T) -> Boolean) : List<Pair<Pair<Int,Int>,T>>{
+fun <T> Matrix<T>.filterCellIndexed (predicate : (T) -> Boolean) : List<Pair<Pair<Int,Int>,T>>{
     val filtered = mutableListOf<Pair<Pair<Int,Int>,T>>()
     this.forEachIndexed { xIndex, yIndex, value ->
         if (predicate(value))
