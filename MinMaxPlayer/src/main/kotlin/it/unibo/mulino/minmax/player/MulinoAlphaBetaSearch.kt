@@ -2,8 +2,8 @@ package it.unibo.mulino.minmax.player
 
 
 import aima.core.search.adversarial.IterativeDeepeningAlphaBetaSearch
-import it.unibo.ai.didattica.mulino.actions.Action
 import it.unibo.ai.didattica.mulino.domain.State.Checker
+import it.unibo.utils.FibonacciHeap
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                                   utilMin: Double,
@@ -34,92 +34,74 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
         }
         val game = game as MulinoGame
-        var opposite = Checker.EMPTY
-        if (player == Checker.WHITE) {
-            opposite = Checker.BLACK
-        } else
-            opposite = Checker.WHITE
-        val intPlayer = when(player){
-            Checker.WHITE->0
-            Checker.BLACK->1
-            else -> -1
-        }
-        val intOpposite = when(opposite){
-            Checker.WHITE->0
-            Checker.BLACK->1
-            else -> -1
-        }
-        var amountPlayer = 0.0
-        var amountOpposite = 0.0
+        var opposite = game.opposite[player]!!
+        val intPlayer = game.checkersToInt[player]!!
+        val intOpposite =  game.checkersToInt[opposite]!!
         when(state!!.currentPhase){
-            1->{
-                amountPlayer = morrisesNumberCoeff[0] * game.getNumMorrises(state, player!!) +
-                        blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, player) +
-                        piecesNumberCoeff[0] * state.checkersOnBoard[intPlayer] +
-                        num2PiecesCoeff[0] * game.getNum2Conf(state, player) +
-                        num3PiecesCoeff[0] * game.getNum3Conf(state, player)
-                if (state.closedMorris && game.opposite(state)==player)
-                    amountPlayer += closedMorrisCoeff[0]
-                amountOpposite = -(morrisesNumberCoeff[0] * game.getNumMorrises(state, opposite)) -
-                        (blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, opposite)) -
-                        (piecesNumberCoeff[0] * state.checkersOnBoard[intOpposite]) -
-                        (num2PiecesCoeff[0] * game.getNum2Conf(state, opposite)) -
-                        (num3PiecesCoeff[0] * game.getNum3Conf(state, opposite))
-                if (state.closedMorris && game.opposite(state)==opposite)
-                    amountOpposite -= closedMorrisCoeff[0]
+            '1'->{
+                amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                        blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
+                        piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite]-state.checkers[intPlayer])) +
+                        num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
+                        num3PiecesCoeff[0] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, opposite))
+                when(game.opposite[state.checker]){
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[0]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[0]
+                }
             }
-            2->{
-                amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player!!) +
-                        blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player) +
-                        piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
-                if (state.closedMorris && game.opposite(state)==player)
-                    amountPlayer += closedMorrisCoeff[1]
+            '2'->{
+                amount = morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                        blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
+                        piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
+                when(game.opposite[state.checker]){
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[1]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[1]
+                }
                 if (game.hasOpenedMorris(state, player))
-                    amountPlayer += openedMorrisCoeff
+                    amount += openedMorrisCoeff
                 if (game.hasDoubleMorris(state, player))
-                    amountPlayer += doubleMorrisCoeff
-                if (game.isWinningConfiguration(state, player!!))
-                    amountPlayer += winningConfCoeff[0]
-
-                amountOpposite = -(morrisesNumberCoeff[1] * game.getNumMorrises(state, opposite)) -
-                        (blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, opposite)) -
-                        (piecesNumberCoeff[1] * state.checkersOnBoard[intOpposite])
-                if (state.closedMorris && game.opposite(state)==opposite)
-                    amountOpposite -= closedMorrisCoeff[1]
-                if (game.hasOpenedMorris(state, opposite))
-                    amountOpposite -= openedMorrisCoeff
-                if (game.hasDoubleMorris(state, opposite))
-                    amountOpposite -= doubleMorrisCoeff
-                if (game.isWinningConfiguration(state, opposite))
-                    amountOpposite -= winningConfCoeff[0]
-            }
-            3->{
-                amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player!!) +
-                        num3PiecesCoeff[1] * game.getNum3Conf(state, player)
-                if (state.closedMorris && game.opposite(state)==player)
-                    amountPlayer += closedMorrisCoeff[2]
+                    amount += doubleMorrisCoeff
                 if (game.isWinningConfiguration(state, player))
-                    amountPlayer += winningConfCoeff[1]
+                    amount += winningConfCoeff[0]
 
-                amountOpposite = -(num2PiecesCoeff[1] * game.getNum2Conf(state, opposite)) -
-                        (num3PiecesCoeff[1] * game.getNum3Conf(state, opposite))
-                if (state.closedMorris && game.opposite(state)==opposite)
-                    amountOpposite -= closedMorrisCoeff[2]
+
+                if (game.hasOpenedMorris(state, opposite))
+                    amount -= openedMorrisCoeff
+                if (game.hasDoubleMorris(state, opposite))
+                    amount -= doubleMorrisCoeff
                 if (game.isWinningConfiguration(state, opposite))
-                    amountOpposite -= winningConfCoeff[1]
+                    amount -= winningConfCoeff[0]
+            }
+            '3'->{
+                amount = num2PiecesCoeff[1] * (game.getNum2Conf(state, player!!) - game.getNum2Conf(state, opposite)) +
+                        num3PiecesCoeff[1] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, opposite))
+                when(game.opposite[state.checker]){
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[2]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[2]
+                }
+                if (game.isWinningConfiguration(state, player))
+                    amount += winningConfCoeff[1]
+
+                if (game.isWinningConfiguration(state, opposite))
+                    amount -= winningConfCoeff[1]
             }
         }
-        amount += amountPlayer + amountOpposite
-        println("Evaluation state ${game.printState(state)} -> $amount")
+        //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
         return amount
     }
 
-    /*
     override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
-        actions!!.sortBy{ eval(game.getResult(state, it), player) }
-        return actions
+        val orderedActions = FibonacciHeap<String>()
+        for(action in actions!!)
+            orderedActions.enqueue(action, action.length.toDouble())
+        return orderedActions.dequeueAll()
     }
-    */
 
     override fun incrementDepthLimit() {
         super.incrementDepthLimit()
@@ -128,10 +110,20 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
 }
 
+fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
+    val mutableList = arrayListOf<T>()
+    while(!this.isEmpty){
+        mutableList.add(this.dequeueMin().value)
+    }
+    return mutableList
+}
+
 fun main(args: Array<String>) {
 
-    val initialState = State(Checker.WHITE)
-
+    var newState = State(checker = Checker.BLACK, checkers = intArrayOf(7,8), checkersOnBoard = intArrayOf(2,1), currentPhase = '1')
+    MulinoGame.addPiece(newState, "d6",Checker.WHITE)
+    MulinoGame.addPiece(newState, "b6",Checker.WHITE)
+    MulinoGame.addPiece(newState, "d5",Checker.BLACK)
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
     initialState.addPiece(Pair('a',4), Checker.WHITE)
@@ -142,8 +134,8 @@ fun main(args: Array<String>) {
     */
 
 
-    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
-    val action = search.makeDecision(initialState)
-    //println("Azione scelta: $action")
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -10000.00, 10000.00, 1)
+    val action = search.makeDecision(newState)
+    println("Azione scelta: $action")
 
 }

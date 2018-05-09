@@ -2,7 +2,7 @@ package it.unibo.mulino.qlearning.player
 
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
-import it.unibo.utils.filterCellIndexed
+import it.unibo.filterCellIndexed
 import org.junit.Assert
 import org.junit.Test
 
