@@ -146,7 +146,7 @@ class StateTest {
     fun MillTestNegative() {
         val state = ExternalState()
         val remappedState = State(state, true)
-        Assert.assertFalse(remappedState.closeAMill(Position(0, 0)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 0)).first)
     }
 
     @Test
@@ -154,7 +154,7 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)).first)
     }
 
     @Test
@@ -163,7 +163,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.BLACK)
         val remappedState = State(state, true)
-        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)))
+        Assert.assertFalse(remappedState.closeAMill(Position(0, 3)).first)
     }
 
     @Test
@@ -172,7 +172,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("a7", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.closeAMill(Position(0, 3)))
+        Assert.assertTrue(remappedState.closeAMill(Position(0, 3)).first)
     }
 
     @Test
@@ -181,7 +181,7 @@ class StateTest {
         state.board.put("a1", ExternalState.Checker.WHITE)
         state.board.put("g1", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.closeAMill(Position(3, 0)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 0)).first)
     }
 
     @Test
@@ -190,7 +190,7 @@ class StateTest {
         state.board.put("c3", ExternalState.Checker.WHITE)
         state.board.put("e3", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.closeAMill(Position(3, 2)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 2)).first)
     }
 
     @Test
@@ -199,7 +199,7 @@ class StateTest {
         state.board.put("d3", ExternalState.Checker.WHITE)
         state.board.put("d1", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.closeAMill(Position(3, 1)))
+        Assert.assertTrue(remappedState.closeAMill(Position(3, 1)).first)
     }
 
     @Test
@@ -208,7 +208,7 @@ class StateTest {
         state.board.put("b4", ExternalState.Checker.WHITE)
         state.board.put("b2", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.closeAMill(Position(1, 5)))
+        Assert.assertTrue(remappedState.closeAMill(Position(1, 5)).first)
     }
 
     @Test
@@ -218,9 +218,9 @@ class StateTest {
         state.board.put("b2", ExternalState.Checker.WHITE)
         state.board.put("b6", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 5)))
-        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 3)))
-        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 1)))
+        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 5)).first)
+        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 3)).first)
+        Assert.assertTrue(remappedState.isAClosedMill(Position(1, 1)).first)
     }
 
     @Test
@@ -229,9 +229,9 @@ class StateTest {
         state.board.put("b4", ExternalState.Checker.WHITE)
         state.board.put("b2", ExternalState.Checker.WHITE)
         val remappedState = State(state, true)
-        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 5)))
-        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 3)))
-        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 1)))
+        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 5)).first)
+        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 3)).first)
+        Assert.assertFalse(remappedState.isAClosedMill(Position(1, 1)).first)
     }
 
 

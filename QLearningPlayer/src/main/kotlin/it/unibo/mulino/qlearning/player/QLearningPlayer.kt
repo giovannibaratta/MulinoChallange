@@ -9,7 +9,7 @@ import it.unibo.mulino.qlearning.player.model.Action
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
-import it.unibo.filterCellIndexed
+import it.unibo.utils.filterCellIndexed
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.List
@@ -30,14 +30,14 @@ class QLearningPlayer : AIPlayer {
 
         val possibleRemove = state.grid
                 .filterCellIndexed { it == enemyType }
-                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second) }
+                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second).first }
 
         val emptyCell = it.grid.filterCellIndexed { it == Type.EMPTY }
 
         emptyCell.forEach {
             val toPos = Position(it.first.first, it.first.second)
             var removePos = Optional.empty<Position>()
-            if (state.closeAMill(toPos)) {
+            if (state.closeAMill(toPos).first) {
                 // 1.a
                 if (possibleRemove.isEmpty())
                     actionList.add(Action.buildPhase1(toPos, Optional.empty()))
@@ -68,7 +68,7 @@ class QLearningPlayer : AIPlayer {
 
         val possibleRemove = state.grid
                 .filterCellIndexed { it == enemyType }
-                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second) }
+                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second).first }
 
         it.grid.filterCellIndexed { it == myType }
                 .forEach {
@@ -79,7 +79,7 @@ class QLearningPlayer : AIPlayer {
                             .filter { it.second == Type.EMPTY }
                             .forEach {
                                 val toCell = it.first
-                                if (state.closeAMill(toCell, myType)) {
+                                if (state.closeAMill(toCell, myType).first) {
                                     actionList.add(Action.buildPhase2(fromCell, toCell, Optional.empty()))
                                 } else {
                                     possibleRemove.forEach {
@@ -113,7 +113,7 @@ class QLearningPlayer : AIPlayer {
 
         val possibleRemove = state.grid
                 .filterCellIndexed { it == enemyType }
-                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second) }
+                .filter { !state.isAClosedMill(Position(it.first.first, it.first.second), it.second).first }
 
         val emptyCell = it.grid.filterCellIndexed { it == Type.EMPTY }
 
@@ -123,7 +123,7 @@ class QLearningPlayer : AIPlayer {
                     val fromCell = Position(it.first.first, it.first.second)
                     emptyCell.forEach {
                         val toCell = Position(it.first.first, it.first.second)
-                        if (state.closeAMill(toCell, myType)) {
+                        if (state.closeAMill(toCell, myType).first) {
                             actionList.add(Action.buildPhase2(fromCell, toCell, Optional.empty()))
                         } else {
                             possibleRemove.forEach {
@@ -157,23 +157,23 @@ class QLearningPlayer : AIPlayer {
         Pair(reward, state.simulateAction(action).newState)
     }
 
-    private val phase1Features: Array<(State, Action) -> Double> =
+    private val phase1Features: Array<(State, Action, State) -> Double> =
             arrayOf(
-                    { state, _ -> state.whiteBoardCount.toDouble() },
-                    { state, _ -> state.blackBoardCount.toDouble() },
-                    { state, action ->
+                    { state, _, newState -> state.whiteBoardCount().toDouble() },
+                    { state, _, newState -> state.blackBoardCount().toDouble() },
+                    { state, action, newState ->
                         when (state.simulateAction(action).mill) {
                             true -> 1.0
                             false -> 0.0
                         }
                     },
-                    { state, _ ->
+                    { state, _, newState ->
                         when (state.enemyCanMove()) {
                             false -> 1.0
                             true -> 0.0
                         }
                     },
-                    { state, _ ->
+                    { state, _, newState ->
                         when (state.iCanMove()) {
                             true -> 1.0
                             false -> 0.0

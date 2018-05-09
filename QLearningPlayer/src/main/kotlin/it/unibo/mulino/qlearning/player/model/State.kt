@@ -1,10 +1,11 @@
 package it.unibo.mulino.qlearning.player.model
 
-import it.unibo.Matrix
-import it.unibo.SquareMatrix
-import it.unibo.filterCellIndexed
+import it.unibo.utils.Matrix
+import it.unibo.utils.SquareMatrix
+import it.unibo.utils.filterCellIndexed
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.collections.HashMap
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
 internal class State(externalGrid: SquareMatrix<Type>? = null,
@@ -39,8 +40,11 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         }
     }
 
-    val blackBoardCount = grid.count { it == Type.BLACK }
-    val whiteBoardCount = grid.count { it == Type.WHITE }
+
+    fun blackBoardCount() = grid.count { it == Type.BLACK }
+
+    fun whiteBoardCount() = grid.count { it == Type.WHITE }
+    //val whiteBoardCount() = grid.count { it == Type.WHITE }
 
     constructor(state: ExternalState, isWhiteTurn: Boolean)
             : this(isWhiteTurn = isWhiteTurn, whiteHandCount = state.whiteCheckers, blackHandCount = state.blackCheckers) {
@@ -65,7 +69,7 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         }
     }
 
-    private fun millTest(position: Position, typeToMill: Type? = null): Boolean {
+    private fun millTest(position: Position, typeToMill: Type? = null): Pair<Boolean, Optional<Pair<Position, Position>>> {
         require(position.x >= 0 && position.x < boardSize, { "Coordinata X non valida" })
         require(position.y >= 0 && position.y < boardSize, { "Coordinata Y non valida" })
         require(grid.get(position) != Type.INVALID, { "Casella non valida" })
@@ -78,54 +82,74 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
             }
         }
         var mill = false
+        var millPos1: Position? = null
+        var millPos2: Position? = null
+
         // top mill
         topAdjacent(position).ifPresent {
             if (it.second == type) {
+                millPos1 = it.first
                 topAdjacent(it.first).ifPresent {
+                    millPos2 = it.first
                     mill = it.second == type
                     return@ifPresent
                 }
                 bottomAdjacent(position).ifPresent {
                     mill = it.second == type
+                    millPos2 = it.first
                 }
             }
         }
         if (mill)
-            return true
+            return Pair(true, Optional.of(Pair(millPos1!!, millPos2!!)))
+
         // right mill
         rightAdjacent(position).ifPresent {
             if (it.second == type) {
+                millPos1 = it.first
                 rightAdjacent(it.first).ifPresent {
+                    millPos2 = it.first
                     mill = it.second == type
                     return@ifPresent
                 }
                 leftAdjacent(position).ifPresent {
                     mill = it.second == type
+                    millPos2 = it.first
                 }
             }
         }
         if (mill)
-            return true
+            return Pair(true, Optional.of(Pair(millPos1!!, millPos2!!)))
         // left mill
         leftAdjacent(position).ifPresent outer@{
-            if (it.second == type)
+            if (it.second == type) {
+                millPos1 = it.first
                 leftAdjacent(it.first).ifPresent {
                     mill = it.second == type
+                    millPos2 = it.first
                 }
+            }
         }
         if (mill)
-            return true
+            return Pair(true, Optional.of(Pair(millPos1!!, millPos2!!)))
         // bottom mill
         bottomAdjacent(position).ifPresent outer@{
-            if (it.second == type)
+            if (it.second == type) {
+                millPos1 = it.first
                 bottomAdjacent(it.first).ifPresent {
                     mill = it.second == type
+                    millPos2 = it.first
                 }
+            }
         }
-        return mill
+
+        if (mill)
+            return Pair(true, Optional.of(Pair(millPos1!!, millPos2!!)))
+        else
+            return Pair(false, Optional.empty())
     }
 
-    fun isAClosedMill(position: Position, typeToMill: Type? = null): Boolean {
+    fun isAClosedMill(position: Position, typeToMill: Type? = null): Pair<Boolean, Optional<Pair<Position, Position>>> {
         require(typeToMill != Type.INVALID)
         val type = when (typeToMill != null) {
             true -> typeToMill
@@ -135,7 +159,7 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
             }
         }
         if (grid.get(position) == Type.EMPTY)
-            return false
+            return Pair(false, Optional.empty())
         if (grid.get(position) != type)
             throw IllegalArgumentException("Casella dell'avversario")
         return millTest(position, type)
@@ -144,7 +168,7 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
     /**
      * True se la pedina nella posizione indicata forma un mulino, altrimenti false
      */
-    fun closeAMill(position: Position, typeToMill: Type? = null): Boolean {
+    fun closeAMill(position: Position, typeToMill: Type? = null): Pair<Boolean, Optional<Pair<Position, Position>>> {
         require(grid.get(position) == Type.EMPTY, { "Casella non vuota" })
         return millTest(position, typeToMill)
     }
@@ -152,6 +176,10 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
 
     // restituisce la griglia, e se ha chiuso un it.unibo.ai.didattica.mulino. Se azione non valida errore
     fun simulateAction(action: Action): ActionResult {
+        //val cached = cache.get(this,action)
+        //if(cached != null)
+        //    return cached
+
         val newStateGrid = SquareMatrix(boardSize, { xIndex, yIndex -> grid[xIndex, yIndex] })
         val newState: State
         if (!action.from.isPresent) {
@@ -201,20 +229,42 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
                 false -> Type.BLACK
             }
             newStateGrid[action.to.get()] = typeToInsert
-            closedMill = newState.isAClosedMill(action.to.get(), typeToInsert)
+            closedMill = newState.isAClosedMill(action.to.get(), typeToInsert).first
         }
 
         // ho fatto un mill ma non ho specificato la remove oppure non ho fatto un mill e ho specificato la remove
         if ((!closedMill && action.remove.isPresent) || (closedMill && when (isWhiteTurn) {
-                    true -> grid.filterCellIndexed { it == Type.BLACK }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
-                    false -> grid.filterCellIndexed { it == Type.WHITE }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second) }.any()
+                    true -> grid.filterCellIndexed { it == Type.BLACK }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second).first }.any()
+                    false -> grid.filterCellIndexed { it == Type.WHITE }.filter { !isAClosedMill(Position(it.first.first, it.first.second), it.second).first }.any()
                 } && !action.remove.isPresent))
             dumpAndThrow(this, action, Optional.of(newState), IllegalStateException("La mossa non è valida. Closed Mill ${closedMill}"))
 
         // ho fatto mill e devo rimuovere la pedina
         action.remove.ifPresent { newStateGrid[action.remove.get()] = Type.EMPTY }
 
-        return ActionResult(newState, closedMill)
+        val enemyType: Type
+        val enemyHandCount: Int
+        val enemyBoardCount: Int
+
+        when (isWhiteTurn) {
+            true -> {
+                enemyType = Type.BLACK
+                enemyHandCount = newState.blackHandCount
+                enemyBoardCount = newState.blackBoardCount()
+            }
+            false -> {
+                enemyType = Type.WHITE
+                enemyHandCount = newState.whiteHandCount
+                enemyBoardCount = newState.whiteBoardCount()
+            }
+        }
+
+        val actionResult = ActionResult(newState, closedMill, (!newState.playerCanMove(enemyType) || (enemyHandCount == 0 && enemyBoardCount <= 2)))
+
+        //if(cached == null)
+        //    cache.put(this,action,actionResult)
+
+        return actionResult
     }
 
     private fun rightAdjacent(pos: Position, includeEmpty: Boolean = false): Optional<Pair<Position, Type>> {
@@ -304,8 +354,8 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         var playerCanMove = false
 
         val (handCount, boardCount) = when (isWhiteTurn) {
-            true -> Pair(whiteHandCount, whiteBoardCount)
-            false -> Pair(blackHandCount, blackBoardCount)
+            true -> Pair(whiteHandCount, whiteBoardCount())
+            false -> Pair(blackHandCount, blackBoardCount())
         }
         // TODO("Metodo per sapere la fase")
 
@@ -403,4 +453,16 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         EMPTY,
         INVALID
     }
+
+
+    companion object {
+        private val cache = Cache()
+    }
+
+    private class Cache {
+        val map = HashMap<Pair<State, Action>, ActionResult>()
+        fun get(s: State, a: Action): ActionResult? = map.get(Pair(s, a))
+        fun put(s: State, a: Action, ar: ActionResult) = map.put(Pair(s, a), ar)
+    }
 }
+
