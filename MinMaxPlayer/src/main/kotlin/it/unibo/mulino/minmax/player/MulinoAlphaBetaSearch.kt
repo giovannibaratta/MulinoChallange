@@ -38,24 +38,28 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         val intPlayer = game.checkersToInt[player]!!
         val intOpposite =  game.checkersToInt[opposite]!!
         when(state!!.currentPhase){
-            1->{
+            '1'->{
                 amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite]-state.checkers[intPlayer])) +
                         num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
                         num3PiecesCoeff[0] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, opposite))
                 when(game.opposite[state.checker]){
-                    player->amount+=closedMorrisCoeff[0]
-                    opposite->amount-=closedMorrisCoeff[0]
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[0]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[0]
                 }
             }
-            2->{
+            '2'->{
                 amount = morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
                 when(game.opposite[state.checker]){
-                    player->amount+=closedMorrisCoeff[1]
-                    opposite->amount-=closedMorrisCoeff[1]
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[1]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[1]
                 }
                 if (game.hasOpenedMorris(state, player))
                     amount += openedMorrisCoeff
@@ -72,12 +76,14 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 if (game.isWinningConfiguration(state, opposite))
                     amount -= winningConfCoeff[0]
             }
-            3->{
+            '3'->{
                 amount = num2PiecesCoeff[1] * (game.getNum2Conf(state, player!!) - game.getNum2Conf(state, opposite)) +
                         num3PiecesCoeff[1] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, opposite))
                 when(game.opposite[state.checker]){
-                    player->amount+=closedMorrisCoeff[2]
-                    opposite->amount-=closedMorrisCoeff[2]
+                    player->if(state.closedMorris)
+                        amount+=closedMorrisCoeff[2]
+                    opposite->if(state.closedMorris)
+                        amount-=closedMorrisCoeff[2]
                 }
                 if (game.isWinningConfiguration(state, player))
                     amount += winningConfCoeff[1]
@@ -86,7 +92,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     amount -= winningConfCoeff[1]
             }
         }
-        //println("Evaluation state ${game.printState(state)} -> $amount")
+        //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
         return amount
     }
 
@@ -114,22 +120,10 @@ fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
 
 fun main(args: Array<String>) {
 
-    val heap = FibonacciHeap<String>()
-val prova1 = "prova"
-    val prova2 = "Prova2"
-    val co = "co"
-
-    heap.enqueue(prova1,prova1.length.toDouble())
-
-    heap.enqueue(prova2,prova2.length.toDouble())
-    heap.enqueue(co,co.length.toDouble())
-
-    heap.dequeueAll().forEach {
-        println(it)
-    }
-
-    //val initialState = State(Checker.WHITE)
-
+    var newState = State(checker = Checker.BLACK, checkers = intArrayOf(7,8), checkersOnBoard = intArrayOf(2,1), currentPhase = '1')
+    MulinoGame.addPiece(newState, "d6",Checker.WHITE)
+    MulinoGame.addPiece(newState, "b6",Checker.WHITE)
+    MulinoGame.addPiece(newState, "d5",Checker.BLACK)
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
     initialState.addPiece(Pair('a',4), Checker.WHITE)
@@ -140,8 +134,8 @@ val prova1 = "prova"
     */
 
 
-    //val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 7.0, 42.0, 1047.0), -10000.00, 10000.00, 1)
-    //val action = search.makeDecision(initialState)
-    //println("Azione scelta: $action")
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -10000.00, 10000.00, 1)
+    val action = search.makeDecision(newState)
+    println("Azione scelta: $action")
 
 }

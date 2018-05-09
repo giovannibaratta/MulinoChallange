@@ -14,7 +14,7 @@ object MulinoGame : Game<State, String, Checker> {
     val charToCheckers = hashMapOf(Pair<Char, Checker>('e', Checker.EMPTY),
             Pair<Char, Checker>('w', Checker.WHITE),
             Pair<Char, Checker>('b', Checker.BLACK))
-    private val toInternalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
+    val toInternalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
             Pair("a4", Pair(1, 0)),
             Pair("a7", Pair(2, 0)),
             Pair("b2", Pair(0, 1)),
@@ -117,6 +117,34 @@ object MulinoGame : Game<State, String, Checker> {
             Pair(1,arrayOf(0,2)),
             Pair(2,arrayOf(1)))
 
+    val diagonals : HashMap<String, CharArray> = hashMapOf(Pair("eee", charArrayOf('e','e','e')),
+            Pair("www", charArrayOf('w','w','w')),
+            Pair("bbb", charArrayOf('b','b','b')),
+            Pair("eew", charArrayOf('e','e','w')),
+            Pair("eeb", charArrayOf('e','e','b')),
+            Pair("wwe", charArrayOf('w','w','e')),
+            Pair("wwb", charArrayOf('w','w','b')),
+            Pair("bbe", charArrayOf('b','b','e')),
+            Pair("bbw", charArrayOf('b','b','w')),
+            Pair("ewe", charArrayOf('e','w','e')),
+            Pair("eww", charArrayOf('e','w','w')),
+            Pair("ewb", charArrayOf('e','w','b')),
+            Pair("ebe", charArrayOf('e','b','e')),
+            Pair("ebb", charArrayOf('e','b','b')),
+            Pair("ebw", charArrayOf('e','b','w')),
+            Pair("wee", charArrayOf('w','e','e')),
+            Pair("wew", charArrayOf('w','e','w')),
+            Pair("web", charArrayOf('w','e','b')),
+            Pair("wbe", charArrayOf('w','b','e')),
+            Pair("wbw", charArrayOf('w','b','w')),
+            Pair("wbb", charArrayOf('w','b','b')),
+            Pair("bee", charArrayOf('b','e','e')),
+            Pair("bew", charArrayOf('b','e','w')),
+            Pair("beb", charArrayOf('b','e','b')),
+            Pair("bwe", charArrayOf('b','w','e')),
+            Pair("bwb", charArrayOf('b','w','b')),
+            Pair("bww", charArrayOf('b','w','w')))
+
     val opposite = hashMapOf(Pair(Checker.BLACK, Checker.WHITE),
             Pair(Checker.WHITE, Checker.BLACK))
 
@@ -147,7 +175,7 @@ object MulinoGame : Game<State, String, Checker> {
         val intChecker = checkersToInt[player]!!
         val intOpposite = checkersToInt[opposite]!!
         when(state.currentPhase){
-            1 ->{
+            '1' ->{
                 var numMorrises = 0
                 for (possiblePosition in getEmptyPositions(state)) {
                     if (checkMorris(state, possiblePosition, player)) {
@@ -166,7 +194,7 @@ object MulinoGame : Game<State, String, Checker> {
                     }
                 }
             }
-            2 ->{
+            '2' ->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
                     for (adiacentPosition in adiacentPositions[actualPosition]!!) {
@@ -189,7 +217,7 @@ object MulinoGame : Game<State, String, Checker> {
                     }
                 }
             }
-            3->{
+            '3'->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
                     when(state.checkersOnBoard[intChecker]){
@@ -237,12 +265,11 @@ object MulinoGame : Game<State, String, Checker> {
                 }
             }
         }
-
-        /*println("Possible actions: ")
+        /*
+        println("Possible actions: ")
         for(action in actions)
             println("$action")
         */
-
         return actions
     }
 
@@ -250,7 +277,8 @@ object MulinoGame : Game<State, String, Checker> {
         val player = state!!.checker
         val opposite = opposite[state.checker]!!
         //System.arraycopy(state.board, 0, newBoard, 0, state.board.size )
-        var newState = State(checker = opposite, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
+        val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
+        var newState = State(checker = opposite,board=diagonals, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
         var current = checkersToInt[player]!!
         var next = checkersToInt[opposite]!!
         for(vertex in 0..7)
@@ -268,9 +296,9 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.closedMorris = true
                 }
                 if(state.checkers[next]==0)
-                    newState.currentPhase=2
+                    newState.currentPhase='2'
                 else
-                    newState.currentPhase=1
+                    newState.currentPhase='1'
             }
 
             '2' ->{
@@ -283,9 +311,9 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.closedMorris = true
                 }
                 if(state.checkersOnBoard[next]==3)
-                    newState.currentPhase=3
+                    newState.currentPhase='3'
                 else
-                    newState.currentPhase=2
+                    newState.currentPhase='2'
             }
             '3' ->{
                 removePiece(newState, action.substring(1, 3))
@@ -337,12 +365,25 @@ object MulinoGame : Game<State, String, Checker> {
 
     fun addPiece(state : State, position: String, checker: Checker) {
         val (vertex, level) = toInternalPositions[position]!!
-        state.board[vertex][level] = checkersToChar[checker]!!
+        //state.board[vertex][level] = checkersToChar[checker]!!
+        val charChecker = checkersToChar[checker]
+        state.board[vertex] = when(level){
+            0->diagonals["$charChecker${state.board[vertex][1]}${state.board[vertex][2]}"]!!
+            1->diagonals["${state.board[vertex][0]}$charChecker${state.board[vertex][2]}"]!!
+            2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}$charChecker"]!!
+            else ->charArrayOf('e','e','e')
+        }
     }
 
     private fun removePiece(state : State, position: String) {
         val (vertex, level) = toInternalPositions[position]!!
-        state.board[vertex][level] = 'e'
+        //state.board[vertex][level] = 'e'
+        state.board[vertex] = when(level){
+            0->diagonals["e${state.board[vertex][1]}${state.board[vertex][2]}"]!!
+            1->diagonals["${state.board[vertex][0]}e${state.board[vertex][2]}"]!!
+            2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}e"]!!
+            else ->charArrayOf('e','e','e')
+        }
     }
 
     private fun getPositions(state : State, checker: Checker): List<String> {
@@ -596,13 +637,13 @@ object MulinoGame : Game<State, String, Checker> {
         var opposite = opposite[checker]!!
         var intOpposite = checkersToInt[opposite]!!
         when(state.currentPhase){
-            1->{
+            '1'->{
                 return ((state.checkers[intOpposite]==0) && (state.checkersOnBoard[intOpposite] < 3))
             }
-            2->{
+            '2'->{
                 return (state.checkersOnBoard[intOpposite] < 3) || (checkNoMoves(state, opposite))
             }
-            3->{
+            '3'->{
                 return (state.checkersOnBoard[intOpposite] < 3)
             }
         }
