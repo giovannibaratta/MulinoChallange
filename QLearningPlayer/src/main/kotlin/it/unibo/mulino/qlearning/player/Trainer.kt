@@ -1,9 +1,9 @@
 package it.unibo.mulino.qlearning.player
 
-import it.unibo.ai.ApproximateQLearning
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
+import it.unibo.mulino.ai.ApproximateQLearning
 import it.unibo.mulino.player.AIPlayer
 import it.unibo.mulino.qlearning.player.model.Action
 import it.unibo.mulino.qlearning.player.model.Position
@@ -90,7 +90,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
             false -> Type.WHITE
         }
         if (oldState.closeAMill(action.to.get(), enemyType).first)
-            0.3
+            0.7
         else
             0.0
     }
@@ -240,7 +240,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
         //val simulation = oldState.simulateAction(action)
 
         if (previousState.contains(newState))
-            reward -= 50.0
+            reward -= 25.0
         //if(previousState.peek().whiteBoardCount() > oldState)
 
         // reward sul numero nei pezzi
@@ -263,7 +263,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
 
         // reward per mill bloccato
         if (oldState.closeAMill(action.to.get(), enemyType).first)
-            reward += 3.0
+            reward += 7.0
 
         // reward per strutture vicine
         if (newState.adjacent(action.to.get(), false).filter { it == playerType }.any())
@@ -273,17 +273,17 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
 
         // reward partita persa per soffocamento
         if (!newState.playerCanMove(playerType)) {
-            reward -= 50.0
+            reward -= 25.0
         }
 
         // reward partita vinta per soffocamento
         if (!newState.playerCanMove(enemyType)) {
-            reward += 50.0
+            reward += 25.0
         }
 
         // reward partita vinta per kill
         if (newState.blackBoardCount() <= 2 && newState.blackHandCount == 0)
-            reward += 50.0
+            reward += 25.0
 
         // reward sconfitta
         val actions: List<Action>
@@ -300,7 +300,7 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
             actions = actionFromStatePhase3(invertedState)
         }
 
-        if (actions.any { invertedState.simulateAction(it).winState }) reward -= 50.0
+        if (actions.any { invertedState.simulateAction(it).winState }) reward -= 25.0
 
         reward
     }
@@ -484,8 +484,8 @@ class Trainer(private val save: Boolean = true) : AIPlayer {
         }
     }
 
-    private val discount = 0.95
-    private val alpha = 0.001
+    private val discount = 0.99
+    private val alpha = 0.005
     private val explorationRate = 0.0
 
     private val learnerPhase1 = ApproximateQLearning<State, Action>(/*{ 1.0/(numeroSimulazioni+1)*/{ alpha },

@@ -3,7 +3,6 @@ package it.unibo.mulino.qlearning.player
 import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
 import java.io.File
-import kotlin.collections.forEach
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
 
@@ -22,6 +21,32 @@ fun main(args: Array<String>) {
     val trainer = Trainer(true)
     var count = 0
     trainer.matchStart()
+
+    for (i in 0..1000) {
+        val random = (Math.random() * lines.size) % lines.size
+        println("random $random")
+        val mappedState = map(lines[(random).toInt()])
+        if (mappedState.whiteHandCount > 0) {
+            // fase 1
+            trainer.playPhase1(mappedState)
+        } else if (mappedState.whiteHandCount == 0 && mappedState.whiteBoardCount() > 3) {
+            // fase 2
+            trainer.playPhase2(mappedState)
+        } else if (mappedState.whiteHandCount == 0 && mappedState.whiteBoardCount() <= 3) {
+            // fase 3
+            trainer.playPhase3(mappedState)
+        } else {
+            throw IllegalStateException("Fase non riconosciuta o non valida")
+        }
+        count++
+        if (count % 1000 == 0) {
+            println(" Working ${(100 * count) / lines.size}% ...")
+            trainer.printPar()
+            println()
+        }
+    }
+
+    /*
     lines.forEach {
         // converto lo stato e richiamo la funzione giusta
         val mappedState = map(it)
@@ -43,7 +68,7 @@ fun main(args: Array<String>) {
             trainer.printPar()
             println()
         }
-    }
+    }*/
     println("fine")
     trainer.matchEnd()
 }

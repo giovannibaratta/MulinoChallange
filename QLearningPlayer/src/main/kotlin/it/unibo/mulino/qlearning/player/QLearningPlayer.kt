@@ -1,9 +1,9 @@
 package it.unibo.mulino.qlearning.player
 
-import it.unibo.ai.ApproximateQLearning
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
+import it.unibo.mulino.ai.ApproximateQLearning
 import it.unibo.mulino.player.AIPlayer
 import it.unibo.mulino.qlearning.player.model.Action
 import it.unibo.mulino.qlearning.player.model.Position

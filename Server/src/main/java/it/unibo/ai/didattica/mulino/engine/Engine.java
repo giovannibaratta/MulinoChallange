@@ -37,11 +37,11 @@ public class Engine {
 	private GUI theGui;
 
 	public Engine(int timeout) {
-		this(timeout, 16);
+		this(timeout, 32);
 	}
 
 	public Engine() {
-		this(60, 16);
+		this(120, 32);
 	}
 
 	/**
@@ -200,8 +200,8 @@ public class Engine {
 
 	public static void main(String[] args) throws IOException {
 
-		int timeout = 60;
-		int cacheSize = 16;
+		int timeout = 120;
+		int cacheSize = 32;
 		if (args.length > 1 && args[1] != null) {
 			String arg1 = "" + args[1];
 

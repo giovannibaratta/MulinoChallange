@@ -1,4 +1,4 @@
-package it.unibo.ai
+package it.unibo.mulino.ai
 
 class ApproximateQLearning<T, E>(private val alpha: () -> Double,
                                  private val discount: () -> Double,
