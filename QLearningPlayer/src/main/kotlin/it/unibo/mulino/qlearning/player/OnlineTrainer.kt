@@ -81,7 +81,7 @@ fun main(args: Array<String>) {
                     line = err.readLine()
                 }
             }
-            val res = p.waitFor()
+            p.waitFor()
             err.close()
             buf.close()
             println("Fine deep mill")

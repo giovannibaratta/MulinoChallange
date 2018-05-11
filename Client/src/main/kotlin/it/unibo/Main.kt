@@ -3,7 +3,7 @@ package it.unibo
 import it.unibo.ai.didattica.mulino.domain.State
 import it.unibo.mulino.minmax.player.MinMaxPlayer
 import it.unibo.mulino.player.AIClient
-import it.unibo.mulino.qlearning.player.Trainer
+import it.unibo.mulino.qlearning.player.QLearningPlayer
 import java.net.ConnectException
 
 enum class Algorithm {
@@ -28,8 +28,8 @@ val player = hashMapOf(
         Pair(Algorithm.MINMAX, MinMaxPlayer()),
         Pair(Algorithm.MINMAX5, MinMaxPlayer(5)),
         Pair(Algorithm.MINMAX10, MinMaxPlayer(10)),
-        Pair(Algorithm.QLEARNING, Trainer()),
-        Pair(Algorithm.QLEARNINGNOSAVE, Trainer(false))
+        Pair(Algorithm.QLEARNING, QLearningPlayer()),
+        Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false))
 )
 
 fun main(args: Array<String>) {

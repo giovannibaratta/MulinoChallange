@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 
     val lines = dataFile.readLines()
     println("Data set size : ${lines.size}")
-    val trainer = Trainer(true)
+    val trainer = QLearningPlayer(true)
     var count = 0
     trainer.matchStart()
 
@@ -76,8 +76,8 @@ fun main(args: Array<String>) {
 internal fun map(stringState: String): State {
     val playerHand = (stringState[24]) - '0'
     val enemyHand = stringState[25] - '0'
-    val playerBoard = stringState[26] - '0'
-    val enemyBoard = stringState[27] - '0'
+    //val playerBoard = stringState[26] - '0'
+    //val enemyBoard = stringState[27] - '0'
 
     val state = State(isWhiteTurn = true, whiteHandCount = playerHand, blackHandCount = enemyHand)
     // prima linea

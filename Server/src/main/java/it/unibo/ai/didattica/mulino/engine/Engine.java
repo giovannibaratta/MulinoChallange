@@ -200,8 +200,8 @@ public class Engine {
 
 	public static void main(String[] args) throws IOException {
 
-		int timeout = 120;
-		int cacheSize = 32;
+		int timeout = 60;
+		int cacheSize = 16;
 		if (args.length > 1 && args[1] != null) {
 			String arg1 = "" + args[1];
 
