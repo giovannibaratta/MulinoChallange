@@ -19,7 +19,19 @@ open class Matrix<T>(val rows: Int,
 
     fun count(predicate: (T) -> Boolean): Int = matrix.sumBy { it.count(predicate) }
 
-    operator fun get(i: Int) = matrix[i].toList()
+    operator fun get(i: Int) = get(i, Orientation.HORIZONTAL)
+
+    operator fun get(i: Int, orientation: Orientation = Orientation.HORIZONTAL): List<T> =
+            when (orientation) {
+                Orientation.HORIZONTAL -> matrix[i].toList()
+                Orientation.VERTICAL -> {
+                    val list = arrayListOf<T>()
+                    for (columnIndex in 0 until rows) {
+                        list.add(matrix.get(columnIndex)[i])
+                    }
+                    list.toList()
+                }
+            }
 
     operator fun get(i: Int, j: Int) = matrix[i][j]
 
@@ -41,6 +53,11 @@ open class Matrix<T>(val rows: Int,
             }
             return elem
         }
+    }
+
+    enum class Orientation {
+        VERTICAL, // column
+        HORIZONTAL // row
     }
 
     fun forEachIndexed(action: (Int, Int, T) -> Unit) {
