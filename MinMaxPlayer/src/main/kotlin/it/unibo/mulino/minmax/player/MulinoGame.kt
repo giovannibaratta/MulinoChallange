@@ -192,10 +192,18 @@ object MulinoGame : Game<State, String, Checker> {
     }
 
     override fun getUtility(state: State, player: Checker): Double {
-        return when (player) {
-            state.checker -> (-10000).toDouble()
-            else -> (10000).toDouble()
+        var utility = 0.00
+        when (player) {
+            state.checker -> when(state.currentPhase) {
+                2-> utility = (-1086).toDouble()
+                3-> utility = (-1190).toDouble()
+            }
+            else -> when(state.currentPhase){
+                2-> utility = (1086).toDouble()
+                1-> utility = (1190).toDouble()
+            }
         }
+        return utility
     }
 
     override fun getActions(state: State?): MutableList<String> {
@@ -680,7 +688,7 @@ object MulinoGame : Game<State, String, Checker> {
                             if ((state.board[precVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
                                     (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
                                     (state.board[nextVertex[vertex]!!][nextLevel[level]!!] =='e') &&
-                                    (state.board[vertex][nextVertex[nextLevel[level]!!]!!] == 'e'))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
                                     (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
