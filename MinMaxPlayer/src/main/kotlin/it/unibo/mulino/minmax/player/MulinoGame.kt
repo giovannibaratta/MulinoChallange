@@ -6,12 +6,13 @@ import java.util.*
 
 object MulinoGame : Game<State, String, Checker> {
 
+    var count = 0
     val checkersToChar = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
             Pair<Checker, Char>(Checker.WHITE, 'w'),
             Pair<Checker, Char>(Checker.BLACK, 'b'))
     val checkersToInt = hashMapOf(Pair<Checker, Int>(Checker.WHITE, 0),
             Pair<Checker, Int>(Checker.BLACK, 1))
-    val charToCheckers = hashMapOf(Pair<Char, Checker>('e', Checker.EMPTY),
+    val charsToCheckers = hashMapOf(Pair<Char, Checker>('e', Checker.EMPTY),
             Pair<Char, Checker>('w', Checker.WHITE),
             Pair<Char, Checker>('b', Checker.BLACK))
     val toInternalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
@@ -117,6 +118,36 @@ object MulinoGame : Game<State, String, Checker> {
             Pair(1,arrayOf(0,2)),
             Pair(2,arrayOf(1)))
 
+    /*
+    val diagonals : HashMap<String, IntArray> = hashMapOf(Pair("000", intArrayOf(0,0,0)),
+            Pair("111", intArrayOf(1,1,1)),
+            Pair("222", intArrayOf(2,2,2)),
+            Pair("001", intArrayOf(0,0,1)),
+            Pair("002", intArrayOf(0,0,2)),
+            Pair("110", intArrayOf(1,1,0)),
+            Pair("112", intArrayOf(1,1,2)),
+            Pair("220", intArrayOf(2,2,0)),
+            Pair("221", intArrayOf(2,2,1)),
+            Pair("010", intArrayOf(0,1,0)),
+            Pair("011", intArrayOf(0,1,1)),
+            Pair("012", intArrayOf(0,1,2)),
+            Pair("020", intArrayOf(0,2,0)),
+            Pair("022", intArrayOf(0,2,2)),
+            Pair("021", intArrayOf(0,2,1)),
+            Pair("100", intArrayOf(1,0,0)),
+            Pair("101", intArrayOf(1,0,1)),
+            Pair("102", intArrayOf(1,0,2)),
+            Pair("120", intArrayOf(1,2,0)),
+            Pair("121", intArrayOf(1,2,1)),
+            Pair("122", intArrayOf(1,2,2)),
+            Pair("200", intArrayOf(2,0,0)),
+            Pair("201", intArrayOf(2,0,1)),
+            Pair("202", intArrayOf(2,0,2)),
+            Pair("210", intArrayOf(2,1,0)),
+            Pair("212", intArrayOf(2,1,2)),
+            Pair("211", intArrayOf(2,1,1)))
+    */
+
     val diagonals : HashMap<String, CharArray> = hashMapOf(Pair("eee", charArrayOf('e','e','e')),
             Pair("www", charArrayOf('w','w','w')),
             Pair("bbb", charArrayOf('b','b','b')),
@@ -161,10 +192,18 @@ object MulinoGame : Game<State, String, Checker> {
     }
 
     override fun getUtility(state: State, player: Checker): Double {
-        return when (player) {
-            state.checker -> (-10000).toDouble()
-            else -> (10000).toDouble()
+        var utility = 0.00
+        when (player) {
+            state.checker -> when(state.currentPhase) {
+                2-> utility = (-1086).toDouble()
+                3-> utility = (-1190).toDouble()
+            }
+            else -> when(state.currentPhase){
+                2-> utility = (1086).toDouble()
+                1-> utility = (1190).toDouble()
+            }
         }
+        return utility
     }
 
     override fun getActions(state: State?): MutableList<String> {
@@ -175,7 +214,7 @@ object MulinoGame : Game<State, String, Checker> {
         val intChecker = checkersToInt[player]!!
         val intOpposite = checkersToInt[opposite]!!
         when(state.currentPhase){
-            '1' ->{
+            1 ->{
                 var numMorrises = 0
                 for (possiblePosition in getEmptyPositions(state)) {
                     if (checkMorris(state, possiblePosition, player)) {
@@ -194,7 +233,7 @@ object MulinoGame : Game<State, String, Checker> {
                     }
                 }
             }
-            '2' ->{
+            2 ->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
                     for (adiacentPosition in adiacentPositions[actualPosition]!!) {
@@ -217,7 +256,7 @@ object MulinoGame : Game<State, String, Checker> {
                     }
                 }
             }
-            '3'->{
+            3->{
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
                     when(state.checkersOnBoard[intChecker]){
@@ -276,7 +315,7 @@ object MulinoGame : Game<State, String, Checker> {
     override fun getResult(state: State?, action: String): State {
         val player = state!!.checker
         val opposite = opposite[state.checker]!!
-        //System.arraycopy(state.board, 0, newBoard, 0, state.board.size )
+        //val startTime = System.nanoTime()
         val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
         var newState = State(checker = opposite,board=diagonals, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
         var current = checkersToInt[player]!!
@@ -296,9 +335,9 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.closedMorris = true
                 }
                 if(state.checkers[next]==0)
-                    newState.currentPhase='2'
+                    newState.currentPhase=2
                 else
-                    newState.currentPhase='1'
+                    newState.currentPhase=1
             }
 
             '2' ->{
@@ -311,9 +350,9 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.closedMorris = true
                 }
                 if(state.checkersOnBoard[next]==3)
-                    newState.currentPhase='3'
+                    newState.currentPhase=3
                 else
-                    newState.currentPhase='2'
+                    newState.currentPhase=2
             }
             '3' ->{
                 removePiece(newState, action.substring(1, 3))
@@ -325,18 +364,17 @@ object MulinoGame : Game<State, String, Checker> {
                 }
             }
         }
+        //val totalTime = System.nanoTime()-startTime
+        count++
         //println("Action ${state.checker}: $action -> State : ${printState(newState)}")
         return newState
     }
 
     override fun isTerminal(state: State?): Boolean {
-        if(isWinner(state!!, Checker.WHITE) || isWinner(state, Checker.BLACK)){
-            return true
-        }
-        return false
+        return (isWinner(state!!, Checker.WHITE) || isWinner(state, Checker.BLACK))
     }
 
-    //MIGLIORABILE
+    /*
     fun isWinningConfiguration(state: State, checker: Checker): Boolean {
         var check = false
         var opposite = opposite[checker]
@@ -357,21 +395,22 @@ object MulinoGame : Game<State, String, Checker> {
         }
         return false
     }
+    */
 
     private fun getPiece(state : State, position: String): Checker {
         val (vertex, level) = toInternalPositions[position]!!
-        return charToCheckers[state.board[vertex][level]]!!
+        return charsToCheckers[state.board[vertex][level]]!!
     }
 
     fun addPiece(state : State, position: String, checker: Checker) {
         val (vertex, level) = toInternalPositions[position]!!
         //state.board[vertex][level] = checkersToChar[checker]!!
-        val charChecker = checkersToChar[checker]
+        val intChecker = checkersToChar[checker]
         state.board[vertex] = when(level){
-            0->diagonals["$charChecker${state.board[vertex][1]}${state.board[vertex][2]}"]!!
-            1->diagonals["${state.board[vertex][0]}$charChecker${state.board[vertex][2]}"]!!
-            2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}$charChecker"]!!
-            else ->charArrayOf('e','e','e')
+            0->diagonals["$intChecker${state.board[vertex][1]}${state.board[vertex][2]}"]!!
+            1->diagonals["${state.board[vertex][0]}$intChecker${state.board[vertex][2]}"]!!
+            2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}$intChecker"]!!
+            else -> charArrayOf('e','e','e')
         }
     }
 
@@ -542,7 +581,21 @@ object MulinoGame : Game<State, String, Checker> {
         return false
     }
 
-    //DA VERIFICARE
+    /*
+    fun hasDoubleMorris(state : State, checker: Checker): Boolean {
+        var count = 0
+        for (position in getPositions(state, checker)) {
+            for (adiacentPosition in adiacentPositions[position]!!) {
+                val (vertex, level) = toInternalPositions[adiacentPosition]!!
+                if (state.board[vertex][level] == 'e' && checkMorris(state, position, adiacentPosition, checker))
+                    count++
+                if(count==2)
+                    return true
+            }
+        }
+        return false
+    }
+    */
     fun hasDoubleMorris(state : State, checker: Checker): Boolean {
         for (position in getPositions(state, checker)) {
             val (vertex, level) = toInternalPositions[position]!!
@@ -569,17 +622,36 @@ object MulinoGame : Game<State, String, Checker> {
 
     fun getNum2Conf(state: State, checker: Checker): Int {
         var count = 0
+        val charChecker = checkersToChar[checker]
         for (position in getPositions(state, checker)) {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == charChecker &&
+                            state.board[precVertex[vertex]!!][level] == 'e')
                         count++
-                    if (state.board[precVertex[vertex]!!][level] == checkersToChar[checker])
+                    else if (state.board[precVertex[vertex]!!][level] == charChecker &&
+                            state.board[nextVertex[vertex]!!][level] == 'e')
                         count++
-                    for(adiacentLevel in adiacentLevels[level]!!){
-                        if (state.board[vertex][adiacentLevel] == checkersToChar[checker])
-                            count++
+                    when(level){
+                        0->{
+                            if(state.board[vertex][1] == charChecker &&
+                                    state.board[vertex][2] == 'e')
+                                count++
+                        }
+                        1->{
+                            if(state.board[vertex][0] == charChecker &&
+                                    state.board[vertex][2] == 'e')
+                                count++
+                            else if (state.board[vertex][2] == charChecker &&
+                                    state.board[vertex][0] == 'e')
+                                count++
+                        }
+                        2->{
+                            if(state.board[vertex][1] == charChecker &&
+                                    state.board[vertex][0] == 'e')
+                                count++
+                        }
                     }
                 }
             }
@@ -594,7 +666,9 @@ object MulinoGame : Game<State, String, Checker> {
             when (vertex) {
                 0, 2, 4, 6 -> {
                     if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker])
+                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker] &&
+                            state.board[nextVertex[nextVertex[vertex]!!]!!][level] == 'e' &&
+                            state.board[precVertex[precVertex[vertex]!!]!!][level] == 'e')
                         count++
 
                 }
@@ -602,28 +676,44 @@ object MulinoGame : Game<State, String, Checker> {
                     when (level) {
                         1 -> {
                             if ((state.board[nextVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][nextLevel[level]!!] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][nextLevel[level]!!] =='e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] =='e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                         }
                     }
@@ -633,17 +723,25 @@ object MulinoGame : Game<State, String, Checker> {
         return count
     }
 
+    fun density(state: State, position : String, checker : Checker) : Double{
+        var density = 0.0
+        for(adiacentPosition in adiacentPositions[position]!!)
+            if(getPiece(state, adiacentPosition)==checker)
+                density++
+        return density
+    }
+
     fun isWinner(state: State, checker: Checker): Boolean {
         var opposite = opposite[checker]!!
         var intOpposite = checkersToInt[opposite]!!
         when(state.currentPhase){
-            '1'->{
+            1->{
                 return ((state.checkers[intOpposite]==0) && (state.checkersOnBoard[intOpposite] < 3))
             }
-            '2'->{
+            2->{
                 return (state.checkersOnBoard[intOpposite] < 3) || (checkNoMoves(state, opposite))
             }
-            '3'->{
+            3->{
                 return (state.checkersOnBoard[intOpposite] < 3)
             }
         }
