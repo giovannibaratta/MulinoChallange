@@ -19,7 +19,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
     override fun makeDecision(state: State?): String {
-        if(state!!.currentPhase==1)
+        if(state!!.currentPhase==1 || state!!.currentPhase==2)
             this.limit=false
         return super.makeDecision(state)
     }
