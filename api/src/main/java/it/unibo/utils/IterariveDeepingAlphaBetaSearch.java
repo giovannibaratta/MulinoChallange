@@ -26,6 +26,7 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
     protected double utilMin;
     protected int currDepthLimit;
     private boolean heuristicEvaluationUsed; // indicates that non-terminal
+    public boolean limit = true;
     // nodes
     // have been evaluated.
     private Timer timer;
@@ -87,7 +88,10 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
         P player = game.getPlayer(state);
         List<A> results = orderActions(state, game.getActions(state), player, 0);
         timer.start();
-        currDepthLimit = 5;
+        if(!limit)
+            currDepthLimit = 5;
+        else
+            currDepthLimit = 0;
         do {
             incrementDepthLimit();
             if (logEnabled)
