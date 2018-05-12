@@ -5,7 +5,6 @@ import it.unibo.utils.SquareMatrix
 import it.unibo.utils.filterCellIndexed
 import java.util.*
 import java.util.regex.Pattern
-import kotlin.collections.HashMap
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
 internal class State(externalGrid: SquareMatrix<Type>? = null,
@@ -67,6 +66,83 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
                 else -> throw IllegalStateException("Il valore ricevuto non è mappabile")
             }
         }
+    }
+
+    fun numberOfLBlocks(type: Type? = null): Int {
+        val typeToCheck = when (type == null) {
+            false -> type
+            true -> when (isWhiteTurn) {
+                true -> Type.WHITE
+                false -> Type.BLACK
+            }
+        }
+
+        if (typeToCheck == Type.WHITE && whiteBoardCount() < 3)
+            return 0
+
+        if (typeToCheck == Type.BLACK && blackBoardCount() < 3)
+            return 0
+
+        var count = 0
+        lBlocks.forEach {
+            if (grid[it[0]] == typeToCheck && grid[it[1]] == typeToCheck && grid[it[2]] == typeToCheck)
+                count++
+        }
+
+        return count
+    }
+
+    fun parallelStructures(type: Type? = null): Int {
+        val typeToCheck = when (type == null) {
+            false -> type
+            true -> when (isWhiteTurn) {
+                true -> Type.WHITE
+                false -> Type.BLACK
+            }
+        }
+        var count = 0
+
+        val v1 = grid[0].count { it == typeToCheck }
+        val v2 = grid[1].count { it == typeToCheck }
+        val v3 = grid[2].count { it == typeToCheck }
+        val v4 = grid[3].count { it == typeToCheck }
+        val v5 = grid[5].count { it == typeToCheck }
+        val v6 = grid[6].count { it == typeToCheck }
+
+        val h1 = grid[0, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        val h2 = grid[1, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        val h3 = grid[2, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        val h4 = grid[4, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        val h5 = grid[5, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        val h6 = grid[6, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+
+        // verticale sinitra
+        if (v1 > 2 && v2 > 2) count++
+        if (v2 > 2 && v3 > 2) count++
+        // verticale destra
+        if (v4 > 2 && v5 > 2) count++
+        if (v5 > 2 && v6 > 2) count++
+        // orizzontale sopra
+        if (h1 > 2 && h2 > 2) count++
+        if (h2 > 2 && h3 > 2) count++
+        // orizzontale sotto
+        if (h4 > 2 && h5 > 2) count++
+        if (h5 > 2 && h6 > 2) count++
+        return count
+    }
+
+    fun formLBlock(xIndex: Int, yIndex: Int): Boolean {
+        val type = grid[xIndex, yIndex]
+        val position = Position(xIndex, yIndex)
+        val left = leftAdjacent(position)
+        val right = rightAdjacent(position)
+        val top = topAdjacent(position)
+        val bottom = bottomAdjacent(position)
+
+        return (left.isPresent && left.get() == type && top.isPresent && top.get() == type)
+                || (left.isPresent && left.get() == type && bottom.isPresent && bottom.get() == type)
+                || (right.isPresent && right.get() == type && top.isPresent && top.get() == type)
+                || (right.isPresent && right.get() == type && bottom.isPresent && bottom.get() == type)
     }
 
     private fun millTest(position: Position, typeToMill: Type? = null): Pair<Boolean, Optional<Pair<Position, Position>>> {
@@ -447,6 +523,13 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         return sb.toString()
     }
 
+    fun gamePhase(): GamePhase = when {
+        this.whiteHandCount > 0 -> GamePhase.PHASE1
+        this.whiteHandCount == 0 && this.whiteBoardCount() > 3 -> GamePhase.PHASE2
+        this.whiteHandCount == 0 && this.whiteBoardCount() <= 3 -> GamePhase.PHASE3
+        else -> throw IllegalStateException("Fase non riconosciuta ${this.whiteHandCount}, ${this.whiteBoardCount()}, ${this.blackHandCount},${this.blackBoardCount()}")
+    }
+
     enum class Type {
         WHITE,
         BLACK,
@@ -454,15 +537,65 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         INVALID
     }
 
-
-    companion object {
-        private val cache = Cache()
+    enum class GamePhase {
+        PHASE1,
+        PHASE2,
+        PHASE3
     }
 
-    private class Cache {
-        val map = HashMap<Pair<State, Action>, ActionResult>()
-        fun get(s: State, a: Action): ActionResult? = map.get(Pair(s, a))
-        fun put(s: State, a: Action, ar: ActionResult) = map.put(Pair(s, a), ar)
+    companion object {
+        private val lBlocks = setOf(
+                // Livello esterno
+                arrayOf(Position(0, 3), Position(0, 6), Position(3, 6)), // angolo alto sx
+                arrayOf(Position(0, 6), Position(3, 6), Position(3, 5)), // superiore centrale sx
+                arrayOf(Position(6, 6), Position(3, 6), Position(3, 5)), // superiore centrale dx
+                arrayOf(Position(3, 6), Position(6, 6), Position(6, 3)), // angolo alto dx
+                arrayOf(Position(6, 6), Position(6, 3), Position(5, 3)), // destro sopra
+                arrayOf(Position(6, 0), Position(6, 3), Position(5, 3)), // destro sotto
+                arrayOf(Position(3, 3), Position(6, 0), Position(6, 3)), // angolo basso dx
+                arrayOf(Position(6, 0), Position(3, 0), Position(3, 1)), // sotto centrale dx
+                arrayOf(Position(0, 0), Position(3, 0), Position(3, 1)), // sotto centrale sx
+                arrayOf(Position(0, 0), Position(0, 3), Position(3, 0)), // angolo basso sx
+                arrayOf(Position(0, 0), Position(0, 3), Position(1, 3)), // sinitro sopra
+                arrayOf(Position(0, 6), Position(0, 3), Position(1, 3)), // sinitro sotto
+
+                // Livello intermedio
+                arrayOf(Position(1, 3), Position(1, 5), Position(3, 5)), // angolo alto sx
+                arrayOf(Position(1, 5), Position(3, 5), Position(3, 6)), // superiore centrale sx sopra
+                arrayOf(Position(1, 5), Position(3, 5), Position(3, 4)), // superiore centrale sx sotto
+                arrayOf(Position(3, 5), Position(3, 6), Position(5, 5)), // superiore centrale dx sopra
+                arrayOf(Position(3, 5), Position(3, 4), Position(5, 5)), // superiore centrale dx sotto
+                arrayOf(Position(3, 5), Position(5, 5), Position(5, 3)), // angolo alto dx
+                arrayOf(Position(5, 5), Position(5, 3), Position(4, 3)), // destro sopra sx
+                arrayOf(Position(5, 5), Position(5, 3), Position(6, 3)), // destro sopra dx
+                arrayOf(Position(5, 1), Position(5, 3), Position(4, 3)), // destro sotto sx
+                arrayOf(Position(5, 1), Position(5, 3), Position(6, 3)), // destro sotto dx
+                arrayOf(Position(5, 3), Position(5, 1), Position(3, 1)), // angolo basso dx
+                arrayOf(Position(5, 1), Position(3, 1), Position(3, 2)), // sotto centrale dx sopra
+                arrayOf(Position(5, 1), Position(3, 1), Position(3, 0)), // sotto centrale dx sotto
+                arrayOf(Position(1, 1), Position(3, 1), Position(3, 2)), // sotto centrale sx sopra
+                arrayOf(Position(1, 1), Position(3, 1), Position(3, 0)), // sotto centrale sx sotto
+                arrayOf(Position(3, 1), Position(1, 1), Position(1, 3)), // angolo basso sx
+                arrayOf(Position(1, 3), Position(1, 5), Position(0, 3)), // sinitro sopra sx
+                arrayOf(Position(1, 3), Position(1, 5), Position(2, 3)), // sinitro sopra dx
+                arrayOf(Position(1, 3), Position(1, 1), Position(0, 3)), // sinitro sotto sx
+                arrayOf(Position(1, 3), Position(1, 1), Position(2, 3)), // sinitro sotto dx
+
+                // Livello interno
+                arrayOf(Position(1, 3), Position(2, 3), Position(2, 4)),
+                arrayOf(Position(1, 3), Position(2, 3), Position(2, 2)),
+                arrayOf(Position(2, 3), Position(2, 4), Position(3, 4)),
+                arrayOf(Position(2, 3), Position(2, 2), Position(3, 2)),
+                arrayOf(Position(2, 2), Position(3, 2), Position(3, 1)),
+                arrayOf(Position(3, 1), Position(3, 2), Position(4, 2)),
+                arrayOf(Position(2, 4), Position(3, 4), Position(3, 5)),
+                arrayOf(Position(3, 5), Position(3, 4), Position(4, 4)),
+                arrayOf(Position(5, 3), Position(4, 3), Position(4, 4)),
+                arrayOf(Position(5, 3), Position(4, 3), Position(4, 2)),
+                arrayOf(Position(3, 2), Position(4, 2), Position(4, 3)),
+                arrayOf(Position(4, 3), Position(4, 4), Position(3, 4))
+        )
+
     }
 }
 

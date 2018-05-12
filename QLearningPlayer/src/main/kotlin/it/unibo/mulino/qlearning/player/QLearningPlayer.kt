@@ -6,9 +6,11 @@ import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.mulino.ai.ApproximateQLearning
 import it.unibo.mulino.player.AIPlayer
 import it.unibo.mulino.qlearning.player.model.Action
+import it.unibo.mulino.qlearning.player.model.ActionResult
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.mulino.qlearning.player.model.State
 import it.unibo.mulino.qlearning.player.model.State.Type
+import it.unibo.utils.Cache
 import it.unibo.utils.SquareMatrix
 import it.unibo.utils.filterCellIndexed
 import java.io.BufferedOutputStream
@@ -31,6 +33,7 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     private val previousState = Stack<State>()
     private var numeroSimulazioni = 0
 
+
     //<editor-fold desc="Features">
     /*********************
      *      FEATURES     *
@@ -39,33 +42,19 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     // TODO("Numero di caselle adiacenti libere disponibili")
 
     private val bias = { _: State, _: Action, _: State -> 1.0 }
-    private val miePedineFeature = { oldState: State, _: Action, _: State -> oldState.whiteBoardCount().toDouble() }
-    private val enemyPedineFeature = { oldState: State, _: Action, _: State -> oldState.blackBoardCount().toDouble() }
     private val chiudoUnMill = { oldState: State, action: Action, _: State ->
-        when (oldState.simulateAction(action).mill) {
+        when (oldState.simulateWithCache(action).mill) {
             true -> 0.3
             false -> 0.0
         }
     }
-    private val avversarioNonSiPuoMuovere = { _: State, _: Action, newState: State ->
-        when (!newState.enemyCanMove()) {
-            false -> 1.0
-            true -> 0.0
-        }
-    }
-    private val ioMiPossoMuovere = { _: State, _: Action, newState: State ->
-        // TODO("Da rivedere tendono conto di tutte le mosse possibili dell'avversario
-        when (newState.iCanMove()) {
-            true -> 0.0
-            false -> -1.0
-        }
-    }
-    private val winningState = { _: State, _: Action, newState: State ->
-        when (newState.blackHandCount == 0 && newState.blackBoardCount() <= 2) {
+    private val winningState = { oldState: State, action: Action, _: State ->
+        when (oldState.simulateWithCache(action).winState) {
             true -> 1.0
             false -> 0.0
         }
     }
+
     private val numeroPedineSpostabili = { _: State, _: Action, newState: State ->
         var count = 0
         newState.grid.forEachIndexed { xIndex, yIndex, value ->
@@ -94,36 +83,33 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         else
             0.0
     }
+    // solo fase 1 e 2
     private val rimuovoPedinaChePuoChiudereUnMill = { oldState: State, action: Action, newState: State ->
         var featureValue = 0.0
         if (action.remove.isPresent) {
             // posso rimuove pedina. Controllo che negli spazi adiacenti alla pedina da rimuovere si poteva formare un mill
-            // TODO("Nella versione in stato 3 dell'avversario dovrei controllare tutti i possibili mill")
             val enemyType = when (oldState.isWhiteTurn) {
                 true -> Type.BLACK
                 false -> Type.WHITE
             }
 
-            val adjs = newState.adjacent(action.remove.get(), true)
-                    .filter {
-                        it.second == Type.EMPTY
-                                && newState.closeAMill(it.first, enemyType).first
-                    }
-            if (adjs.any())
+            if (newState.adjacent(action.remove.get(), true).any {
+                        it.second == Type.EMPTY && newState.closeAMill(it.first, enemyType).first
+                    })
                 featureValue += 0.5
         }
         featureValue
     }
-    private val mettoLaPedinaInUnPostoChePuoGenerareUnMill = { oldState: State, action: Action, _: State ->
+    private val mettoLaPedinaInUnPostoChePuoGenerareUnMill = { oldState: State, action: Action, newState: State ->
         val myType = when (oldState.isWhiteTurn) {
             true -> Type.WHITE
             false -> Type.BLACK
         }
 
-        if (oldState.adjacent(action.to.get(), false).filter { it.second == myType }.any())
-            0.3
-        else
-            0.0
+        when (newState.adjacent(action.to.get()).any { it.second == myType }) {
+            true -> 0.3 // ho altre mie pedine vicino
+            false -> 0.0
+        }
     }
     private val enemyOpenMorris = { oldState: State, _: Action, newState: State ->
         val enemyType = when (oldState.isWhiteTurn) {
@@ -150,56 +136,59 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         count / 10
     }
     private val enemyCanWin = { _: State, _: Action, newState: State ->
-        val actions: List<Action>
+
         val invertedState = newState.invert()
-        if (invertedState.whiteHandCount > 0) {
-            // fase 1
-            actions = actionFromStatePhase1(invertedState)
-        } else if (invertedState.whiteHandCount == 0 && invertedState.whiteBoardCount() > 3) {
-            // fase 2
-            actions = actionFromStatePhase2(invertedState)
-        } else {
-            // fase 3
-            assert(invertedState.whiteHandCount == 0 && invertedState.whiteBoardCount() <= 3)
-            actions = actionFromStatePhase3(invertedState)
+
+        val actions = when (invertedState.gamePhase()) {
+            State.GamePhase.PHASE1 -> actionFromStatePhase1(invertedState)
+            State.GamePhase.PHASE2 -> actionFromStatePhase2(invertedState)
+            State.GamePhase.PHASE3 -> actionFromStatePhase3(invertedState)
         }
 
-        if (actions.any { invertedState.simulateAction(it).winState }) -1.0
+        if (actions.any { invertedState.simulateWithCache(it).winState }) -1.0
         else 0.0
     }
+    private val struttureAdL = { oldState: State, _: Action, newState: State ->
+        val myType = when (oldState.isWhiteTurn) {
+            true -> Type.WHITE
+            false -> Type.BLACK
+        }
 
-    private fun State.invert(): State {
-        val newMatrix = SquareMatrix<Type>(this.grid.size, { x, y ->
-            when (this.grid[x, y]) {
-                Type.EMPTY -> Type.EMPTY
-                Type.BLACK -> Type.WHITE
-                Type.WHITE -> Type.BLACK
-                Type.INVALID -> Type.INVALID
-            }
-        })
-        return State(newMatrix, true, this.blackHandCount, this.whiteHandCount)
+        newState.numberOfLBlocks(myType) / 10.0
     }
 
+    private val parallelStructures = { oldState: State, _: Action, newState: State ->
+        val myType = when (oldState.isWhiteTurn) {
+            true -> Type.WHITE
+            false -> Type.BLACK
+        }
 
-    private val features: Array<(State, Action, State) -> Double> =
+        newState.parallelStructures(myType) / 10.0
+    }
+
+    private val featuresPhase12: Array<(State, Action, State) -> Double> =
             arrayOf(
                     bias,
                     enemyCanWin,
-                    // [0] numero di pedine mie
-                    //miePedineFeature,
-                    // [1] numero di pedine avversarie
-                    //enemyPedineFeature,
-                    // [2] faccio un mill
                     chiudoUnMill,
-                    // [3] l'avversario non si può muovere
-                    avversarioNonSiPuoMuovere,
-                    // [4] io non mi posso muovere
-                    ioMiPossoMuovere,
-                    // [5] impedisco all'avversario di chiudere un mill nel suo turno
                     deniedEnemyMill,
-                    // [6] rimozione tattica
                     rimuovoPedinaChePuoChiudereUnMill,
-                    // [7] smartPlacing
+                    mettoLaPedinaInUnPostoChePuoGenerareUnMill,
+                    winningState,
+                    numeroPedineSpostabili,
+                    numeroPedineSpostabiliAvversario,
+                    enemyOpenMorris,
+                    myOpenMorris,
+                    struttureAdL,
+                    parallelStructures
+            )
+
+    private val featuresPhase3: Array<(State, Action, State) -> Double> =
+            arrayOf(
+                    bias,
+                    enemyCanWin,
+                    chiudoUnMill,
+                    deniedEnemyMill,
                     mettoLaPedinaInUnPostoChePuoGenerareUnMill,
                     winningState,
                     numeroPedineSpostabili,
@@ -213,9 +202,9 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     /*********************
      *        PESI       *
      *********************/
-    private val phase1Weights = Array(features.size, { 0.0 })
-    private val phase2Weights = Array(features.size, { 0.0 })
-    private val phaseFinalWeights = Array(features.size, { 0.0 })
+    private val phase1Weights = Array(featuresPhase12.size, { 0.0 })
+    private val phase2Weights = Array(featuresPhase12.size, { 0.0 })
+    private val phaseFinalWeights = Array(featuresPhase3.size, { 0.0 })
     //</editor-fold desc="Features">
 
     //<editor-fold desc="Reward">
@@ -237,23 +226,24 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         //println(oldState.toString())
         //println(newState.toString())
         var reward = 0.0
-        //val simulation = oldState.simulateAction(action)
+        //val simulation = oldState.simulateWithCache(action)
 
         if (previousState.contains(newState))
             reward -= 25.0
         //if(previousState.peek().whiteBoardCount() > oldState)
 
+        /*
         // reward sul numero nei pezzi
         if (newState.whiteBoardCount() > newState.blackBoardCount()) {
             reward += 0.5
         } else {
             reward -= 0.5
-        }
+        }*/
 
         // reward sul mill
         when (action.remove.isPresent) {
-            true -> reward += 3.0
-            else -> reward += -0.5
+            true -> reward += 1.0
+            else -> reward += -0.2
         }
 
         val (playerType, enemyType) = when (oldState.isWhiteTurn) {
@@ -263,13 +253,13 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
 
         // reward per mill bloccato
         if (oldState.closeAMill(action.to.get(), enemyType).first)
-            reward += 7.0
+            reward += 2.0
 
         // reward per strutture vicine
         if (newState.adjacent(action.to.get(), false).filter { it == playerType }.any())
-            reward += 1.0
+            reward += 0.3
         else
-            reward -= 0.2
+            reward -= 0.1
 
         // reward partita persa per soffocamento
         if (!newState.playerCanMove(playerType)) {
@@ -285,22 +275,16 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         if (newState.blackBoardCount() <= 2 && newState.blackHandCount == 0)
             reward += 25.0
 
-        // reward sconfitta
-        val actions: List<Action>
+
         val invertedState = newState.invert()
-        if (invertedState.whiteHandCount > 0) {
-            // fase 1
-            actions = actionFromStatePhase1(invertedState)
-        } else if (invertedState.whiteHandCount == 0 && invertedState.whiteBoardCount() > 3) {
-            // fase 2
-            actions = actionFromStatePhase2(invertedState)
-        } else {
-            // fase 3
-            assert(invertedState.whiteHandCount == 0 && invertedState.whiteBoardCount() <= 3)
-            actions = actionFromStatePhase3(invertedState)
+
+        val actions = when (invertedState.gamePhase()) {
+            State.GamePhase.PHASE1 -> actionFromStatePhase1(invertedState)
+            State.GamePhase.PHASE2 -> actionFromStatePhase2(invertedState)
+            State.GamePhase.PHASE3 -> actionFromStatePhase3(invertedState)
         }
 
-        if (actions.any { invertedState.simulateAction(it).winState }) reward -= 25.0
+        if (actions.any { invertedState.simulateWithCache(it).winState }) reward -= 25.0
 
         reward
     }
@@ -479,19 +463,19 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     private val applyAction: ((State, Action, State) -> Double) -> (State, Action) -> Pair<Double, State> = {
         val rewardFunction = it
         { state, action ->
-            val newState = state.simulateAction(action).newState
+            val newState = state.simulateWithCache(action).newState
             Pair(rewardFunction(state, action, newState), newState)
         }
     }
 
     private val discount = 0.99
-    private val alpha = 0.005
+    private val alpha = 0.00
     private val explorationRate = 0.0
 
     private val learnerPhase1 = ApproximateQLearning<State, Action>(/*{ 1.0/(numeroSimulazioni+1)*/{ alpha },
             { discount },
             explorationRate = { explorationRate },
-            featureExtractors = features,
+            featureExtractors = featuresPhase12,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase1,
             applyAction = applyAction(phase1Reward))
@@ -499,7 +483,7 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     private val learnerPhase2 = ApproximateQLearning<State, Action>(/*{ 1.0/(numeroSimulazioni+1)*/{ alpha },
             { discount },
             explorationRate = { explorationRate },
-            featureExtractors = features,
+            featureExtractors = featuresPhase12,
             weights = phase2Weights,
             actionsFromState = actionFromStatePhase2,
             applyAction = applyAction(phase1Reward))
@@ -508,7 +492,7 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
             { discount },
             explorationRate = { explorationRate },
             weights = phaseFinalWeights,
-            featureExtractors = features,
+            featureExtractors = featuresPhase3,
             actionsFromState = actionFromStatePhase3,
             applyAction = applyAction(phase1Reward))
 
@@ -566,13 +550,15 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
     }
 
     internal fun printPar() {
-        println("Alpha : ${alpha}")
-        println("Weights 1 : ${learnerPhase1.weights.joinToString(", ", "[", "]")}")
-        println("Weights 2 : ${learnerPhase2.weights.joinToString(", ", "[", "]")}")
-        println("Weights 3 : ${learnerPhase3.weights.joinToString(", ", "[", "]")}")
+        val sb = StringBuilder()
+        sb.append("Stat :\n")
+        sb.append("Alpha : ${alpha}\n")
+        sb.append("Cache hit : ${(cache.hits.toDouble() / cache.total) * 100}%")
+        sb.append("Weights 1 : ${learnerPhase1.weights.joinToString(", ", "[", "]")}\n")
+        sb.append("Weights 2 : ${learnerPhase2.weights.joinToString(", ", "[", "]")}\n")
+        sb.append("Weights 3 : ${learnerPhase3.weights.joinToString(", ", "[", "]")}\n")
+        println(sb.toString())
     }
-
-
 
     private fun normalize(state: ExternalState, playerType: ExternalState.Checker): ExternalState =
             when (playerType) {
@@ -637,6 +623,16 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         return xPos + yPos
     }
 
+    private fun State.simulateWithCache(action: Action): ActionResult {
+        val key = Pair(this, action)
+        var cached = cache.get(key)
+        if (cached == null) {
+            cached = this.simulateAction(action)
+            cache.put(key, cached)
+        }
+        return cached
+    }
+    
     fun load(noError: Boolean) {
         val saveFile = File("weights")
         if (!saveFile.exists()) {
@@ -674,6 +670,18 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         println("ph 3 " + phaseFinalWeights.joinToString(", ", "[", "]"))
     }
 
+    private fun State.invert(): State {
+        val newMatrix = SquareMatrix<Type>(this.grid.size, { x, y ->
+            when (this.grid[x, y]) {
+                Type.EMPTY -> Type.EMPTY
+                Type.BLACK -> Type.WHITE
+                Type.WHITE -> Type.BLACK
+                Type.INVALID -> Type.INVALID
+            }
+        })
+        return State(newMatrix, true, this.blackHandCount, this.whiteHandCount)
+    }
+
     fun save() {
         val saveFile = File("weights")
         if (saveFile.exists()) {
@@ -689,11 +697,10 @@ class QLearningPlayer(private val save: Boolean = true) : AIPlayer {
         os.close()
     }
 
-
     companion object {
-        const val version: Long = 2L
+        const val version: Long = 3L
+        private val cache = Cache<Pair<State, Action>, ActionResult>()
     }
-
 
     override fun matchStart() {
         load(true)
