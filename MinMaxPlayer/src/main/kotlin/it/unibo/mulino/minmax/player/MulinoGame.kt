@@ -366,7 +366,7 @@ object MulinoGame : Game<State, String, Checker> {
         return (isWinner(state!!, Checker.WHITE) || isWinner(state, Checker.BLACK))
     }
 
-    //MIGLIORABILE
+    /*
     fun isWinningConfiguration(state: State, checker: Checker): Boolean {
         var check = false
         var opposite = opposite[checker]
@@ -387,6 +387,7 @@ object MulinoGame : Game<State, String, Checker> {
         }
         return false
     }
+    */
 
     private fun getPiece(state : State, position: String): Checker {
         val (vertex, level) = toInternalPositions[position]!!
@@ -572,6 +573,7 @@ object MulinoGame : Game<State, String, Checker> {
         return false
     }
 
+    /*
     fun hasDoubleMorris(state : State, checker: Checker): Boolean {
         var count = 0
         for (position in getPositions(state, checker)) {
@@ -585,7 +587,7 @@ object MulinoGame : Game<State, String, Checker> {
         }
         return false
     }
-    /*
+    */
     fun hasDoubleMorris(state : State, checker: Checker): Boolean {
         for (position in getPositions(state, checker)) {
             val (vertex, level) = toInternalPositions[position]!!
@@ -609,21 +611,39 @@ object MulinoGame : Game<State, String, Checker> {
         }
         return false
     }
-    */
 
     fun getNum2Conf(state: State, checker: Checker): Int {
         var count = 0
+        val charChecker = checkersToChar[checker]
         for (position in getPositions(state, checker)) {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker])
+                    if (state.board[nextVertex[vertex]!!][level] == charChecker &&
+                            state.board[precVertex[vertex]!!][level] == 'e')
                         count++
-                    if (state.board[precVertex[vertex]!!][level] == checkersToChar[checker])
+                    else if (state.board[precVertex[vertex]!!][level] == charChecker &&
+                            state.board[nextVertex[vertex]!!][level] == 'e')
                         count++
-                    for(adiacentLevel in adiacentLevels[level]!!){
-                        if (state.board[vertex][adiacentLevel] == checkersToChar[checker])
-                            count++
+                    when(level){
+                        0->{
+                            if(state.board[vertex][1] == charChecker &&
+                                    state.board[vertex][2] == 'e')
+                                count++
+                        }
+                        1->{
+                            if(state.board[vertex][0] == charChecker &&
+                                    state.board[vertex][2] == 'e')
+                                count++
+                            else if (state.board[vertex][2] == charChecker &&
+                                    state.board[vertex][0] == 'e')
+                                count++
+                        }
+                        2->{
+                            if(state.board[vertex][1] == charChecker &&
+                                    state.board[vertex][0] == 'e')
+                                count++
+                        }
                     }
                 }
             }
@@ -638,7 +658,9 @@ object MulinoGame : Game<State, String, Checker> {
             when (vertex) {
                 0, 2, 4, 6 -> {
                     if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker])
+                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker] &&
+                            state.board[nextVertex[nextVertex[vertex]!!]!!][level] == 'e' &&
+                            state.board[precVertex[precVertex[vertex]!!]!!][level] == 'e')
                         count++
 
                 }
@@ -646,28 +668,44 @@ object MulinoGame : Game<State, String, Checker> {
                     when (level) {
                         1 -> {
                             if ((state.board[nextVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][nextLevel[level]!!] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][nextLevel[level]!!] =='e') &&
+                                    (state.board[vertex][nextVertex[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] =='e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
                                 count++
                             if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]))
+                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
+                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
+                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
                                 count++
                         }
                     }

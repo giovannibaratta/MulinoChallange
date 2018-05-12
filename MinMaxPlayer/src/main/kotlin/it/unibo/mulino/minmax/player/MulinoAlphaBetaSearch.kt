@@ -72,16 +72,19 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     amount += openedMorrisCoeff
                 if (game.hasDoubleMorris(state, player))
                     amount += doubleMorrisCoeff
+                /*
                 if (game.isWinningConfiguration(state, player))
                     amount += winningConfCoeff[0]
-
+                */
 
                 if (game.hasOpenedMorris(state, opposite))
                     amount -= openedMorrisCoeff
                 if (game.hasDoubleMorris(state, opposite))
                     amount -= doubleMorrisCoeff
+                /*
                 if (game.isWinningConfiguration(state, opposite))
                     amount -= winningConfCoeff[0]
+                */
             }
             3->{
                 amount = num2PiecesCoeff[1] * (game.getNum2Conf(state, player!!) - game.getNum2Conf(state, opposite)) +
@@ -96,6 +99,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                             amount-=closedMorrisCoeff[2]
                     }
                 }
+                /*
                 if (game.isWinningConfiguration(state, player)){
                     //println("WINNING CONFIGURATION for $player : ${game.printState(state!!)}")
                     amount += winningConfCoeff[1]
@@ -105,6 +109,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     //println("WINNING CONFIGURATION for $opposite : ${game.printState(state!!)}")
                     amount -= winningConfCoeff[1]
                 }
+                */
             }
         }
         //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
