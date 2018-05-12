@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
             "java -jar cook.jar",
             "java -jar deep.jar",
             "java -jar ginew.jar",
-            "java -jar gallina.jar",
+            //"java -jar gallina.jar",
             "java -jar unknown.jar",
 
             "java -jar barba.jar",
@@ -22,7 +22,7 @@ fun main(args: Array<String>) {
             "java -jar cook.jar",
             "java -jar deep.jar",
             "java -jar ginew.jar",
-            "java -jar gallina.jar",
+            //"java -jar gallina.jar",
             "java -jar unknown.jar"
     )
 
@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
             "-w -t 55",
             "-w -t 55", // deep
             "-t 55",
-            "White",
+            //"White",
             "White",
 
 
@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
             "-w -t 55",
             "-w -t 55", // deep
             "-t 55",
-            "White",
+            //"White",
             "White"
     )
 
@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
             "-b -t 55",
             "-b -t 55", // deep
             "-b -t 55",
-            "Black",
+            //"Black",
             "Black",
 
 
@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             "-b -t 55",
             "-b -t 55", // deep
             "-b -t 55",
-            "Black",
+            //"Black",
             "Black"
 
     )
@@ -68,9 +68,9 @@ fun main(args: Array<String>) {
     val myClientW = "java -jar client.jar White qLearning"
     val myClientB = "java -jar client.jar Black qLearning"
 
-    for (i in 0..100) {
+    for (i in 0..5) {
 
-        val player = ((Math.random() * 13) % 12).toInt()
+        val player = ((Math.random() * 11) % 10).toInt()
         val white = (Math.random()) * 100 % 100
 
         println("\n\n!! Avversario $player , white $white !! \n\n")
@@ -133,17 +133,20 @@ fun main(args: Array<String>) {
             val pLocal = pWhite ?: throw IllegalStateException("Non sono riuscito ad avviare il processo")
             val buf = pLocal.inputStream.bufferedReader()
             val err = pLocal.errorStream.bufferedReader()
+            val print = white > 50
             thread {
                 var line = buf.readLine()
                 while (line != null) {
-                    //println(line)
+                    if (print)
+                        println(line)
                     line = buf.readLine()
                 }
             }
             thread {
                 var line = err.readLine()
                 while (line != null) {
-                    //println(line)
+                    if (print)
+                        println(line)
                     line = err.readLine()
                 }
             }
@@ -157,7 +160,7 @@ fun main(args: Array<String>) {
 
         thread {
             Thread.sleep(400)
-            pBlack = when (white >= 50) {
+            pBlack = when (white > 50) {
                 true -> Runtime.getRuntime().exec(enemyCmd[player] + " " + enemyBlack[player])
                 false -> Runtime.getRuntime().exec(myClientB)
             }
@@ -165,17 +168,20 @@ fun main(args: Array<String>) {
 
             val buf = pLocal.inputStream.bufferedReader()
             val err = pLocal.errorStream.bufferedReader()
+            val print = white <= 50
             thread {
                 var line = buf.readLine()
                 while (line != null) {
-                    //println(line)
+                    if (print)
+                        println(line)
                     line = buf.readLine()
                 }
             }
             thread {
                 var line = err.readLine()
                 while (line != null) {
-                    //println(line)
+                    if (print)
+                        println(line)
                     line = err.readLine()
                 }
             }
@@ -194,10 +200,4 @@ fun main(args: Array<String>) {
     }
 
     println("Fine training")
-
-    /*for(i in 0 .. 10){
-
-    }*/
-
-
 }

@@ -37,11 +37,11 @@ public class Engine {
 	private GUI theGui;
 
 	public Engine(int timeout) {
-		this(timeout, 32);
+        this(timeout, 16);
 	}
 
 	public Engine() {
-		this(120, 32);
+        this(60, 16);
 	}
 
 	/**

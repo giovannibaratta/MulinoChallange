@@ -1,26 +1,28 @@
 package it.unibo.mulino.qlearning.player.model
 
 import it.unibo.utils.Matrix
-import it.unibo.utils.SquareMatrix
 import it.unibo.utils.filterCellIndexed
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.math.max
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-internal class State(externalGrid: SquareMatrix<Type>? = null,
+internal class State(externalGrid: Matrix<Type>? = null,
                      val isWhiteTurn: Boolean,
                      val whiteHandCount: Int,
                      val blackHandCount: Int) {
 
-    var grid: SquareMatrix<Type>
+    var grid: Matrix<Type>
     val boardSize: Int
     val middleLine: Int
     val midllePoint: Position
 
     init {
+        require(whiteHandCount >= 0, { "White Hand count < 0" })
+        require(blackHandCount >= 0, { "Black Hand count < 0" })
         if (externalGrid == null) {
-            grid = SquareMatrix<Type>(7, { _, _ -> Type.INVALID })
-            boardSize = grid.size
+            grid = Matrix.buildMatrix(7, 7, { _, _ -> Type.INVALID })
+            boardSize = grid.rows
             middleLine = (boardSize - 1) / 2
             midllePoint = Position(middleLine, middleLine)
             // Inserisco le caselle vuote valide
@@ -33,12 +35,11 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
             }
         } else {
             grid = externalGrid
-            boardSize = grid.size
+            boardSize = grid.rows
             middleLine = (boardSize - 1) / 2
             midllePoint = Position(middleLine, middleLine)
         }
     }
-
 
     fun blackBoardCount() = grid.count { it == Type.BLACK }
 
@@ -92,6 +93,8 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         return count
     }
 
+
+    // TODO("Da rivedere e verificare che le pedine siano unicamente sui vertici e non solo in numero")
     fun parallelStructures(type: Type? = null): Int {
         val typeToCheck = when (type == null) {
             false -> type
@@ -100,34 +103,58 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
                 false -> Type.BLACK
             }
         }
+
+        val enemyType = when (typeToCheck) {
+            Type.WHITE -> Type.BLACK
+            Type.BLACK -> Type.WHITE
+            else -> throw IllegalStateException("Type to check non valido")
+        }
         var count = 0
 
-        val v1 = grid[0].count { it == typeToCheck }
-        val v2 = grid[1].count { it == typeToCheck }
-        val v3 = grid[2].count { it == typeToCheck }
-        val v4 = grid[3].count { it == typeToCheck }
-        val v5 = grid[5].count { it == typeToCheck }
-        val v6 = grid[6].count { it == typeToCheck }
+        // lato sx verticale
+        if (grid[0, 0] == typeToCheck && grid[0, 6] == typeToCheck
+                && grid[1, 1] == typeToCheck && grid[1, 5] == typeToCheck
+                && (grid[0, 3] != enemyType) && grid[1, 3] != enemyType)
+            count++
 
-        val h1 = grid[0, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
-        val h2 = grid[1, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
-        val h3 = grid[2, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
-        val h4 = grid[4, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
-        val h5 = grid[5, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
-        val h6 = grid[6, Matrix.Orientation.VERTICAL].count { it == typeToCheck }
+        if (grid[2, 2] == typeToCheck && grid[2, 4] == typeToCheck
+                && grid[1, 1] == typeToCheck && grid[1, 5] == typeToCheck
+                && (grid[2, 3] != enemyType) && grid[1, 3] != enemyType)
+            count++
 
-        // verticale sinitra
-        if (v1 > 2 && v2 > 2) count++
-        if (v2 > 2 && v3 > 2) count++
-        // verticale destra
-        if (v4 > 2 && v5 > 2) count++
-        if (v5 > 2 && v6 > 2) count++
-        // orizzontale sopra
-        if (h1 > 2 && h2 > 2) count++
-        if (h2 > 2 && h3 > 2) count++
-        // orizzontale sotto
-        if (h4 > 2 && h5 > 2) count++
-        if (h5 > 2 && h6 > 2) count++
+        // lato dx verticale
+        if (grid[6, 0] == typeToCheck && grid[6, 6] == typeToCheck
+                && grid[5, 1] == typeToCheck && grid[5, 5] == typeToCheck
+                && (grid[6, 3] != enemyType) && grid[5, 3] != enemyType)
+            count++
+
+        if (grid[4, 2] == typeToCheck && grid[4, 4] == typeToCheck
+                && grid[5, 1] == typeToCheck && grid[5, 5] == typeToCheck
+                && (grid[5, 3] != enemyType) && grid[4, 3] != enemyType)
+            count++
+
+        // sopra orizzontale
+        if (grid[0, 6] == typeToCheck && grid[6, 6] == typeToCheck
+                && grid[1, 5] == typeToCheck && grid[5, 5] == typeToCheck
+                && (grid[3, 6] != enemyType) && grid[3, 5] != enemyType)
+            count++
+
+        if (grid[2, 4] == typeToCheck && grid[4, 4] == typeToCheck
+                && grid[1, 5] == typeToCheck && grid[5, 5] == typeToCheck
+                && (grid[3, 4] != enemyType) && grid[3, 5] != enemyType)
+            count++
+
+        // lato dx verticale
+        if (grid[0, 0] == typeToCheck && grid[6, 0] == typeToCheck
+                && grid[1, 1] == typeToCheck && grid[5, 1] == typeToCheck
+                && (grid[3, 0] != enemyType) && grid[3, 1] != enemyType)
+            count++
+
+        if (grid[2, 2] == typeToCheck && grid[4, 2] == typeToCheck
+                && grid[1, 1] == typeToCheck && grid[5, 1] == typeToCheck
+                && (grid[3, 2] != enemyType) && grid[3, 1] != enemyType)
+            count++
+
         return count
     }
 
@@ -256,16 +283,16 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         //if(cached != null)
         //    return cached
 
-        val newStateGrid = SquareMatrix(boardSize, { xIndex, yIndex -> grid[xIndex, yIndex] })
+        val newStateGrid = grid.deepCopy()
         val newState: State
         if (!action.from.isPresent) {
             // fase 1
             if (isWhiteTurn) {
                 // diminuisco i bianchi
-                newState = State(newStateGrid, !isWhiteTurn, whiteHandCount - 1, blackHandCount)
+                newState = State(newStateGrid, !isWhiteTurn, max(whiteHandCount - 1, 0), blackHandCount)
             } else {
                 //diminuisco i neri
-                newState = State(newStateGrid, !isWhiteTurn, whiteHandCount, blackHandCount - 1)
+                newState = State(newStateGrid, !isWhiteTurn, whiteHandCount, max(blackHandCount - 1, 0))
             }
         } else {
             // fase 2
@@ -481,7 +508,7 @@ internal class State(externalGrid: SquareMatrix<Type>? = null,
         return sb.toString()
     }*/
 
-    operator fun <T> Matrix<T>.get(position: Position) = this[position.x][position.y]
+    operator fun <T> Matrix<T>.get(position: Position) = this[position.x, position.y]
 
     operator fun <T> Matrix<T>.set(position: Position, value: T) {
         this[position.x, position.y] = value

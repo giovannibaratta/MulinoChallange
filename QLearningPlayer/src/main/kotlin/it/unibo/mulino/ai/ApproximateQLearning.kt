@@ -9,11 +9,17 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
                                  private val applyAction: (T, E) -> Pair<Double, T> // reward State
 ) {
 
-    private fun qValue(state: T, agentAction: E, newState: T) =
-            featureExtractors.mapIndexed { index, f -> f(state, agentAction, newState) * weights[index] }.sum()
+    private fun qValue(state: T, agentAction: E, newState: T): Double {
+        var value = 0.0
+        for (i in featureExtractors.indices) {
+            value += featureExtractors[i](state, agentAction, newState) * weights[i]
+        }
+        return value
+    }
+    //featureExtractors.mapIndexed { index, f -> f(state, agentAction, newState) * weights[index] }.sum()
 
     fun think(state: T): E {
-        //printActionValue(state)
+        printActionValue(state)
         val nextActionAndValue = when (Math.random() < explorationRate()) {
             true -> getRandomACtion(state)
             false -> getNextBestAction(state)
@@ -36,7 +42,15 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
     //debug
     private fun printActionValue(state: T) {
         val actions = actionsFromState(state)
-        actions.forEach { println("Action " + it + " - value " + qValue(state, it, applyAction(state, it).second)) }
+        actions.forEach {
+            val res = applyAction(state, it)
+            println("Action " + it + " - value " + qValue(state, it, res.second))
+            val action = it
+            featureExtractors.forEachIndexed { index, f ->
+                println("f[$index] - ${f(state, action, res.second)} - ${f(state, action, res.second) * weights[index]}")
+            }
+            println("\n")
+        }
     }
 
     private fun getNextBestAction(state : T)

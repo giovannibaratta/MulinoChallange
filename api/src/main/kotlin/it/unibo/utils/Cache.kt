@@ -1,12 +1,14 @@
 package it.unibo.utils
 
 class Cache<K, V> {
+
+    private val map = HashMap<K, V>()
     var hits = 0
         private set
     var total = 0
         private set
-
-    private val map = HashMap<K, V>()
+    var size = map.size
+        private set
 
     fun get(k: K): V? {
         val res = map.get(k)

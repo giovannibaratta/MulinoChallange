@@ -21,8 +21,8 @@ class StateTest {
 
         val state = ExternalState()
         val parsed = State(state, true)
-        Assert.assertEquals(expectedGrid.size, parsed.grid.size)
-        Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
+        Assert.assertEquals(expectedGrid.size, parsed.grid.rows)
+        Assert.assertEquals(expectedGrid[0].size, parsed.grid.rows)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
             arrayOfTypes.forEachIndexed { indexC, type ->
                 Assert.assertEquals(type, parsed.grid[index, indexC])
@@ -45,8 +45,8 @@ class StateTest {
         val state = ExternalState()
         state.board.put("a1", ExternalState.Checker.WHITE)
         val parsed = State(state, true)
-        Assert.assertEquals(expectedGrid.size, parsed.grid.size)
-        Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
+        Assert.assertEquals(expectedGrid.size, parsed.grid.rows)
+        Assert.assertEquals(expectedGrid[0].size, parsed.grid.rows)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
             arrayOfTypes.forEachIndexed { indexC, type ->
                 Assert.assertEquals(type, parsed.grid[index, indexC])
@@ -71,8 +71,8 @@ class StateTest {
         state.board.put("d2", ExternalState.Checker.WHITE)
         state.board.put("d3", ExternalState.Checker.BLACK)
         val parsed = State(state, true)
-        Assert.assertEquals(expectedGrid.size, parsed.grid.size)
-        Assert.assertEquals(expectedGrid[0].size, parsed.grid.size)
+        Assert.assertEquals(expectedGrid.size, parsed.grid.rows)
+        Assert.assertEquals(expectedGrid[0].size, parsed.grid.rows)
         expectedGrid.forEachIndexed { index, arrayOfTypes ->
             arrayOfTypes.forEachIndexed { indexC, type ->
                 Assert.assertEquals(type, parsed.grid[index, indexC])

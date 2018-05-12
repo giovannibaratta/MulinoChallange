@@ -28,8 +28,8 @@ val player = hashMapOf(
         Pair(Algorithm.MINMAX, MinMaxPlayer()),
         Pair(Algorithm.MINMAX5, MinMaxPlayer(5)),
         Pair(Algorithm.MINMAX10, MinMaxPlayer(10)),
-        Pair(Algorithm.QLEARNING, QLearningPlayer()),
-        Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false))
+        Pair(Algorithm.QLEARNING, QLearningPlayer(explorationRate = { 0.0 }, alpha = { 0.0 })),
+        Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false, explorationRate = { 0.0 }, alpha = { 0.0 }))
 )
 
 fun main(args: Array<String>) {

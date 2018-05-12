@@ -8,7 +8,7 @@ import org.junit.Test
 
 class QLearningPlayerTest {
 
-    private val player = QLearningPlayer()
+    private val player = QLearningPlayer(explorationRate = { 0.0 }, alpha = { 0.0 })
 
     @Test
     fun actionPhase1Test() {

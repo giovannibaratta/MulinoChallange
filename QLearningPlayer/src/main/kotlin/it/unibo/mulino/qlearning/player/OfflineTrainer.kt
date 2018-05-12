@@ -18,13 +18,16 @@ fun main(args: Array<String>) {
 
     val lines = dataFile.readLines()
     println("Data set size : ${lines.size}")
-    val trainer = QLearningPlayer(true)
+    val trainer = QLearningPlayer(true, { 0.0 }, { 0.02 })
     var count = 0
     trainer.matchStart()
 
-    for (i in 0..1000) {
-        val random = (Math.random() * lines.size) % lines.size
-        println("random $random")
+    val iteration = 100000
+
+    for (i in 0..iteration) {
+        var random = (Math.random() * lines.size) % lines.size
+        //println("random ${random.toInt()}")
+        //random = 214911.0
         val mappedState = map(lines[(random).toInt()])
         if (mappedState.whiteHandCount > 0) {
             // fase 1
@@ -39,12 +42,13 @@ fun main(args: Array<String>) {
             throw IllegalStateException("Fase non riconosciuta o non valida")
         }
         count++
-        if (count % 1000 == 0) {
-            println(" Working ${(100 * count) / lines.size}% ...")
+        if (count % 200 == 0) {
+            println(" Working ${(100 * count) / iteration}% ...")
             trainer.printPar()
             println()
         }
     }
+    trainer.printPar()
 
     /*
     lines.forEach {

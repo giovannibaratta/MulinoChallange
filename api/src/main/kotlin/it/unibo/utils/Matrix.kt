@@ -1,43 +1,71 @@
 package it.unibo.utils
 
-open class Matrix<T>(val rows: Int,
-                     val columns: Int,
-                     init: (Int, Int) -> T) : Iterable<T> {
+open class Matrix<T> private constructor(val rows: Int,
+                                         val columns: Int,
+                                         private val matrix: MutableList<T>) {
 
-    private var matrix: MutableList<ArrayList<T>>
-
-    init {
-        val rowsArray = mutableListOf<ArrayList<T>>()
-        for (i in 0 until rows) {
-            val columnElem = arrayListOf<T>()
-            for (y in 0 until columns)
-                columnElem.add(init(i, y))
-            rowsArray.add(columnElem)
-        }
-        matrix = rowsArray
+    companion object {
+        fun <T> buildMatrix(rows: Int, columns: Int, init: (Int, Int) -> T) = Matrix(rows, columns, MutableList(rows * columns, { index ->
+            val row = index / columns
+            val column = index % columns
+            init(row, column)
+        }))
     }
 
-    fun count(predicate: (T) -> Boolean): Int = matrix.sumBy { it.count(predicate) }
+    /*
+    private val matrix = MutableList(rows * columns, { index ->
+        val row = index / columns
+        val column = index % columns
+        init(row, column)
+    })*/
 
-    operator fun get(i: Int) = get(i, Orientation.HORIZONTAL)
+    /*
+    /*private constructor(rows: Int, columns: Int, list : MutableList<T>) : this(rows, columns){
 
-    operator fun get(i: Int, orientation: Orientation = Orientation.HORIZONTAL): List<T> =
+    }*/
+
+    constructor(rows: Int,
+                        columns: Int) : this(rows, columns, null){
+
+    }
+
+    constructor(rows: Int,
+                columns: Int,
+                init: (Int, Int) -> T) : this(rows, columns) /*: Iterable<T>*/ {
+
+    }*/
+    //private var matrix: MutableList<ArrayList<T>>
+
+/*init {
+    varowsArray = mutableListOf<ArrayList<T>>()
+    for (i in 0 until rows) {
+        val columnElem = arrayListOf<T>()
+        for (y in 0 until columns)
+            columnElem.add(init(i, y))
+        rowsArray.add(columnElem)
+    }
+    matrix = rowsArray
+}*/
+
+    fun count(predicate: (T) -> Boolean): Int = matrix.count(predicate)
+
+//operator fun get(i: Int) = get(i, Orientation.HORIZONTAL)
+
+    operator fun get(i: Int, orientation: Orientation): MutableList<T> =
             when (orientation) {
-                Orientation.HORIZONTAL -> matrix[i].toList()
+                Orientation.HORIZONTAL -> {
+                    MutableList(columns, { this[i, it] })
+                }
                 Orientation.VERTICAL -> {
-                    val list = arrayListOf<T>()
-                    for (columnIndex in 0 until rows) {
-                        list.add(matrix.get(columnIndex)[i])
-                    }
-                    list.toList()
+                    MutableList(rows, { this[it, i] })
                 }
             }
 
-    operator fun get(i: Int, j: Int) = matrix[i][j]
+    operator fun get(i: Int, j: Int) = matrix[i * columns + j]
 
-    operator fun set(i: Int, j: Int, value: T) = matrix[i].set(j, value)
+    operator fun set(i: Int, j: Int, value: T) = matrix.set(i * columns + j, value)
 
-    override fun iterator(): Iterator<T> = object : Iterator<T> {
+    fun iterator(): Iterator<T> = object : Iterator<T> {
 
         private var currentRow = 0
         private var currentColumns = 0
@@ -45,7 +73,7 @@ open class Matrix<T>(val rows: Int,
         override fun hasNext(): Boolean = currentRow < rows && currentColumns < columns
 
         override fun next(): T {
-            val elem = matrix[currentRow][currentColumns]
+            val elem = this@Matrix[currentRow, currentColumns]
             currentColumns++
             if (currentColumns >= columns) {
                 currentColumns = 0
@@ -61,15 +89,22 @@ open class Matrix<T>(val rows: Int,
     }
 
     fun forEachIndexed(action: (Int, Int, T) -> Unit) {
-        matrix.forEachIndexed { rowIndex, column ->
-            column.forEachIndexed { colIndex, value ->
-                action(rowIndex, colIndex, value)
-            }
+        matrix.forEachIndexed { index, t ->
+            val row = index / columns
+            val column = index % columns
+            action(row, column, t)
         }
     }
+
+    fun forEach(action: (T) -> Unit) = matrix.forEach(action)
+
+    private fun linearize(x: Int, y: Int): Int = x * columns + y
+
+    fun deepCopy(): Matrix<T> = Matrix(rows, columns, MutableList(matrix.size, { matrix[it] }))
 }
 
-data class SquareMatrix<T>(val size: Int, private val init: (Int, Int) -> T) : Matrix<T>(size, size, init)
+
+//data class Matrix<T>(val size: Int, private val init: (Int, Int) -> T) : Matrix<T>(size, size, init)
 
 
 fun <T> Matrix<T>.filterCell(predicate: (T) -> Boolean): List<T> {
@@ -90,7 +125,7 @@ fun <T> Matrix<T>.filterCellIndexed(predicate: (T) -> Boolean): List<Pair<Pair<I
 }
 
 // TODO("Da testare, possibile bug sull'iterator")
-fun <T> Matrix<T>.forEachCell(action: (T) -> Unit) = this.forEach { action(it) }
+fun <T> Matrix<T>.forEachCell(action: (T) -> Unit) = this.iterator().forEach { action(it) }
 
 fun <T> Array<Array<T>>.filterCell(predicate: (T) -> Boolean): List<T> {
     val filtered = mutableListOf<T>()
