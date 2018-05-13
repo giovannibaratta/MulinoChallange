@@ -58,13 +58,13 @@ class QLearningPlayer(private val save: Boolean = true,
     private val bias = { _: State, _: Action, _: State -> 1.0 }
     internal val chiudoUnMill = { oldState: State, action: Action, _: State ->
         when (oldState.simulateWithCache(action).mill) {
-            true -> 0.3
+            true -> 0.4
             false -> 0.0
         }
     }
     internal val winningState = { oldState: State, action: Action, _: State ->
         when (oldState.simulateWithCache(action).winState) {
-            true -> 1.0
+            true -> 2.0
             false -> 0.0
         }
     }
@@ -88,7 +88,7 @@ class QLearningPlayer(private val save: Boolean = true,
         -count.toDouble() / 10
     }
 
-    internal val deniedEnemyMillPositive = 0.7
+    internal val deniedEnemyMillPositive = 0.8
     internal val deniedEnemyMillNegative = 0.0
 
     internal val deniedEnemyMill = { oldState: State, action: Action, _: State ->
@@ -198,6 +198,17 @@ class QLearningPlayer(private val save: Boolean = true,
         newState.parallelStructures(myType) / 10.0
     }
 
+    internal val pezziDa2 = { oldState: State, action: Action, newState: State ->
+        val myType = when (oldState.isWhiteTurn) {
+            true -> Type.WHITE
+            false -> Type.BLACK
+        }
+        if (newState.adjacent(action.to.get(), false).any { it == myType })
+            0.3
+        else
+            0.0
+    }
+
     private val featuresPhase12: Array<(State, Action, State) -> Double> =
             arrayOf(
                     bias, //0
@@ -210,6 +221,7 @@ class QLearningPlayer(private val save: Boolean = true,
                     myOpenMorris, //7
                     struttureAdL, //8
                     parallelStructures, // 9
+                    pezziDa2,
                     //numeroPedineSpostabiliAvversario, //10
                     //enemyOpenMorris, // 11
                     enemyCanWin //12
@@ -223,6 +235,8 @@ class QLearningPlayer(private val save: Boolean = true,
                     deniedEnemyMill,
                     mettoLaPedinaInUnPostoChePuoGenerareUnMill,
                     winningState,
+
+                    pezziDa2,
                     //numeroPedineSpostabili,
                     //numeroPedineSpostabiliAvversario,
                     //enemyOpenMorris,
@@ -251,6 +265,9 @@ class QLearningPlayer(private val save: Boolean = true,
             true -> Pair(Type.WHITE, Type.BLACK)
             false -> Pair(Type.BLACK, Type.WHITE)
         }
+
+        if (newState.adjacent(action.to.get(), false).any { it == playerType })
+            reward += 0.5
 
         var differenceEnemyMorris = 0.0
         var differenceMossePossibiliAvversario = 0.0
@@ -340,6 +357,8 @@ class QLearningPlayer(private val save: Boolean = true,
             reward -= 25.0
         }*/
 
+
+        // OLD REWARD
         // reward partita vinta per soffocamento
         if (!newState.playerCanMove(enemyType)) {
             reward += 25.0
@@ -348,7 +367,7 @@ class QLearningPlayer(private val save: Boolean = true,
         // reward partita vinta per kill
         if (newState.blackBoardCount() <= 2 && newState.blackHandCount == 0)
             reward += 25.0
-
+/*
         val invertedState = newState.invert()
 
         val actions = when (invertedState.gamePhase()) {
@@ -359,9 +378,55 @@ class QLearningPlayer(private val save: Boolean = true,
 
         // partita persa con una mossa dell'avversario
         if (actions.any { invertedState.simulateWithCache(it).winState }) reward -= 25.0
+        */
+
+        reward += numeroSimulazioni(value = -30.0, number = 2, state = newState.invert())
 
         reward
     }
+
+    private fun numeroSimulazioni(value: Double, number: Int, state: State): Double {
+        if (number == 0) return 0.0
+
+        val actions = when (state.gamePhase()) {
+            State.GamePhase.PHASE1 -> actionFromStatePhase1(state)
+            State.GamePhase.PHASE2 -> actionFromStatePhase2(state)
+            State.GamePhase.PHASE3 -> actionFromStatePhase3(state)
+        }
+
+        for (action in actions) {
+            val result = state.simulateAction(action)
+            if (result.winState) return value
+            val simulazione = numeroSimulazioni(-value / 2, number - 1, state.invert())
+            if (simulazione != 0.0)
+                return simulazione
+        }
+
+        return 0.0
+        /*
+        return when(newState.winState) {
+            true -> value
+            false -> {
+                val invertedState = newState.newState.invert()
+
+                val actions = when (invertedState.gamePhase()) {
+                    State.GamePhase.PHASE1 -> actionFromStatePhase1(invertedState)
+                    State.GamePhase.PHASE2 -> actionFromStatePhase2(invertedState)
+                    State.GamePhase.PHASE3 -> actionFromStatePhase3(invertedState)
+                }
+
+                for (action in actions){
+                    val result = invertedState.simulateAction(action)
+                    if(result.winState) return value
+                    else numeroSimulazioni(-value/2,number-1,result.newState,)
+                }
+                //actions.any { invertedState.simulateAction(action).winState }
+
+                //actions.map { invertedState.simulateAction(action).winState/*numeroSimulazioni(-value/2, number-1, invertedState, it)*/ }.max() ?: 0.0
+            }
+        }*/
+    }
+
 
     private val phase2Reward = { oldState: State, action: Action, newState: State ->
 

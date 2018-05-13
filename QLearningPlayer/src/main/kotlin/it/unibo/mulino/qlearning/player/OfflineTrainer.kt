@@ -22,10 +22,10 @@ fun main(args: Array<String>) {
     var count = 0
     trainer.matchStart()
 
-    val iteration = lines.size
+    val iteration = 75000
 
     for (i in 0..iteration) {
-        var random = (Math.random() * lines.size) % lines.size
+        val random = (Math.random() * lines.size) % lines.size
         //println("random ${random.toInt()}")
         //random = 214911.0
         val mappedState = map(lines[(random).toInt()])
@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
             throw IllegalStateException("Fase non riconosciuta o non valida")
         }
         count++
-        if (count % 200 == 0) {
+        if (count % 500 == 0) {
             println(" Working ${(100 * count) / iteration}% ...")
             trainer.printPar()
             println()
