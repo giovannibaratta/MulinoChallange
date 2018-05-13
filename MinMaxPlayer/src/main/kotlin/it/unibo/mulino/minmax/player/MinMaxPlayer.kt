@@ -69,10 +69,8 @@ class MinMaxPlayer(val time: Int = 58) : AIPlayer {
         }
         //val totalTime = System.nanoTime()-startTime
         //println("Tempo inizializzazione: $totalTime")
-        val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -1000.00, 1000.00, time)
+        val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, time)
         val actionString = search.makeDecision(clientState)
-        println("Stati generati: ${game.count}")
-        game.count=0
         when(actionString.get(0)){
             '1'->{
                 val action = Phase1Action()

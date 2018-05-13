@@ -6,7 +6,6 @@ import java.util.*
 
 object MulinoGame : Game<State, String, Checker> {
 
-    var count = 0
     val checkersToChar = hashMapOf(Pair<Checker, Char>(Checker.EMPTY, 'e'),
             Pair<Checker, Char>(Checker.WHITE, 'w'),
             Pair<Checker, Char>(Checker.BLACK, 'b'))
@@ -200,7 +199,7 @@ object MulinoGame : Game<State, String, Checker> {
             }
             else -> when(state.currentPhase){
                 2-> utility = (1086).toDouble()
-                1-> utility = (1190).toDouble()
+                3-> utility = (1190).toDouble()
             }
         }
         return utility
@@ -317,7 +316,7 @@ object MulinoGame : Game<State, String, Checker> {
         val opposite = opposite[state.checker]!!
         //val startTime = System.nanoTime()
         val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
-        var newState = State(checker = opposite,board=diagonals, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]), currentPhase = state.currentPhase)
+        var newState = State(checker = opposite,board=diagonals, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]))
         var current = checkersToInt[player]!!
         var next = checkersToInt[opposite]!!
         for(vertex in 0..7)
@@ -334,7 +333,7 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
-                if(state.checkers[next]==0)
+                if(newState.checkers[next]==0)
                     newState.currentPhase=2
                 else
                     newState.currentPhase=1
@@ -349,7 +348,7 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
-                if(state.checkersOnBoard[next]==3)
+                if(newState.checkersOnBoard[next]==3)
                     newState.currentPhase=3
                 else
                     newState.currentPhase=2
@@ -362,16 +361,17 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.checkersOnBoard[next]--
                     newState.closedMorris = true
                 }
+                newState.currentPhase=3
             }
         }
         //val totalTime = System.nanoTime()-startTime
-        count++
         //println("Action ${state.checker}: $action -> State : ${printState(newState)}")
         return newState
     }
 
     override fun isTerminal(state: State?): Boolean {
-        return (isWinner(state!!, Checker.WHITE) || isWinner(state, Checker.BLACK))
+        var check = false
+        return isWinner(state!!, Checker.WHITE) || isWinner(state, Checker.BLACK)
     }
 
     /*
@@ -502,18 +502,19 @@ object MulinoGame : Game<State, String, Checker> {
     private fun checkNoMoves(state: State, checker: Checker): Boolean {
         val intChecker = checkersToInt[checker]!!
         return getBlockedPieces(state, checker)==state.checkersOnBoard[intChecker]
+
     }
 
     private fun checkNoMoves(state: State, position: String, checker: Checker): Boolean {
         var check = false
-        var opposite = opposite[checker]
         val (vertex, level) = toInternalPositions[position]!!
         check = (state.board[nextVertex[vertex]!!][level] != 'e' &&
                 state.board[precVertex[vertex]!!][level] != 'e')
-        if(check)
+        if(check){
             when (vertex) {
-            1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels[level]!!) {
-                check = check && (state.board[vertex][adiacentLevel] !='e')
+                1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels[level]!!) {
+                    check = check && (state.board[vertex][adiacentLevel] != 'e')
+                }
             }
         }
         return check
@@ -749,7 +750,7 @@ object MulinoGame : Game<State, String, Checker> {
     }
 
     fun printState(state : State): String {
-        var out ="Phase : ${state.currentPhase}; Checker : ${state.checker}; ClosedMorris : ${state.closedMorris}; WhiteCheckers : ${state.checkers[0]}; BlackCheckers : ${state.checkers[1]}; Positions : "
+        var out ="Phase : ${state.currentPhase}; Checker : ${state.checker}; ClosedMorris : ${state.closedMorris}; WhiteCheckersOnBoard : ${state.checkersOnBoard[0]}; BlackCheckersOnBoard : ${state.checkersOnBoard[1]}; Positions : "
 
         for(position in getPositions(state, Checker.WHITE)){
             out+="($position W) - "
