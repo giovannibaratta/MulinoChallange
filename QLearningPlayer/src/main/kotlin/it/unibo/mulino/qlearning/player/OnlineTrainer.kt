@@ -65,8 +65,8 @@ fun main(args: Array<String>) {
 
     )
 
-    val myClientW = "java -jar client.jar White qLearning"
-    val myClientB = "java -jar client.jar Black qLearning"
+    val myClientW = "java -jar client.jar White qLearningApprendimento"
+    val myClientB = "java -jar client.jar Black qLearningApprendimento"
 
     for (i in 0..5) {
 

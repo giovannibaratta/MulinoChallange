@@ -19,7 +19,7 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
     //featureExtractors.mapIndexed { index, f -> f(state, agentAction, newState) * weights[index] }.sum()
 
     fun think(state: T): E {
-        printActionValue(state)
+        //printActionValue(state)
         val nextActionAndValue = when (Math.random() < explorationRate()) {
             true -> getRandomACtion(state)
             false -> getNextBestAction(state)
@@ -42,10 +42,16 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
     //debug
     private fun printActionValue(state: T) {
         val actions = actionsFromState(state)
-        actions.forEach {
+        actions.sortedBy {
+            val action = it
+            val res = applyAction(state, it)
+            var count = 0.0
+            featureExtractors.forEachIndexed { index, f -> count += f(state, action, res.second) * weights[index] }
+            count
+        }.forEach {
+            val action = it
             val res = applyAction(state, it)
             println("Action " + it + " - value " + qValue(state, it, res.second))
-            val action = it
             featureExtractors.forEachIndexed { index, f ->
                 println("f[$index] - ${f(state, action, res.second)} - ${f(state, action, res.second) * weights[index]}")
             }
