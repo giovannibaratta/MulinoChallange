@@ -16,13 +16,13 @@ fun main(args: Array<String>) {
         System.exit(1)
     }
 
-    val lines = dataFile.readLines()
+    val lines = dataFile.readLines().toMutableList()
     println("Data set size : ${lines.size}")
     val trainer = QLearningPlayer(true, { 0.0 }, { 0.02 })
     var count = 0
     trainer.matchStart()
 
-    val iteration = 100000
+    val iteration = lines.size
 
     for (i in 0..iteration) {
         var random = (Math.random() * lines.size) % lines.size
@@ -47,6 +47,7 @@ fun main(args: Array<String>) {
             trainer.printPar()
             println()
         }
+        lines.removeAt(random.toInt())
     }
     trainer.printPar()
 

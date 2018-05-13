@@ -86,7 +86,8 @@ internal class State(externalGrid: Matrix<Type>? = null,
 
         var count = 0
         lBlocks.forEach {
-            if (grid[it[0]] == typeToCheck && grid[it[1]] == typeToCheck && grid[it[2]] == typeToCheck)
+            if (grid[it[0]] == typeToCheck && grid[it[1]] == typeToCheck && grid[it[2]] == typeToCheck
+                    && grid[it[3]] == Type.EMPTY && grid[it[4]] == Type.EMPTY)
                 count++
         }
 
@@ -573,54 +574,54 @@ internal class State(externalGrid: Matrix<Type>? = null,
     companion object {
         private val lBlocks = setOf(
                 // Livello esterno
-                arrayOf(Position(0, 3), Position(0, 6), Position(3, 6)), // angolo alto sx
-                arrayOf(Position(0, 6), Position(3, 6), Position(3, 5)), // superiore centrale sx
-                arrayOf(Position(6, 6), Position(3, 6), Position(3, 5)), // superiore centrale dx
-                arrayOf(Position(3, 6), Position(6, 6), Position(6, 3)), // angolo alto dx
-                arrayOf(Position(6, 6), Position(6, 3), Position(5, 3)), // destro sopra
-                arrayOf(Position(6, 0), Position(6, 3), Position(5, 3)), // destro sotto
-                arrayOf(Position(3, 3), Position(6, 0), Position(6, 3)), // angolo basso dx
-                arrayOf(Position(6, 0), Position(3, 0), Position(3, 1)), // sotto centrale dx
-                arrayOf(Position(0, 0), Position(3, 0), Position(3, 1)), // sotto centrale sx
-                arrayOf(Position(0, 0), Position(0, 3), Position(3, 0)), // angolo basso sx
-                arrayOf(Position(0, 0), Position(0, 3), Position(1, 3)), // sinitro sopra
-                arrayOf(Position(0, 6), Position(0, 3), Position(1, 3)), // sinitro sotto
+                arrayOf(Position(0, 3), Position(0, 6), Position(3, 6), Position(0, 0), Position(6, 6)), // angolo alto sx
+                arrayOf(Position(0, 6), Position(3, 6), Position(3, 5), Position(6, 6), Position(3, 4)), // superiore centrale sx
+                arrayOf(Position(6, 6), Position(3, 6), Position(3, 5), Position(3, 4), Position(0, 6)), // superiore centrale dx
+                arrayOf(Position(3, 6), Position(6, 6), Position(6, 3), Position(6, 0), Position(0, 6)), // angolo alto dx
+                arrayOf(Position(6, 6), Position(6, 3), Position(5, 3), Position(4, 3), Position(6, 0)), // destro sopra
+                arrayOf(Position(6, 0), Position(6, 3), Position(5, 3), Position(4, 3), Position(6, 6)), // destro sotto
+                arrayOf(Position(3, 3), Position(6, 0), Position(6, 3), Position(0, 0), Position(6, 6)), // angolo basso dx
+                arrayOf(Position(6, 0), Position(3, 0), Position(3, 1), Position(0, 0), Position(3, 2)), // sotto centrale dx
+                arrayOf(Position(0, 0), Position(3, 0), Position(3, 1), Position(3, 2), Position(6, 6)), // sotto centrale sx
+                arrayOf(Position(0, 0), Position(0, 3), Position(3, 0), Position(0, 6), Position(6, 6)), // angolo basso sx
+                arrayOf(Position(0, 0), Position(0, 3), Position(1, 3), Position(0, 6), Position(2, 3)), // sinitro sopra
+                arrayOf(Position(0, 6), Position(0, 3), Position(1, 3), Position(0, 0), Position(2, 3)), // sinitro sotto
 
                 // Livello intermedio
-                arrayOf(Position(1, 3), Position(1, 5), Position(3, 5)), // angolo alto sx
-                arrayOf(Position(1, 5), Position(3, 5), Position(3, 6)), // superiore centrale sx sopra
-                arrayOf(Position(1, 5), Position(3, 5), Position(3, 4)), // superiore centrale sx sotto
-                arrayOf(Position(3, 5), Position(3, 6), Position(5, 5)), // superiore centrale dx sopra
-                arrayOf(Position(3, 5), Position(3, 4), Position(5, 5)), // superiore centrale dx sotto
-                arrayOf(Position(3, 5), Position(5, 5), Position(5, 3)), // angolo alto dx
-                arrayOf(Position(5, 5), Position(5, 3), Position(4, 3)), // destro sopra sx
-                arrayOf(Position(5, 5), Position(5, 3), Position(6, 3)), // destro sopra dx
-                arrayOf(Position(5, 1), Position(5, 3), Position(4, 3)), // destro sotto sx
-                arrayOf(Position(5, 1), Position(5, 3), Position(6, 3)), // destro sotto dx
-                arrayOf(Position(5, 3), Position(5, 1), Position(3, 1)), // angolo basso dx
-                arrayOf(Position(5, 1), Position(3, 1), Position(3, 2)), // sotto centrale dx sopra
-                arrayOf(Position(5, 1), Position(3, 1), Position(3, 0)), // sotto centrale dx sotto
-                arrayOf(Position(1, 1), Position(3, 1), Position(3, 2)), // sotto centrale sx sopra
-                arrayOf(Position(1, 1), Position(3, 1), Position(3, 0)), // sotto centrale sx sotto
-                arrayOf(Position(3, 1), Position(1, 1), Position(1, 3)), // angolo basso sx
-                arrayOf(Position(1, 3), Position(1, 5), Position(0, 3)), // sinitro sopra sx
-                arrayOf(Position(1, 3), Position(1, 5), Position(2, 3)), // sinitro sopra dx
-                arrayOf(Position(1, 3), Position(1, 1), Position(0, 3)), // sinitro sotto sx
-                arrayOf(Position(1, 3), Position(1, 1), Position(2, 3)), // sinitro sotto dx
+                arrayOf(Position(1, 3), Position(1, 5), Position(3, 5), Position(1, 1), Position(5, 5)), // angolo alto sx
+                arrayOf(Position(1, 5), Position(3, 5), Position(3, 6), Position(3, 4), Position(5, 5)), // superiore centrale sx sopra
+                arrayOf(Position(1, 5), Position(3, 5), Position(3, 4), Position(3, 6), Position(5, 5)), // superiore centrale sx sotto
+                arrayOf(Position(3, 5), Position(3, 6), Position(5, 5), Position(1, 5), Position(3, 4)), // superiore centrale dx sopra
+                arrayOf(Position(3, 5), Position(3, 4), Position(5, 5), Position(3, 6), Position(1, 5)), // superiore centrale dx sotto
+                arrayOf(Position(3, 5), Position(5, 5), Position(5, 3), Position(5, 1), Position(1, 5)), // angolo alto dx
+                arrayOf(Position(5, 5), Position(5, 3), Position(4, 3), Position(5, 1), Position(6, 3)), // destro sopra sx
+                arrayOf(Position(5, 5), Position(5, 3), Position(6, 3), Position(5, 1), Position(4, 3)), // destro sopra dx
+                arrayOf(Position(5, 1), Position(5, 3), Position(4, 3), Position(5, 5), Position(6, 3)), // destro sotto sx
+                arrayOf(Position(5, 1), Position(5, 3), Position(6, 3), Position(5, 5), Position(4, 3)), // destro sotto dx
+                arrayOf(Position(5, 3), Position(5, 1), Position(3, 1), Position(5, 5), Position(1, 1)), // angolo basso dx
+                arrayOf(Position(5, 1), Position(3, 1), Position(3, 2), Position(3, 0), Position(1, 1)), // sotto centrale dx sopra
+                arrayOf(Position(5, 1), Position(3, 1), Position(3, 0), Position(3, 2), Position(1, 1)), // sotto centrale dx sotto
+                arrayOf(Position(1, 1), Position(3, 1), Position(3, 2), Position(5, 1), Position(3, 0)), // sotto centrale sx sopra
+                arrayOf(Position(1, 1), Position(3, 1), Position(3, 0), Position(5, 1), Position(3, 2)), // sotto centrale sx sotto
+                arrayOf(Position(3, 1), Position(1, 1), Position(1, 3), Position(1, 5), Position(5, 1)), // angolo basso sx
+                arrayOf(Position(1, 3), Position(1, 5), Position(0, 3), Position(2, 3), Position(1, 1)), // sinitro sopra sx
+                arrayOf(Position(1, 3), Position(1, 5), Position(2, 3), Position(1, 1), Position(0, 3)), // sinitro sopra dx
+                arrayOf(Position(1, 3), Position(1, 1), Position(0, 3), Position(1, 5), Position(2, 3)), // sinitro sotto sx
+                arrayOf(Position(1, 3), Position(1, 1), Position(2, 3), Position(1, 5), Position(0, 3)), // sinitro sotto dx
 
                 // Livello interno
-                arrayOf(Position(1, 3), Position(2, 3), Position(2, 4)),
-                arrayOf(Position(1, 3), Position(2, 3), Position(2, 2)),
-                arrayOf(Position(2, 3), Position(2, 4), Position(3, 4)),
-                arrayOf(Position(2, 3), Position(2, 2), Position(3, 2)),
-                arrayOf(Position(2, 2), Position(3, 2), Position(3, 1)),
-                arrayOf(Position(3, 1), Position(3, 2), Position(4, 2)),
-                arrayOf(Position(2, 4), Position(3, 4), Position(3, 5)),
-                arrayOf(Position(3, 5), Position(3, 4), Position(4, 4)),
-                arrayOf(Position(5, 3), Position(4, 3), Position(4, 4)),
-                arrayOf(Position(5, 3), Position(4, 3), Position(4, 2)),
-                arrayOf(Position(3, 2), Position(4, 2), Position(4, 3)),
-                arrayOf(Position(4, 3), Position(4, 4), Position(3, 4))
+                arrayOf(Position(1, 3), Position(2, 3), Position(2, 4), Position(0, 3), Position(2, 2)),
+                arrayOf(Position(1, 3), Position(2, 3), Position(2, 2), Position(0, 3), Position(2, 4)),
+                arrayOf(Position(2, 3), Position(2, 4), Position(3, 4), Position(2, 2), Position(4, 4)),
+                arrayOf(Position(2, 3), Position(2, 2), Position(3, 2), Position(4, 2), Position(2, 4)),
+                arrayOf(Position(2, 2), Position(3, 2), Position(3, 1), Position(3, 0), Position(4, 2)),
+                arrayOf(Position(3, 1), Position(3, 2), Position(4, 2), Position(2, 2), Position(3, 0)),
+                arrayOf(Position(2, 4), Position(3, 4), Position(3, 5), Position(3, 6), Position(4, 4)),
+                arrayOf(Position(3, 5), Position(3, 4), Position(4, 4), Position(3, 6), Position(2, 4)),
+                arrayOf(Position(5, 3), Position(4, 3), Position(4, 4), Position(4, 2), Position(6, 3)),
+                arrayOf(Position(5, 3), Position(4, 3), Position(4, 2), Position(4, 4), Position(6, 3)),
+                arrayOf(Position(3, 2), Position(4, 2), Position(4, 3), Position(4, 4), Position(2, 2)),
+                arrayOf(Position(4, 3), Position(4, 4), Position(3, 4), Position(2, 4), Position(4, 2))
         )
 
     }

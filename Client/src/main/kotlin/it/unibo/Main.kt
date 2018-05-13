@@ -10,6 +10,7 @@ enum class Algorithm {
     QLEARNING,
     MINMAX,
     QLEARNINGNOSAVE,
+    QLEARNINGAPPRENDIMENTO,
     MINMAX5,
     MINMAX10
 }
@@ -29,7 +30,8 @@ val player = hashMapOf(
         Pair(Algorithm.MINMAX5, MinMaxPlayer(5)),
         Pair(Algorithm.MINMAX10, MinMaxPlayer(10)),
         Pair(Algorithm.QLEARNING, QLearningPlayer(explorationRate = { 0.0 }, alpha = { 0.0 })),
-        Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false, explorationRate = { 0.0 }, alpha = { 0.0 }))
+        Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false, explorationRate = { 0.15 }, alpha = { 0.0 })),
+        Pair(Algorithm.QLEARNINGAPPRENDIMENTO, QLearningPlayer(true, explorationRate = { 0.0 }, alpha = { 0.01 }))
 )
 
 fun main(args: Array<String>) {
@@ -52,6 +54,7 @@ fun main(args: Array<String>) {
             "MinMax" -> Algorithm.MINMAX
             "MinMax5" -> Algorithm.MINMAX5
             "MinMax10" -> Algorithm.MINMAX10
+            "qLearningApprendimento" -> Algorithm.QLEARNINGAPPRENDIMENTO
             else -> exitWithError(ErrorType.ALGORITHM)
         }
     }
