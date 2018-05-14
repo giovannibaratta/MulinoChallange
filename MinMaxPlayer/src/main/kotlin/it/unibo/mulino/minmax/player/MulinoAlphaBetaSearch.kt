@@ -47,7 +47,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         val intOpposite =  game.checkersToInt[opposite]!!
         when (state.currentPhase) {
             1 -> {
-                amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
+                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite] - state.checkers[intPlayer])) +
                         num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
@@ -60,7 +60,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
             }
             2 -> {
-                amount = morrisesNumberCoeff[1] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
+                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
                 if (state.closedMorris){
@@ -119,7 +119,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     if (game.hasDoubleMorris(state, opposite))
                         amountOpposite += doubleMorrisCoeff
                 }
-                amount=amountPlayer-amountOpposite
+                amount+=amountPlayer-amountOpposite
             }
         }
         //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
