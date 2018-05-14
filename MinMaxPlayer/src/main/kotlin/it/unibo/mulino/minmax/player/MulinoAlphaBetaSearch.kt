@@ -19,9 +19,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
     override fun makeDecision(state: State?): String {
-        if(state!!.currentPhase==1 || state!!.currentPhase==2) {
-            this.limit=false
-        }
         return super.makeDecision(state)
     }
 
@@ -138,20 +135,21 @@ fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
 
 fun main(args: Array<String>) {
 
-    var newState = State(checker = Checker.WHITE, checkers = intArrayOf(0,0), checkersOnBoard = intArrayOf(9,4), currentPhase = 2)
-    MulinoGame.addPiece(newState, "a4",Checker.WHITE)
+    var newState = State(checker = Checker.WHITE, checkers = intArrayOf(0,0), checkersOnBoard = intArrayOf(9,5), currentPhase = 2)
+    MulinoGame.addPiece(newState, "a1",Checker.WHITE)
+    MulinoGame.addPiece(newState, "a7",Checker.WHITE)
     MulinoGame.addPiece(newState, "b4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c5",Checker.WHITE)
+    MulinoGame.addPiece(newState, "c3",Checker.WHITE)
+    MulinoGame.addPiece(newState, "d2",Checker.WHITE)
     MulinoGame.addPiece(newState, "d5",Checker.WHITE)
-    MulinoGame.addPiece(newState, "d6",Checker.WHITE)
-    MulinoGame.addPiece(newState, "d7",Checker.WHITE)
+    MulinoGame.addPiece(newState, "e4",Checker.WHITE)
     MulinoGame.addPiece(newState, "f4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "e3",Checker.WHITE)
-    MulinoGame.addPiece(newState, "a7",Checker.BLACK)
-    MulinoGame.addPiece(newState, "b6",Checker.BLACK)
+    MulinoGame.addPiece(newState, "g4",Checker.WHITE)
+    MulinoGame.addPiece(newState, "c5",Checker.BLACK)
     MulinoGame.addPiece(newState, "e5",Checker.BLACK)
-    MulinoGame.addPiece(newState, "f6",Checker.BLACK)
+    MulinoGame.addPiece(newState, "e3",Checker.BLACK)
+    MulinoGame.addPiece(newState, "d3",Checker.BLACK)
+    MulinoGame.addPiece(newState, "f2",Checker.BLACK)
 
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
@@ -162,7 +160,7 @@ fun main(args: Array<String>) {
     initialState.addPiece(Pair('d',2), Checker.BLACK)
     */
 
-    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -10000.00, 10000.00, 1)
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -1000.00, 1000.00, 1)
     val action = search.makeDecision(newState)
     println("Azione scelta: $action")
 
