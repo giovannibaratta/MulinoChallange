@@ -1,12 +1,17 @@
 package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
-import it.unibo.utils.*
+import it.unibo.mulino.qlearning.player.model.Position
+import it.unibo.utils.FibonacciHeap
+import it.unibo.utils.IterariveDeepingAlphaBetaSearch
+import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
+import it.unibo.mulino.qlearning.player.model.State as QLearningState
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
-                                  utilMin: Double,
-                                  utilMax: Double,
-                                  time: Int) : IterariveDeepingAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
+                            utilMin: Double,
+                            utilMax: Double,
+                            time: Int,
+                            private val sortAction: Boolean = false) : IterariveDeepingAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
 
     private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
     private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])
@@ -18,22 +23,31 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val doubleMorrisCoeff = coefficients[11]
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
+    private var ordered = 0
     override fun makeDecision(state: State?): String {
-        if(state!!.currentPhase==1 || state!!.currentPhase==2) {
-            //this.limit=false
+        if (state == null) throw IllegalArgumentException("Lo stato è null")
+
+        if (state.currentPhase == 1 || state.currentPhase == 2) {
+            this.limit = false
         }
-        return super.makeDecision(state)
+        ordered = 0
+        val decision = super.makeDecision(state)
+        println("ordered $ordered")
+        return decision
     }
 
     override fun eval(state: State?, player: Checker?): Double {
+        if (state == null) throw IllegalArgumentException("State is null")
+        if (player == null) throw IllegalArgumentException("Player is null")
+
         var amount = super.eval(state, player)
         val game = game as MulinoGame
-        var opposite = game.opposite[player]!!
+        val opposite = game.opposite[player]!!
         val intPlayer = game.checkersToInt[player]!!
         val intOpposite =  game.checkersToInt[opposite]!!
-        when(state!!.currentPhase) {
+        when (state.currentPhase) {
             1 -> {
-                amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                amount = morrisesNumberCoeff[0] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite] - state.checkers[intPlayer])) +
                         num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
@@ -46,7 +60,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
             }
             2 -> {
-                amount = morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                amount = morrisesNumberCoeff[1] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
                 if (state.closedMorris){
@@ -69,13 +83,13 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 var amountPlayer = 0.0
                 var amountOpposite = 0.00
                 if (state.checkersOnBoard[intPlayer] == 3) {
-                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player!!) +
+                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player) +
                             num3PiecesCoeff[1] * game.getNum3Conf(state, player)
                     if (state.closedMorris && game.opposite[state.checker] == player) {
                         amountPlayer += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player!!) +
+                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player) +
                             blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, opposite)  +
                             piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
                     if (state.closedMorris && game.opposite[state.checker]==player) {
@@ -88,13 +102,13 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
 
                 if (state.checkersOnBoard[intOpposite] == 3) {
-                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, opposite!!) +
+                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, opposite) +
                             num3PiecesCoeff[1] * game.getNum3Conf(state, opposite)
                     if (state.closedMorris && game.opposite[state.checker] == opposite) {
                         amountOpposite += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountOpposite =  morrisesNumberCoeff[1] * game.getNumMorrises(state, opposite!!) +
+                    amountOpposite = morrisesNumberCoeff[1] * game.getNumMorrises(state, opposite) +
                             blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player)  +
                             piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
                     if (state.closedMorris && game.opposite[state.checker]==opposite) {
@@ -112,26 +126,136 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return amount
     }
 
-    /*
+    private val sorter = QLearningPlayerAlternative({ 0.0 })
+
     override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
-        val orderedActions = FibonacciHeap<String>()
-        val game = game as MulinoGame
-        for(action in actions!!){
-            /*var value = game.density(state!!, action.substring(1,3), player!!)
-            if(action.length>3)
-                value = game.density(state!!, action.substring(3,5), player!!) - value
-            */
-            orderedActions.enqueue(action, action.length.toDouble())
+        if (state == null) throw IllegalArgumentException("State is null")
+        if (actions == null) throw IllegalArgumentException("Actions is null")
+        if (player == null) throw IllegalArgumentException("Player is null")
+        if (depth > 3 || !sortAction)
+            return actions
+
+        //if(!sortAction) return actions
+        //println("Sorting")
+        return when (getPhase(state)) {
+            1 -> sorter.playPhase1(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "1${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "1${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+            2 -> sorter.playPhase2(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()
+            3 -> sorter.playPhase3(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()
+            else -> throw IllegalStateException("Fase non valida")
         }
-        return orderedActions.dequeueAll()
     }
-    */
+
+    private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {
+        ChesaniState.Checker.WHITE -> true
+        Checker.BLACK -> false
+        else -> throw IllegalStateException("Checker non valido")
+    })
+
+    private fun State.toChesaniState(): ChesaniState {
+        val state = ChesaniState()
+        state.blackCheckers = this.checkers[1]
+        state.whiteCheckers = this.checkers[0]
+        state.currentPhase = when (this.currentPhase) {
+            1 -> ChesaniState.Phase.FIRST
+            2 -> ChesaniState.Phase.SECOND
+            3 -> ChesaniState.Phase.FINAL
+            else -> throw IllegalStateException("Fase non valida")
+        }
+        state.blackCheckersOnBoard = this.checkersOnBoard[1]
+        state.whiteCheckersOnBoard = this.checkersOnBoard[0]
+
+        this.board.forEachIndexed { index, charArray ->
+            state.board.put(toExternalPositions.get(Pair(index, 0)), charArray[0].toChecker())
+            state.board.put(toExternalPositions.get(Pair(index, 1)), charArray[1].toChecker())
+            state.board.put(toExternalPositions.get(Pair(index, 2)), charArray[2].toChecker())
+        }
+
+        return state
+    }
+
+    private val toExternalPositions = hashMapOf(
+            Pair(Pair(0, 0), "a1"),
+            Pair(Pair(1, 0), "a4"),
+            Pair(Pair(2, 0), "a7"),
+            Pair(Pair(0, 1), "b2"),
+            Pair(Pair(1, 1), "b4"),
+            Pair(Pair(2, 1), "b6"),
+            Pair(Pair(0, 2), "c3"),
+            Pair(Pair(1, 2), "c4"),
+            Pair(Pair(2, 2), "c5"),
+            Pair(Pair(3, 2), "d5"),
+            Pair(Pair(3, 1), "d6"),
+            Pair(Pair(3, 0), "d7"),
+            Pair(Pair(7, 0), "d1"),
+            Pair(Pair(7, 1), "d2"),
+            Pair(Pair(7, 2), "d3"),
+            Pair(Pair(6, 2), "e3"),
+            Pair(Pair(5, 2), "e4"),
+            Pair(Pair(4, 2), "e5"),
+            Pair(Pair(6, 1), "f2"),
+            Pair(Pair(5, 1), "f4"),
+            Pair(Pair(4, 1), "f6"),
+            Pair(Pair(6, 0), "g1"),
+            Pair(Pair(5, 0), "g4"),
+            Pair(Pair(4, 0), "g7")
+    )
+
+    private fun Char.toChecker() = when (this) {
+        'e' -> ChesaniState.Checker.EMPTY
+        'w' -> ChesaniState.Checker.WHITE
+        'b' -> ChesaniState.Checker.BLACK
+        else -> throw  IllegalArgumentException("Non esiste un mapping per $this")
+    }
+
+    private fun Position.toExternal(): String {
+        val xPos: Char = 'a' + this.x
+        val yPos: String = (this.y + 1).toString()
+        return xPos + yPos
+    }
+
+    private fun getPhase(state: State) = when {
+        state.currentPhase == 1 -> 1
+
+        state.currentPhase == 2 -> 2
+
+        state.currentPhase == 3 && when (state.checker) {
+            Checker.WHITE -> state.checkersOnBoard[0]
+            Checker.BLACK -> state.checkersOnBoard[1]
+            else -> throw IllegalStateException("Checker non valido")
+        } > 3 -> 2
+
+        state.currentPhase == 3 && when (state.checker) {
+            Checker.WHITE -> state.checkersOnBoard[0]
+            Checker.BLACK -> state.checkersOnBoard[1]
+            else -> throw IllegalStateException("Checker non valido")
+        } <= 3 -> 2
+
+        else -> throw IllegalStateException("Fase non riconosciuta")
+    }
 
 }
 
 fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
     val mutableList = arrayListOf<T>()
-    while(!this.isEmpty){
+    while (!this.isEmpty) {
         mutableList.add(this.dequeueMin().value)
     }
     return mutableList

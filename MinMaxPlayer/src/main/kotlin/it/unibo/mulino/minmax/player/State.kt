@@ -1,11 +1,12 @@
 package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
-import java.util.*
 
 //var board : Array<CharArray> = Array(8, { MulinoGame.diagonals["eee"]!! })
 data class State(var checker: Checker,
-                 var board : Array<CharArray> = Array(8, { MulinoGame.diagonals["eee"]!! }),
+                 var board: Array<CharArray> = Array(8, {
+                     MulinoGame.diagonals["eee"] ?: throw Exception("Bug programmatore")
+                 }),
                  var checkers : IntArray = intArrayOf(9,9),
                  var checkersOnBoard : IntArray = intArrayOf(0,0),
                  var currentPhase : Int = 1,

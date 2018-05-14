@@ -147,7 +147,8 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("211", intArrayOf(2,1,1)))
     */
 
-    val diagonals : HashMap<String, CharArray> = hashMapOf(Pair("eee", charArrayOf('e','e','e')),
+    val diagonals: HashMap<String, CharArray> = hashMapOf(
+            Pair("eee", charArrayOf('e', 'e', 'e')),
             Pair("www", charArrayOf('w','w','w')),
             Pair("bbb", charArrayOf('b','b','b')),
             Pair("eew", charArrayOf('e','e','w')),
@@ -173,10 +174,13 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("beb", charArrayOf('b','e','b')),
             Pair("bwe", charArrayOf('b','w','e')),
             Pair("bwb", charArrayOf('b','w','b')),
-            Pair("bww", charArrayOf('b','w','w')))
+            Pair("bww", charArrayOf('b', 'w', 'w'))
+    )
 
-    val opposite = hashMapOf(Pair(Checker.BLACK, Checker.WHITE),
-            Pair(Checker.WHITE, Checker.BLACK))
+    val opposite = hashMapOf(
+            Pair(Checker.BLACK, Checker.WHITE),
+            Pair(Checker.WHITE, Checker.BLACK)
+    )
 
     override fun getInitialState(): State {
         return State(Checker.WHITE)
@@ -312,13 +316,15 @@ object MulinoGame : Game<State, String, Checker> {
     }
 
     override fun getResult(state: State?, action: String): State {
-        val player = state!!.checker
+        if (state == null) throw IllegalArgumentException("State is null")
+
+        val player = state.checker
         val opposite = opposite[state.checker]!!
         //val startTime = System.nanoTime()
         val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
-        var newState = State(checker = opposite,board=diagonals, checkers = intArrayOf(state.checkers[0],state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0],state.checkersOnBoard[1]))
-        var current = checkersToInt[player]!!
-        var next = checkersToInt[opposite]!!
+        val newState = State(checker = opposite, board = diagonals, checkers = intArrayOf(state.checkers[0], state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0], state.checkersOnBoard[1]))
+        val current = checkersToInt[player]!!
+        val next = checkersToInt[opposite]!!
         for(vertex in 0..7)
             for(level in 0..2)
                 newState.board[vertex][level]=state.board[vertex][level]
@@ -447,8 +453,7 @@ object MulinoGame : Game<State, String, Checker> {
 
     private fun checkMorris(state : State,position: String, checker: Checker): Boolean {
         val (vertex, level) = toInternalPositions[position]!!
-        var check = false
-        check = when (vertex) {
+        val check = when (vertex) {
             1, 3, 5, 7 -> ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
                     (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker])) ||
                     ((state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
