@@ -349,7 +349,7 @@ object MulinoGame : Game<State, String, Checker> {
                     newState.closedMorris = true
                 }
                 if(newState.checkersOnBoard[next]==3)
-                    newState.currentPhase=3
+                    newState.currentPhase = 3
                 else
                     newState.currentPhase=2
             }

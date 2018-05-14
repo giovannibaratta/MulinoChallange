@@ -90,11 +90,11 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
         setLogEnabled(true);
         timer.start();
         if(!limit)
-            currDepthLimit = 6;
+            currDepthLimit = 5;
         else
-            currDepthLimit = 4;
+            currDepthLimit = 1;
         do {
-            incrementDepthLimit();
+            //incrementDepthLimit();
             if (logEnabled)
                 logText = new StringBuffer("depth " + currDepthLimit + ": ");
             heuristicEvaluationUsed = false;
