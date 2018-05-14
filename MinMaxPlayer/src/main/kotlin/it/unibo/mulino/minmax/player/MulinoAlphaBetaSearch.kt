@@ -19,7 +19,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
     override fun makeDecision(state: State?): String {
-        if(state!!.currentPhase==1) {
+        if(state!!.currentPhase==1 || state!!.currentPhase==2) {
             this.limit=false
         }
         return super.makeDecision(state)
@@ -27,8 +27,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
     override fun eval(state: State?, player: Checker?): Double {
         var amount = super.eval(state, player)
-        if(amount!=0.0)
-            println("Current eval : $amount ....")
         val game = game as MulinoGame
         var opposite = game.opposite[player]!!
         val intPlayer = game.checkersToInt[player]!!
@@ -109,7 +107,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 amount+=amountPlayer-amountOpposite
             }
         }
-        println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
+        //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
         return amount
     }
 
