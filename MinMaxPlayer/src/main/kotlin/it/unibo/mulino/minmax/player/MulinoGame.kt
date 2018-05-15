@@ -257,17 +257,17 @@ object MulinoGame : Game<State, String, Checker> {
             }
             3->{
                 var numMorrises = 0
-                for (actualPosition in getPositions(state, player)) {
-                    when(state.checkersOnBoard[intChecker]){
-                        3 ->{
+                when(state.checkersOnBoard[intChecker]){
+                    3 ->{
+                        for (actualPosition in getPositions(state, player)) {
                             for (possiblePosition in getEmptyPositions(state)) {
                                 if (checkMorris(state, actualPosition, possiblePosition, player)) {
                                     for (adversarialPosition in getPositions(state, opposite)) {
-                                        if(!checkMorris(state, adversarialPosition, opposite)) {
+                                        if (!checkMorris(state, adversarialPosition, opposite)) {
                                             actions.add("3$actualPosition$possiblePosition$adversarialPosition")
-                                        }else numMorrises++
+                                        } else numMorrises++
                                     }
-                                    if(numMorrises == state.checkersOnBoard[intOpposite]){
+                                    if (numMorrises == state.checkersOnBoard[intOpposite]) {
                                         for (adversarialPosition in getPositions(state, opposite)) {
                                             actions.add("3$actualPosition$possiblePosition$adversarialPosition")
                                         }
@@ -277,24 +277,24 @@ object MulinoGame : Game<State, String, Checker> {
                                 }
                             }
                         }
-                        else ->{
-                            for (actualPosition in getPositions(state, player)) {
-                                for (adiacentPosition in adiacentPositions[actualPosition]!!) {
-                                    if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
-                                        if (checkMorris(state, actualPosition, adiacentPosition, player)) {
-                                            for (adversarialPosition in getPositions(state, opposite)) {
-                                                if(!checkMorris(state, adversarialPosition, opposite)) {
-                                                    actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
-                                                }else numMorrises++
-                                            }
-                                            if(numMorrises == state.checkersOnBoard[intOpposite]){
-                                                for (adversarialPosition in getPositions(state, opposite)) {
-                                                    actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
-                                                }
-                                            }
-                                        } else {
-                                            actions.add("3$actualPosition$adiacentPosition")
+                    }
+                    else ->{
+                        for (actualPosition in getPositions(state, player)) {
+                            for (adiacentPosition in adiacentPositions[actualPosition]!!) {
+                                if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
+                                    if (checkMorris(state, actualPosition, adiacentPosition, player)) {
+                                        for (adversarialPosition in getPositions(state, opposite)) {
+                                            if(!checkMorris(state, adversarialPosition, opposite)) {
+                                                actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
+                                            }else numMorrises++
                                         }
+                                        if(numMorrises == state.checkersOnBoard[intOpposite]){
+                                            for (adversarialPosition in getPositions(state, opposite)) {
+                                                actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
+                                            }
+                                        }
+                                    } else {
+                                        actions.add("3$actualPosition$adiacentPosition")
                                     }
                                 }
                             }
