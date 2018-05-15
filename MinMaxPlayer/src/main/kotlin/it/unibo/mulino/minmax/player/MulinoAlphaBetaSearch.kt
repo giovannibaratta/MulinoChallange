@@ -47,7 +47,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         val intOpposite =  game.checkersToInt[opposite]!!
         when (state.currentPhase) {
             1 -> {
-                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite] - state.checkers[intPlayer])) +
                         num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
@@ -60,7 +60,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
             }
             2 -> {
-                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
+                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, opposite)) +
                         blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
                 if (state.closedMorris){
@@ -119,7 +119,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     if (game.hasDoubleMorris(state, opposite))
                         amountOpposite += doubleMorrisCoeff
                 }
-                amount+=amountPlayer-amountOpposite
+                amount += amountPlayer - amountOpposite
             }
         }
         //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
@@ -135,9 +135,15 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         if (depth > 3 || !sortAction)
             return actions
 
+        return when (getPhase(state)) {
+            1 -> sorter.playPhase1(state, actions).map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+            2 -> sorter.playPhase2(state, actions).map { it.first }.toMutableList()
+            3 -> sorter.playPhase3(state, actions).map { it.first }.toMutableList()
+            else -> throw IllegalStateException("Fase non valida")
+        }
         //if(!sortAction) return actions
         //println("Sorting")
-        return when (getPhase(state)) {
+        /*return when (getPhase(state)) {
             1 -> sorter.playPhase1(state.remapToQLearningState(player)).map {
                 //println("Action ${it.first} -> ${it.second}")
                 when (it.first.remove.isPresent) {
@@ -160,7 +166,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
             }.toMutableList()
             else -> throw IllegalStateException("Fase non valida")
-        }
+        }*/
     }
 
     private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {

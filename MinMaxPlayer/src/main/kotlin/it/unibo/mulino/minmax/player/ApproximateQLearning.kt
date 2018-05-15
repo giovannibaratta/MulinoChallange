@@ -16,7 +16,7 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         return value
     }
 
-    fun think(state: T, actions: List<E>): List<Pair<E, Double>> {
+    fun think(state: T, actions: MutableList<E>): List<Pair<E, Double>> {
         //printActionValue(state)
         val nextActionAndValue = actions.map { Pair(it, qValue(state, it, applyAction(state, it).second)) }
                 .sortedByDescending { it.second }

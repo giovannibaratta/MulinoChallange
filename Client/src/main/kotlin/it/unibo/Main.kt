@@ -2,6 +2,7 @@ package it.unibo
 
 import it.unibo.ai.didattica.mulino.domain.State
 import it.unibo.mulino.minmax.player.MinMaxPlayer
+import it.unibo.mulino.minmax.player.Trainer
 import it.unibo.mulino.player.AIClient
 import it.unibo.mulino.qlearning.player.QLearningPlayer
 import java.net.ConnectException
@@ -12,7 +13,9 @@ enum class Algorithm {
     QLEARNINGNOSAVE,
     QLEARNINGAPPRENDIMENTO,
     MINMAX5,
-    MINMAX10
+    MINMAX10,
+    TRAINERMINMAX,
+    MINMAX2
 }
 
 enum class ErrorType {
@@ -29,9 +32,11 @@ val player = hashMapOf(
         Pair(Algorithm.MINMAX, MinMaxPlayer()),
         Pair(Algorithm.MINMAX5, MinMaxPlayer(5)),
         Pair(Algorithm.MINMAX10, MinMaxPlayer(10)),
-        Pair(Algorithm.QLEARNING, QLearningPlayer(explorationRate = { 0.0 }, alpha = { 0.0 })),
+        Pair(Algorithm.QLEARNING, QLearningPlayer(explorationRate = { 0.8 }, alpha = { 0.0 })),
         Pair(Algorithm.QLEARNINGNOSAVE, QLearningPlayer(false, explorationRate = { 0.15 }, alpha = { 0.0 })),
-        Pair(Algorithm.QLEARNINGAPPRENDIMENTO, QLearningPlayer(true, explorationRate = { 0.0 }, alpha = { 0.01 }))
+        Pair(Algorithm.QLEARNINGAPPRENDIMENTO, QLearningPlayer(true, explorationRate = { 0.0 }, alpha = { 0.01 })),
+        Pair(Algorithm.TRAINERMINMAX, Trainer()),
+        Pair(Algorithm.MINMAX2, MinMaxPlayer(2))
 )
 
 fun main(args: Array<String>) {
@@ -54,7 +59,9 @@ fun main(args: Array<String>) {
             "MinMax" -> Algorithm.MINMAX
             "MinMax5" -> Algorithm.MINMAX5
             "MinMax10" -> Algorithm.MINMAX10
+            "MinMax2" -> Algorithm.MINMAX2
             "qLearningApprendimento" -> Algorithm.QLEARNINGAPPRENDIMENTO
+            "TrainerMinMax" -> Algorithm.TRAINERMINMAX
             else -> exitWithError(ErrorType.ALGORITHM)
         }
     }

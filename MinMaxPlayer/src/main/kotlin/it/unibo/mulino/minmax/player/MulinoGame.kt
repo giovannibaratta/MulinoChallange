@@ -14,7 +14,8 @@ object MulinoGame : Game<State, String, Checker> {
     val charsToCheckers = hashMapOf(Pair<Char, Checker>('e', Checker.EMPTY),
             Pair<Char, Checker>('w', Checker.WHITE),
             Pair<Char, Checker>('b', Checker.BLACK))
-    val toInternalPositions = hashMapOf(Pair("a1", Pair(0, 0)),
+    val toInternalPositions = hashMapOf(Pair(
+            "a1", Pair(0, 0)),
             Pair("a4", Pair(1, 0)),
             Pair("a7", Pair(2, 0)),
             Pair("b2", Pair(0, 1)),
@@ -39,7 +40,8 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("g4", Pair(5, 0)),
             Pair("g7", Pair(4, 0))
     )
-    private val toExternalPositions = hashMapOf(Pair(Pair(0, 0), "a1"),
+    val toExternalPositions = hashMapOf(
+            Pair(Pair(0, 0), "a1"),
             Pair(Pair(1, 0), "a4"),
             Pair(Pair(2, 0), "a7"),
             Pair(Pair(0, 1), "b2"),
