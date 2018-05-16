@@ -60,7 +60,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
             else -> 1
         }
         //val diagonals :Array<CharArray> = Array(8, {index->game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!!})
-        val clientState = State(checker = player, board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+        val clientState = State(playerType = player.toInt(), board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
 
         //val totalTime = System.nanoTime()-startTime
         //println("Tempo inizializzazione: $totalTime")
@@ -103,6 +103,12 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
             }
         }
         return Phase1Action()
+    }
+
+    fun it.unibo.ai.didattica.mulino.domain.State.Checker.toInt() = when (this) {
+        it.unibo.ai.didattica.mulino.domain.State.Checker.WHITE -> 0
+        it.unibo.ai.didattica.mulino.domain.State.Checker.BLACK -> 1
+        else -> throw IllegalArgumentException("Checker $this non valido")
     }
 
     private fun Metrics.print() {

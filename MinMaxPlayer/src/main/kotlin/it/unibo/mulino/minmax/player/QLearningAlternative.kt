@@ -235,27 +235,26 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
     private val numMorrisMultiplier = 0.1
 
     private val numMorris = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNumMorrises(newState, oldState.checker) * numMorrisMultiplier
+        MulinoGame.getNumMorrises(newState, oldState.playerType) * numMorrisMultiplier
     }
 
     private val blockedOppPiecesMultiplier = 0.1
 
     private val blockedOppPieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
         MulinoGame.getBlockedPieces(newState,
-                MulinoGame.opposite[oldState.checker]
-                        ?: throw IllegalStateException("Checker non valido")) * blockedOppPiecesMultiplier
+                MulinoGame.opposite(oldState.playerType)) * blockedOppPiecesMultiplier
     }
 
     private val num2PiecesMultiplier = 0.1
 
     private val num2Pieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNum2Conf(newState, oldState.checker) * num2PiecesMultiplier
+        MulinoGame.getNum2Conf(newState, oldState.playerType) * num2PiecesMultiplier
     }
 
     private val num3PiecesMultiplier = 0.1
 
     private val num3Pieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNum3Conf(newState, oldState.checker) * num3PiecesMultiplier
+        MulinoGame.getNum3Conf(newState, oldState.playerType) * num3PiecesMultiplier
     }
 
     private val closedMorrisMultiplier = 1.0
@@ -504,17 +503,17 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
     private val phase1Reward = { oldState: MinMaxState, action: String, newState: MinMaxState ->
 
         var reward = 0.0
-        if (!MulinoGame.hasOpenedMorris(oldState, oldState.checker)
-                && MulinoGame.hasOpenedMorris(newState, oldState.checker))
+        if (!MulinoGame.hasOpenedMorris(oldState, oldState.playerType)
+                && MulinoGame.hasOpenedMorris(newState, oldState.playerType))
             reward += 1.0
 
         if (newState.closedMorris)
             reward += 5.0
 
-        val myBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldState.checker) -
-                MulinoGame.getBlockedPieces(newState, oldState.checker)
+        val myBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldState.playerType) -
+                MulinoGame.getBlockedPieces(newState, oldState.playerType)
 
-        val opposite = MulinoGame.opposite[oldState.checker] ?: throw IllegalStateException("Checker non valido")
+        val opposite = MulinoGame.opposite(oldState.playerType)
         val enemyBlockedDiff = MulinoGame.getBlockedPieces(oldState, opposite) -
                 MulinoGame.getBlockedPieces(newState, opposite)
 
@@ -528,7 +527,7 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
         else if (enemyBlockedDiff < 0)
             reward += 0.5
 
-        if (MulinoGame.isWinner(newState, oldState.checker))
+        if (MulinoGame.isWinner(newState, oldState.playerType))
             reward += 25.0
 
         reward
