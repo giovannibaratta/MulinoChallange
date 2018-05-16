@@ -9,7 +9,7 @@ import it.unibo.mulino.player.AIPlayer
 import java.util.*
 import javax.swing.Timer
 
-class MinMaxPlayer(val time: Int = 58) : AIPlayer {
+class MinMaxPlayer(val time: Int = 85) : AIPlayer {
 
     init {
         require(time > 0)
