@@ -89,16 +89,12 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
         StringBuffer logText = null;
         P player = game.getPlayer(state);
         List<A> results = orderActions(state, game.getActions(state), player, 0);
-        /*for(int i=0;i<results.size();i++){
-            System.out.println("Pre sort Action " + i + " " + results.get(i));
-        }*/
         setLogEnabled(true);
         timer.start();
-        currDepthLimit = 0;
-        /*if(!limit)
-            currDepthLimit = 4;
+        if(!limit)
+            currDepthLimit = 5;
         else
-            currDepthLimit = 4;*/
+            currDepthLimit = 0;
         do {
             incrementDepthLimit();
             if (logEnabled)
@@ -128,9 +124,6 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             }
             //System.out.println("Depth "+getMetrics().getInt(METRICS_MAX_DEPTH)+" complete. Nodes expanded "+getMetrics().getInt(METRICS_NODES_EXPANDED)+ " Best action :"+newResults.actions.get(0)+" "+newResults.utilValues.get(0)+".");
         } while (!timer.timeOutOccurred() && heuristicEvaluationUsed);
-        /*for(int i=0;i<results.size();i++){
-            System.out.println("Post sort Action " + i + " " + results.get(i));
-        }*/
         return results.get(0);
     }
 

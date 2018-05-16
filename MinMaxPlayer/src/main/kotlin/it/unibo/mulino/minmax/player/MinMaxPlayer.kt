@@ -47,7 +47,6 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
                     diagonalsString[vertex][level] = 'b'
                     //game.addPiece(clientState, position, State.Checker.BLACK)
                 }
-            //else -> throw IllegalStateException("Nella board c'è un elemeno non valido")
             }
         }
         val diagonals :Array<CharArray> = Array(8, {index->game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!!})
