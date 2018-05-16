@@ -3,7 +3,7 @@ package it.unibo.mulino.minmax.player
 class ApproximateQLearning<T, E>(private val alpha: () -> Double,
                                  private val discount: () -> Double,
                                  private val featureExtractors: Array<(T, E, T) -> Double>,
-                                 val weights: Array<Double> = Array(featureExtractors.size, { 0.0 }),
+                                 val weights: DoubleArray = DoubleArray(featureExtractors.size, { 0.0 }),
                                  private val actionsFromState: (T) -> List<E>,
                                  private val applyAction: (T, E) -> Pair<Double, T> // reward State
 ) {

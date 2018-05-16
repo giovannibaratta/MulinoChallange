@@ -1,8 +1,12 @@
 package it.unibo.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
+import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 
 
 /**
@@ -83,7 +87,7 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
      * subsequent depth-limited search runs.
      */
     @Override
-    public A makeDecision(S state) {
+    public A makeDecision(S state) throws ExecutionException {
         metrics = new Metrics();
         metrics.set(METRICS_PRUNE, 0);
         StringBuffer logText = null;
@@ -96,6 +100,26 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             currDepthLimit = 5;
         else
             currDepthLimit = 0;*/
+
+        // creo il thread pool
+        ArrayBlockingQueue<ParallelComputation> threadPool = new ArrayBlockingQueue<>(2);
+
+        try {
+            ParallelComputation thread = new ParallelComputation();
+            threadPool.put(thread);
+            new Thread(thread).start();
+            thread = new ParallelComputation();
+            threadPool.put(thread);
+            new Thread(thread).start();
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new ExecutionException("non sono riuscito ad creare i thread", e);
+        }
+
+        Semaphore wait = new Semaphore(threadPool.size());
+        List<ParallelComputation> workingThread = Collections.synchronizedList(new ArrayList<>());
+        Object mutex = new Object();
+
         currDepthLimit = 0;
         do {
             incrementDepthLimit();
@@ -103,6 +127,11 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
                 logText = new StringBuffer("\n[Depth " + currDepthLimit + "]\n");
             heuristicEvaluationUsed = false;
             ActionStore<A> newResults = new ActionStore<>();
+
+
+
+            /* OLD
+
             for (A action : results) {
                 double value = minValue(game.getResult(state, action), player, Double.NEGATIVE_INFINITY,
                         Double.POSITIVE_INFINITY, 1);
@@ -111,7 +140,35 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
                 newResults.add(action, value);
                 if (logEnabled)
                     logText.append(action).append("->").append(value).append(" \n");
+            }*/
+            Object mutex2 = new Object();
+            //synchronized (mutex) {
+            for (int i = 0; i < results.size(); i++) {
+                final A action = results.get(i);
+                try {
+                    wait.acquire();
+                } catch (InterruptedException e) {
+                    throw new ExecutionException("Il main è stato interrotto", e);
+                }
+                ParallelComputation thread = threadPool.poll();
+                thread.startSearch(new SearchPar(state, action, player), () -> {
+                    //synchronized (mutex2) {
+                    workingThread.remove(thread);
+                    try {
+                        threadPool.put(thread);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                    newResults.add(action, thread.getResult());
+                    wait.release();
+                    //}
+                });
+                workingThread.add(thread);
+                if (timer.timeOutOccurred())
+                    break; // exit from action loop
             }
+            //}
+
             if (logEnabled)
                 System.out.println(logText);
             if (newResults.size() > 0) {
@@ -126,6 +183,10 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             }
             //System.out.println("Depth "+getMetrics().getInt(METRICS_MAX_DEPTH)+" complete. Nodes expanded "+getMetrics().getInt(METRICS_NODES_EXPANDED)+ " Best action :"+newResults.actions.get(0)+" "+newResults.utilValues.get(0)+".");
         } while (!timer.timeOutOccurred() && heuristicEvaluationUsed);
+
+        threadPool.forEach((ParallelComputation p) -> p.stopWork());
+        workingThread.forEach((ParallelComputation p) -> p.stopWork());
+
         return results.get(0);
     }
 
@@ -272,4 +333,113 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             return actions.size();
         }
     }
+
+    private class SearchPar {
+
+        private S state;
+        private A action;
+        private P player;
+
+        public SearchPar(S state, A action, P player) {
+            this.state = state;
+            this.action = action;
+            this.player = player;
+        }
+
+        public P getPlayer() {
+            return player;
+        }
+
+        public void setPlayer(P player) {
+            this.player = player;
+        }
+
+        public S getState() {
+            return state;
+        }
+
+        public void setState(S state) {
+            this.state = state;
+        }
+
+        public A getAction() {
+            return action;
+        }
+
+        public void setAction(A action) {
+            this.action = action;
+        }
+    }
+
+    private class ParallelComputation implements Runnable {
+
+        /*
+        private List<A> results;
+        S state;
+        P player;
+            */
+
+        private Optional<SearchPar> searchPar = Optional.empty();
+        private Optional<Double> result = Optional.empty();
+        private Optional<Runnable> callback = Optional.empty();
+        private Semaphore semaphore = new Semaphore(0);
+        private Boolean running = false;
+        private Boolean stop = false;
+
+        public ParallelComputation(/*List<A> results, S state, P player*/) {
+            /*this.results=results;
+            this.player=player;
+            this.state=state;*/
+        }
+
+        public double getResult() {
+            if (running) throw new IllegalStateException("Il thread sta ancora eseguendo");
+            if (!result.isPresent()) throw new IllegalStateException("Non è stato generato un risultato");
+            return result.get();
+        }
+
+        public void startSearch(SearchPar search, Runnable call) {
+            if (running) throw new IllegalStateException("Il thread è già in esecuzione");
+
+            searchPar = Optional.of(search);
+            callback = Optional.of(call);
+            running = true;
+            result = Optional.empty();
+            // faccio partire il thread
+            semaphore.release();
+        }
+
+        private void stopWork() {
+            stop = true;
+            semaphore.release();
+        }
+
+        public void run() {
+            /*
+             * 1) Mi attivo e aspetto di ricevere un ramo
+             * 2) Calcolo il ramo fino alla fine
+             * 3) Una volta finito, setto una variabile, avverto il main e attendo un nuovo ordine
+             */
+            System.out.println("Thread start");
+            // aspetto un comando
+            while (!stop) {
+                try {
+                    semaphore.acquire();
+                } catch (InterruptedException e) {
+                    throw new IllegalStateException("Il thread è stato interrotto", e);
+                }
+
+                if (!stop) {
+                    // calcolo minMax
+                    //System.out.println("Inizio a calcolare");
+                    result = Optional.of(minValue(game.getResult(searchPar.get().getState(), searchPar.get().getAction()), searchPar.get().player, Double.NEGATIVE_INFINITY,
+                            Double.POSITIVE_INFINITY, 1));
+                    running = false;
+                    //System.out.println("Fine calcolo");
+                    callback.get().run();
+                }
+            }
+        }
+    }
+
 }

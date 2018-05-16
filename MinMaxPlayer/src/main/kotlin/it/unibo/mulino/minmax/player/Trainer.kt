@@ -52,16 +52,16 @@ class Trainer : AIPlayer {
         //val diagonalsString = Array(8, { charArrayOf('e','e','e')})
         // mapping dello stato esterno
         for (position in state.board.keys) {
-            val (vertex, level) = game.toInternalPositions[position]!!
+            val intPosition = game.toInternalPositions[position]!!
             when (state.board[position]) {
                 State.Checker.WHITE -> {
-                    board[0] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    board[0] += it.unibo.mulino.minmax.player.State.position[intPosition]
                     //diagonalsString[vertex][level] = 'w'
                     //game.addPiece(clientState, position, State.Checker.WHITE)
                 }
                 State.Checker.BLACK -> {
                     //diagonalsString[vertex][level] = 'b'
-                    board[1] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    board[1] += it.unibo.mulino.minmax.player.State.position[intPosition]
                     //game.addPiece(clientState, position, State.Checker.BLACK)
                 }
             }

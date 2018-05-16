@@ -30,10 +30,10 @@ object ActionMapper {
                 for (removeVertex in 0 until 8)
                     for (removeLevel in 0 until 3) {
                         // posizione remove generata
-                        if (toVertex != removeVertex || toLevel != removeLevel) {
+                        //if (toVertex != removeVertex || toLevel != removeLevel) {
                             val removeString = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]
                             azioniFase1ConRemove[toIndex][removeVertex * 3 + removeLevel] = "1$toString$removeString"
-                        }
+                        //}
                     }
             }
 
@@ -46,8 +46,8 @@ object ActionMapper {
                 val fromIndex = fromVertex * 3 + fromLevel
 
                 for (toVertex in 0 until 8)
-                    for (toLevel in 0 until 3)
-                        if (toVertex != fromVertex || toLevel != fromLevel) {
+                    for (toLevel in 0 until 3) {
+                        //if (toVertex != fromVertex || toLevel != fromLevel) {
                             // Posizione from generata
                             val toPosition = Pair(toVertex, toLevel)
                             val toString = MulinoGame.toExternalPositions[toPosition]
@@ -56,15 +56,17 @@ object ActionMapper {
                             azioniFase3SenzaRemove[fromIndex][toIndex] = "3${fromString}${toString}"
 
                             for (removeVertex in 0 until 8)
-                                for (removeLevel in 0 until 3)
-                                // posizione remove generata
-                                    if (((removeVertex != fromVertex) && (removeVertex != toVertex)) || ((removeLevel != fromLevel) && (removeLevel != toLevel))) {
-                                        val removeString = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]
-                                        azioniFase2ConRemove[fromIndex][toIndex][removeVertex * 3 + removeLevel] = "2$fromString$toString$removeString"
-                                        azioniFase3ConRemove[fromIndex][toIndex][removeVertex * 3 + removeLevel] = "3$fromString$toString$removeString"
-                                    }
+                                for (removeLevel in 0 until 3) {
+                                    // posizione remove generata
+                                    //if (((removeVertex != fromVertex) && (removeVertex != toVertex)) || ((removeLevel != fromLevel) && (removeLevel != toLevel))) {
+                                    val removeString = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]
+                                    azioniFase2ConRemove[fromIndex][toIndex][removeVertex * 3 + removeLevel] = "2$fromString$toString$removeString"
+                                    azioniFase3ConRemove[fromIndex][toIndex][removeVertex * 3 + removeLevel] = "3$fromString$toString$removeString"
+                                    //}
+                                }
 
-                        }
+                        //}
+                    }
             }
 
     }

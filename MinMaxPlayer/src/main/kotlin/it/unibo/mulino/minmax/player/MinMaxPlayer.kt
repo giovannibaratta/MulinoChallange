@@ -33,34 +33,33 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
 
     private fun play(state: ChesaniState, player: ChesaniState.Checker): Action {
         val game = MulinoGame
+        // board iniziale vuota da riempire con le pedine ricevute dal server
         val board = intArrayOf(0, 0)
-        //val startTime = System.nanoTime()
-        //val diagonalsString = Array(8, { charArrayOf('e','e','e')})
-        // mapping dello stato esterno
+
         for(position in state.board.keys){
-            val (vertex, level) = game.toInternalPositions[position]!!
+            val intPosition = game.toInternalPositions[position]!!
+
             when(state.board[position]){
-                ChesaniState.Checker.WHITE -> {
-                    board[0] += State.position[vertex * 3 + level]
-                    //diagonalsString[vertex][level] = 'w'
-                    //game.addPiece(clientState, position, State.Checker.WHITE)
-                }
-                ChesaniState.Checker.BLACK -> {
-                    //diagonalsString[vertex][level] = 'b'
-                    board[1] += State.position[vertex * 3 + level]
-                    //game.addPiece(clientState, position, State.Checker.BLACK)
-                }
+                ChesaniState.Checker.WHITE -> board[0] += State.position[intPosition]
+                ChesaniState.Checker.BLACK -> board[1] += State.position[intPosition]
+            // else può essere una casella vuota e non devo fare niente
             }
         }
-        val whiteChecker = state.whiteCheckers
-        val blackChecker = state.blackCheckers
-        val phase = when {
-            state.currentPhase == ChesaniState.Phase.SECOND -> 2
-            state.currentPhase == ChesaniState.Phase.FINAL -> 3
-            else -> 1
+
+        val phase = when (state.currentPhase) {
+            ChesaniState.Phase.FIRST -> 1
+            ChesaniState.Phase.SECOND -> 2
+            ChesaniState.Phase.FINAL -> 3
+            null -> throw IllegalStateException("Il server ha inviato una fase un null")
         }
-        //val diagonals :Array<CharArray> = Array(8, {index->game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!!})
-        val clientState = State(playerType = player.toInt(), board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+
+        val clientState = State(
+                playerType = player.toInt(),
+                board = board,
+                currentPhase = phase,
+                checkers = intArrayOf(state.whiteCheckers, state.blackCheckers),
+                checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard)
+        )
 
         //val totalTime = System.nanoTime()-startTime
         //println("Tempo inizializzazione: $totalTime")
