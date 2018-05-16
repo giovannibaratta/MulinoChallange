@@ -16,10 +16,15 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         return value
     }
 
-    fun think(state: T, actions: MutableList<E>): List<Pair<E, Double>> {
+    fun think(state: T, actions: MutableList<E>): MutableList<E>/*List<Pair<E, Double>>*/ {
         //printActionValue(state)
-        val nextActionAndValue = actions.map { Pair(it, qValue(state, it, applyAction(state, it).second)) }
-                .sortedByDescending { it.second }
+        //val nextActionAndValue = actions.map { Pair(it, qValue(state, it, applyAction(state, it).second)) }
+        //        .sortedByDescending { it.second }
+
+        val nextActionAndValue = actions
+        nextActionAndValue.sortBy { qValue(state, it, applyAction(state, it).second) }
+
+        /*
         val alpha = alpha()
         // fine dei giochi
         if (nextActionAndValue.isEmpty()) return mutableListOf()
@@ -34,10 +39,11 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         val difference = (reward.first +
                 (discount() * (getSortedAction(reward.second).firstOrNull()?.second ?: 0.0))) - bestActionValue.second
 
+
         // aggiorno i pesi
         for (index in weights.indices)
             weights[index] += alpha * difference * featureExtractors[index](state, bestActionValue.first, reward.second)
-
+        */
         return nextActionAndValue
     }
 

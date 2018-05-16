@@ -2,7 +2,68 @@ package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 
+data class State(
+        val checker: Checker,
+        val board: IntArray = intArrayOf(0, 0),
+        val checkers: IntArray = intArrayOf(9, 9),
+        val checkersOnBoard: IntArray = intArrayOf(0, 0),
+        val currentPhase: Int = 1,
+        val closedMorris: Boolean = false
+) {
+
+    fun isSet(x: Int, y: Int, player: Int): Boolean = board[player].and(position[x * 3 + y]) > 0
+
+    fun isNotSet(x: Int, y: Int): Boolean = !isSet(x, y, 0) && !isSet(x, y, 1)
+
+    fun isSet(posToCheck: Pair<Int, Int>, player: Int): Boolean = board[player].and(position[posToCheck.first * 3 + posToCheck.second]) > 0
+
+    companion object {
+
+        fun isSet(board: IntArray, x: Int, y: Int, player: Int): Boolean = board[player].and(position[x * 3 + y]) > 0
+
+        fun isNotSet(board: IntArray, x: Int, y: Int): Boolean = !State.isSet(board, x, y, 0) && !State.isSet(board, x, y, 1)
+
+        fun isSet(board: IntArray, posToCheck: Pair<Int, Int>, player: Int): Boolean = board[player].and(position[posToCheck.first * 3 + posToCheck.second]) > 0
+
+        val position = intArrayOf(1, 8, 64, 2, 16, 128, 4, 32, 256, 2048, 1024, 512, 8388608, 1048576, 131072, 4194304, 524288, 65536, 2097152, 262144, 32768, 4096, 8192, 16384)
+        /*
+            val position = hashMapOf(
+                    //Pair(0, 1),
+                    //Pair(3, 2),
+                    //Pair(6, 4),
+                    //Pair(1, 8),
+                    //Pair(4, 16),
+                    //Pair(7, 32),
+                    //Pair(2, 64),
+                    //Pair(5, 128),
+                    //Pair(8, 256),
+                    //Pair(11, 512),
+                    //Pair(10, 1024),
+                    //Pair(9, 2048),
+                    Pair(21, 4096),
+                    Pair(22, 8192),
+                    Pair(23, 16384),
+                    Pair(20, 32768),
+                    Pair(17, 65536),
+                    //Pair(14, 131072),
+                    Pair(19, 262144),
+                    Pair(16, 524288),
+                    //Pair(13, 1048576),
+                    Pair(18, 2097152),
+                    Pair(15, 4194304),
+                    Pair(12, 8388608)
+                )*/
+    }
+}
+
+fun Checker.toInt() = when (this) {
+    Checker.WHITE -> 0
+    Checker.BLACK -> 1
+    else -> throw IllegalArgumentException("Checker $this non valido")
+}
+
 //var board : Array<CharArray> = Array(8, { MulinoGame.diagonals["eee"]!! })
+/*
 data class State(var checker: Checker,
                  var board: Array<CharArray> = Array(8, {
                      MulinoGame.diagonals["eee"] ?: throw Exception("Bug programmatore")
@@ -517,3 +578,4 @@ fun main(args: Array<String>) {
     //println("Configurazione vincente fase 2: ${state.isWinner(Checker.WHITE)}")
     //println("Configurazione vincente fase 1: ${state.isWinner(Checker.WHITE)}")
 }
+        */

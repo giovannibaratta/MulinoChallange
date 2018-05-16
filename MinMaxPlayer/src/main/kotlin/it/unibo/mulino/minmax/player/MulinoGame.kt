@@ -149,6 +149,7 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("211", intArrayOf(2,1,1)))
     */
 
+    /*
     val diagonals: HashMap<String, CharArray> = hashMapOf(
             Pair("eee", charArrayOf('e', 'e', 'e')),
             Pair("www", charArrayOf('w','w','w')),
@@ -177,7 +178,7 @@ object MulinoGame : Game<State, String, Checker> {
             Pair("bwe", charArrayOf('b','w','e')),
             Pair("bwb", charArrayOf('b','w','b')),
             Pair("bww", charArrayOf('b', 'w', 'w'))
-    )
+    )*/
 
     val opposite = hashMapOf(
             Pair(Checker.BLACK, Checker.WHITE),
@@ -225,16 +226,32 @@ object MulinoGame : Game<State, String, Checker> {
                     if (checkMorris(state, possiblePosition, player)) {
                         for (adversarialPosition in getPositions(state, opposite)) {
                             if(!checkMorris(state, adversarialPosition, opposite)) {
-                                actions.add("1$possiblePosition$adversarialPosition")
+                                val toPos = toInternalPositions[possiblePosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                val removePos = toInternalPositions[adversarialPosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                actions.add(ActionMapper.azioniFase1ConRemove[toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+
+                                //actions.add("1$possiblePosition$adversarialPosition")
                             }else numMorrises++
                         }
                         if(numMorrises == state.checkersOnBoard[intOpposite]){
                             for (adversarialPosition in getPositions(state, opposite)) {
-                                actions.add("1$possiblePosition$adversarialPosition")
+                                val toPos = toInternalPositions[possiblePosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                val removePos = toInternalPositions[adversarialPosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                actions.add(ActionMapper.azioniFase1ConRemove[toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+//                               //actions.add("1$possiblePosition$adversarialPosition")
                             }
                         }
                     } else {
-                        actions.add("1$possiblePosition")
+                        val toPos = toInternalPositions[possiblePosition]
+                                ?: throw IllegalStateException("pos non valida")
+                        //val removePos = toInternalPositions[adversarialPosition] ?: throw IllegalStateException("pos non valida")
+                        actions.add(ActionMapper.azioniFase1SenzaRemove[toPos.first * 3 + toPos.second])
+
+                        //actions.add("1$possiblePosition")
                     }
                 }
             }
@@ -242,20 +259,40 @@ object MulinoGame : Game<State, String, Checker> {
                 var numMorrises = 0
                 for (actualPosition in getPositions(state, player)) {
                     for (adiacentPosition in adiacentPositions[actualPosition]!!) {
-                        if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
+                        if (getPiece(state.board, adiacentPosition) == Checker.EMPTY) {
                             if (checkMorris(state, actualPosition, adiacentPosition, player)) {
                                 for (adversarialPosition in getPositions(state, opposite)) {
                                     if(!checkMorris(state, adversarialPosition, opposite)) {
-                                        actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
+                                        val fromPos = toInternalPositions[actualPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        val toPos = toInternalPositions[adiacentPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        val removePos = toInternalPositions[adversarialPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        actions.add(ActionMapper.azioniFase2ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                        //actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
                                     }else numMorrises++
                                 }
                                 if(numMorrises == state.checkersOnBoard[intOpposite]){
                                     for (adversarialPosition in getPositions(state, opposite)) {
-                                        actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
+                                        val fromPos = toInternalPositions[actualPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        val toPos = toInternalPositions[adiacentPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        val removePos = toInternalPositions[adversarialPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        actions.add(ActionMapper.azioniFase2ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                        //actions.add("2$actualPosition$adiacentPosition$adversarialPosition")
                                     }
                                 }
                             } else {
-                                actions.add("2$actualPosition$adiacentPosition")
+                                val fromPos = toInternalPositions[actualPosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                val toPos = toInternalPositions[adiacentPosition]
+                                        ?: throw IllegalStateException("pos non valida")
+                                //val removePos = toInternalPositions[adversarialPosition] ?: throw IllegalStateException("pos non valida")
+                                actions.add(ActionMapper.azioniFase2SenzaRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second])
+                                //actions.add("2$actualPosition$adiacentPosition")
                             }
                         }
                     }
@@ -263,44 +300,84 @@ object MulinoGame : Game<State, String, Checker> {
             }
             3->{
                 var numMorrises = 0
-                when(state.checkersOnBoard[intChecker]){
-                    3 ->{
+                when (state.checkersOnBoard[intChecker]) {
+                    3 -> {
                         for (actualPosition in getPositions(state, player)) {
                             for (possiblePosition in getEmptyPositions(state)) {
                                 if (checkMorris(state, actualPosition, possiblePosition, player)) {
                                     for (adversarialPosition in getPositions(state, opposite)) {
                                         if (!checkMorris(state, adversarialPosition, opposite)) {
-                                            actions.add("3$actualPosition$possiblePosition$adversarialPosition")
+                                            val fromPos = toInternalPositions[actualPosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            val toPos = toInternalPositions[possiblePosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            val removePos = toInternalPositions[adversarialPosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            actions.add(ActionMapper.azioniFase3ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                            //actions.add("3$actualPosition$possiblePosition$adversarialPosition")
                                         } else numMorrises++
                                     }
                                     if (numMorrises == state.checkersOnBoard[intOpposite]) {
                                         for (adversarialPosition in getPositions(state, opposite)) {
-                                            actions.add("3$actualPosition$possiblePosition$adversarialPosition")
+                                            val fromPos = toInternalPositions[actualPosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            val toPos = toInternalPositions[possiblePosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            val removePos = toInternalPositions[adversarialPosition]
+                                                    ?: throw IllegalStateException("pos non valida")
+                                            actions.add(ActionMapper.azioniFase3ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                            //actions.add("3$actualPosition$possiblePosition$adversarialPosition")
                                         }
                                     }
                                 } else {
-                                    actions.add("3$actualPosition$possiblePosition")
+                                    val fromPos = toInternalPositions[actualPosition]
+                                            ?: throw IllegalStateException("pos non valida")
+                                    val toPos = toInternalPositions[possiblePosition]
+                                            ?: throw IllegalStateException("pos non valida")
+                                    //val removePos = toInternalPositions[adversarialPosition] ?: throw IllegalStateException("pos non valida")
+                                    actions.add(ActionMapper.azioniFase3SenzaRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second])
+                                    //actions.add("3$actualPosition$possiblePosition")
                                 }
                             }
                         }
                     }
-                    else ->{
+                    else -> {
                         for (actualPosition in getPositions(state, player)) {
                             for (adiacentPosition in adiacentPositions[actualPosition]!!) {
-                                if (getPiece(state, adiacentPosition) == Checker.EMPTY) {
+                                if (getPiece(state.board, adiacentPosition) == Checker.EMPTY) {
                                     if (checkMorris(state, actualPosition, adiacentPosition, player)) {
                                         for (adversarialPosition in getPositions(state, opposite)) {
-                                            if(!checkMorris(state, adversarialPosition, opposite)) {
-                                                actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
-                                            }else numMorrises++
+                                            if (!checkMorris(state, adversarialPosition, opposite)) {
+                                                val fromPos = toInternalPositions[actualPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                val toPos = toInternalPositions[adiacentPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                val removePos = toInternalPositions[adversarialPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                actions.add(ActionMapper.azioniFase3ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                                //actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
+                                            } else numMorrises++
                                         }
-                                        if(numMorrises == state.checkersOnBoard[intOpposite]){
+                                        if (numMorrises == state.checkersOnBoard[intOpposite]) {
                                             for (adversarialPosition in getPositions(state, opposite)) {
-                                                actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
+                                                val fromPos = toInternalPositions[actualPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                val toPos = toInternalPositions[adiacentPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                val removePos = toInternalPositions[adversarialPosition]
+                                                        ?: throw IllegalStateException("pos non valida")
+                                                actions.add(ActionMapper.azioniFase3ConRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second][removePos.first * 3 + removePos.second])
+                                                //actions.add("3$actualPosition$adiacentPosition$adversarialPosition")
                                             }
                                         }
                                     } else {
-                                        actions.add("3$actualPosition$adiacentPosition")
+                                        val fromPos = toInternalPositions[actualPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        val toPos = toInternalPositions[adiacentPosition]
+                                                ?: throw IllegalStateException("pos non valida")
+                                        //val removePos = toInternalPositions[adversarialPosition] ?: throw IllegalStateException("pos non valida")
+                                        actions.add(ActionMapper.azioniFase3SenzaRemove[fromPos.first * 3 + fromPos.second][toPos.first * 3 + toPos.second])
+                                        //actions.add("3$actualPosition$adiacentPosition")
                                     }
                                 }
                             }
@@ -323,58 +400,66 @@ object MulinoGame : Game<State, String, Checker> {
         val player = state.checker
         val opposite = opposite[state.checker]!!
         //val startTime = System.nanoTime()
-        val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
-        val newState = State(checker = opposite, board = diagonals, checkers = intArrayOf(state.checkers[0], state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0], state.checkersOnBoard[1]))
+        //val diagonals : Array<CharArray> = Array(8, {index-> diagonals["${state.board[index][0]}${state.board[index][1]}${state.board[index][2]}"]!!})
+        //val newState = State(checker = opposite, board = diagonals, checkers = intArrayOf(state.checkers[0], state.checkers[1]), checkersOnBoard = intArrayOf(state.checkersOnBoard[0], state.checkersOnBoard[1]))
         val current = checkersToInt[player]!!
         val next = checkersToInt[opposite]!!
+        var newCheckers = intArrayOf(state.checkers[0], state.checkers[1])
+        var newBoardCheckers = intArrayOf(state.checkersOnBoard[0], state.checkersOnBoard[1])
+        var newBoard = state.board
+        var newClosedMorris = false
+        var newPhase = state.currentPhase
+
+        /*
         for(vertex in 0..7)
             for(level in 0..2)
                 newState.board[vertex][level]=state.board[vertex][level]
+        */
         when(action.get(0)){
             '1' ->{
-                addPiece(newState, action.substring(1, 3), player)
-                newState.checkers[current]--
-                newState.checkersOnBoard[current]++
+                newBoard = addPiece(newBoard, action.substring(1, 3), player)
+                newCheckers[current]-- //newState.checkers[current]--
+                newBoardCheckers[current]++ // newState.checkersOnBoard[current]++
 
                 if (action.length>3) {
-                    removePiece(newState, action.substring(3, 5))
-                    newState.checkersOnBoard[next]--
-                    newState.closedMorris = true
+                    newBoard = removePiece(newBoard, action.substring(3, 5))
+                    newBoardCheckers[next]--
+                    newClosedMorris = true
                 }
-                if(newState.checkers[next]==0)
-                    newState.currentPhase=2
+                if (newCheckers[next] == 0)
+                    newPhase = 2
                 else
-                    newState.currentPhase=1
+                    newPhase = 1
             }
 
             '2' ->{
-                removePiece(newState, action.substring(1, 3))
-                addPiece(newState, action.substring(3, 5), player)
+                newBoard = removePiece(newBoard, action.substring(1, 3))
+                newBoard = addPiece(newBoard, action.substring(3, 5), player)
 
                 if (action.length>5) {
-                    removePiece(newState, action.substring(5, 7))
-                    newState.checkersOnBoard[next]--
-                    newState.closedMorris = true
+                    newBoard = removePiece(newBoard, action.substring(5, 7))
+                    newBoardCheckers[next]--
+                    newClosedMorris = true
                 }
-                if(newState.checkersOnBoard[next]==3)
-                    newState.currentPhase = 3
+                if (newBoardCheckers[next] == 3)
+                    newPhase = 3
                 else
-                    newState.currentPhase=2
+                    newPhase = 2
             }
             '3' ->{
-                removePiece(newState, action.substring(1, 3))
-                addPiece(newState, action.substring(3, 5), player)
+                newBoard = removePiece(newBoard, action.substring(1, 3))
+                newBoard = addPiece(newBoard, action.substring(3, 5), player)
                 if (action.length>5) {
-                    removePiece(newState, action.substring(5, 7))
-                    newState.checkersOnBoard[next]--
-                    newState.closedMorris = true
+                    newBoard = removePiece(newBoard, action.substring(5, 7))
+                    newBoardCheckers[next]--
+                    newClosedMorris = true
                 }
-                newState.currentPhase=3
+                newPhase = 3
             }
         }
         //val totalTime = System.nanoTime()-startTime
         //println("Action ${state.checker}: $action -> State : ${printState(newState)}")
-        return newState
+        return State(opposite, newBoard, newCheckers, newBoardCheckers, newPhase, newClosedMorris)
     }
 
     override fun isTerminal(state: State?): Boolean {
@@ -405,12 +490,27 @@ object MulinoGame : Game<State, String, Checker> {
     }
     */
 
-    private fun getPiece(state : State, position: String): Checker {
+    private fun getPiece(board: IntArray, position: String): Checker {
         val (vertex, level) = toInternalPositions[position]!!
-        return charsToCheckers[state.board[vertex][level]]!!
+        when {
+            State.isSet(board, vertex, level, 0) && !State.isSet(board, vertex, level, 1) -> return Checker.WHITE
+            !State.isSet(board, vertex, level, 0) && State.isSet(board, vertex, level, 1) -> return Checker.BLACK
+            State.isNotSet(board, vertex, level) -> return Checker.EMPTY
+            else -> throw IllegalStateException("Stato board non valido")
+        }
+        //return charsToCheckers[state.board[vertex][level]]!!
     }
 
-    fun addPiece(state : State, position: String, checker: Checker) {
+    fun addPiece(board: IntArray, position: String, checker: Checker): IntArray {
+        val (vertex, level) = toInternalPositions[position]!!
+        if (State.isNotSet(board, vertex, level)) {
+            when (checker) {
+                Checker.WHITE -> return intArrayOf(board[0] + State.position[vertex * 3 + level], board[1])
+                Checker.BLACK -> return intArrayOf(board[0], board[1] + State.position[vertex * 3 + level])
+                else -> throw IllegalArgumentException("Player $checker non valido")
+            }
+        } else throw IllegalStateException("In $position non c'è già pezzo")
+        /*
         val (vertex, level) = toInternalPositions[position]!!
         //state.board[vertex][level] = checkersToChar[checker]!!
         val intChecker = checkersToChar[checker]
@@ -419,25 +519,30 @@ object MulinoGame : Game<State, String, Checker> {
             1->diagonals["${state.board[vertex][0]}$intChecker${state.board[vertex][2]}"]!!
             2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}$intChecker"]!!
             else -> charArrayOf('e','e','e')
-        }
+        }*/
     }
 
-    private fun removePiece(state : State, position: String) {
+    private fun removePiece(board: IntArray, position: String): IntArray {
         val (vertex, level) = toInternalPositions[position]!!
+        if (State.isSet(board, vertex, level, 0)) return intArrayOf(board[0] - State.position[vertex * 3 + level], board[1])
+        else if (State.isSet(board, vertex, level, 1)) return intArrayOf(board[0], board[1] - State.position[vertex * 3 + level])
+        else throw IllegalStateException("In $position non c'è nessun pezzo")
+
+        /*val (vertex, level) = toInternalPositions[position]!!
         //state.board[vertex][level] = 'e'
         state.board[vertex] = when(level){
             0->diagonals["e${state.board[vertex][1]}${state.board[vertex][2]}"]!!
             1->diagonals["${state.board[vertex][0]}e${state.board[vertex][2]}"]!!
             2->diagonals["${state.board[vertex][0]}${state.board[vertex][1]}e"]!!
             else ->charArrayOf('e','e','e')
-        }
+        }*/
     }
 
     private fun getPositions(state : State, checker: Checker): List<String> {
         val positions = LinkedList<String>()
         for (position in toInternalPositions.keys) {
             val (vertex, level) = toInternalPositions[position]!!
-            if (state.board[vertex][level] == checkersToChar[checker]!!)
+            if (State.isSet(state.board, vertex, level, checker.toInt()))
                 positions.add(position)
         }
         return positions
@@ -447,23 +552,23 @@ object MulinoGame : Game<State, String, Checker> {
         val positions = LinkedList<String>()
         for (position in toInternalPositions.keys) {
             val (vertex, level) = toInternalPositions[position]!!
-            if (state.board[vertex][level] == 'e')
+            if (state.isNotSet(vertex, level))
                 positions.add(position)
         }
         return positions
     }
 
-    private fun checkMorris(state : State,position: String, checker: Checker): Boolean {
+    private fun checkMorris(state: State, position: String, checker: Checker): Boolean {
         val (vertex, level) = toInternalPositions[position]!!
         val check = when (vertex) {
-            1, 3, 5, 7 -> ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                    (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker])) ||
-                    ((state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                            ((state.board[vertex][nextLevel[nextLevel[level]!!]!!]) == checkersToChar[checker]))
-            else -> ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                    (state.board[nextVertex[nextVertex[vertex]!!]!!][level] == checkersToChar[checker])) ||
-                    ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                            (state.board[precVertex[precVertex[vertex]!!]!!][level] == checkersToChar[checker]))
+            1, 3, 5, 7 -> ((State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt())) &&
+                    (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()))) ||
+                    ((State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                            (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt())))
+            else -> ((State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt())) &&
+                    (State.isSet(state.board, nextVertex[nextVertex[vertex]!!]!!, level, checker.toInt()))) ||
+                    ((State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt())) &&
+                            (State.isSet(state.board, precVertex[precVertex[vertex]!!]!!, level, checker.toInt())))
         }
         return check
     }
@@ -475,32 +580,32 @@ object MulinoGame : Game<State, String, Checker> {
         if (adiacentPositions[newPosition]!!.contains(oldPosition)) {
             when (newVertex) {
                 1, 3, 5, 7 -> when (oldVertex) {
-                    newVertex -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                            (state.board[nextVertex[newVertex]!!][newLevel] == checkersToChar[checker]))
-                    else -> check = ((state.board[newVertex][nextLevel[newLevel]!!] == checkersToChar[checker]) &&
-                            (state.board[newVertex][nextLevel[nextLevel[newLevel]!!]!!] == checkersToChar[checker]))
+                    newVertex -> check = ((State.isSet(state.board, precVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                            (State.isSet(state.board, nextVertex[newVertex]!!, newLevel, checker.toInt())))
+                    else -> check = ((State.isSet(state.board, newVertex, nextLevel[newLevel]!!, checker.toInt())) &&
+                            (State.isSet(state.board, newVertex, nextLevel[nextLevel[newLevel]!!]!!, checker.toInt())))
                 }
                 0, 2, 4, 6 -> when (oldVertex) {
-                    nextVertex[newVertex] -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                            (state.board[precVertex[precVertex[newVertex]!!]!!][newLevel] == checkersToChar[checker]))
-                    else -> check = ((state.board[nextVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                            (state.board[nextVertex[nextVertex[newVertex]!!]!!][newLevel] == checkersToChar[checker]))
+                    nextVertex[newVertex] -> check = ((State.isSet(state.board, precVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                            (State.isSet(state.board, precVertex[precVertex[newVertex]!!]!!, newLevel, checker.toInt())))
+                    else -> check = ((State.isSet(state.board, nextVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                            (State.isSet(state.board, nextVertex[nextVertex[newVertex]!!]!!, newLevel, checker.toInt())))
                 }
             }
         } else {
             when (newVertex) {
-                1, 3, 5, 7 -> check = ((state.board[precVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                        (state.board[nextVertex[newVertex]!!][newLevel] == checkersToChar[checker])) ||
-                        ((state.board[newVertex][nextLevel[newLevel]!!] == checkersToChar[checker]) &&
-                                (state.board[newVertex][nextLevel[nextLevel[newLevel]!!]!!] == checkersToChar[checker]) &&
+                1, 3, 5, 7 -> check = ((State.isSet(state.board, precVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                        (State.isSet(state.board, nextVertex[newVertex]!!, newLevel, checker.toInt()))) ||
+                        ((State.isSet(state.board, newVertex, nextLevel[newLevel]!!, checker.toInt())) &&
+                                (State.isSet(state.board, newVertex, nextLevel[nextLevel[newLevel]!!]!!, checker.toInt())) &&
                                 (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel[newLevel]!!) &&
                                         (toInternalPositions[oldPosition] != Pair(newVertex, nextLevel[nextLevel[newLevel]!!]!!))))
                 0, 2, 4, 6 -> check = ((toInternalPositions[oldPosition] != Pair(nextVertex[nextVertex[newVertex]!!]!!, newLevel)) &&
-                        (state.board[nextVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                        (state.board[nextVertex[nextVertex[newVertex]!!]!!][newLevel] == checkersToChar[checker])) ||
+                        (State.isSet(state.board, nextVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                        (State.isSet(state.board, nextVertex[nextVertex[newVertex]!!]!!, newLevel, checker.toInt()))) ||
                         ((toInternalPositions[oldPosition] != Pair(precVertex[precVertex[newVertex]!!]!!, newLevel)) &&
-                                (state.board[precVertex[newVertex]!!][newLevel] == checkersToChar[checker]) &&
-                                (state.board[precVertex[precVertex[newVertex]!!]!!][newLevel] == checkersToChar[checker]))
+                                (State.isSet(state.board, precVertex[newVertex]!!, newLevel, checker.toInt())) &&
+                                (State.isSet(state.board, precVertex[precVertex[newVertex]!!]!!, newLevel, checker.toInt())))
             }
         }
         return check
@@ -515,12 +620,12 @@ object MulinoGame : Game<State, String, Checker> {
     private fun checkNoMoves(state: State, position: String, checker: Checker): Boolean {
         var check = false
         val (vertex, level) = toInternalPositions[position]!!
-        check = (state.board[nextVertex[vertex]!!][level] != 'e' &&
-                state.board[precVertex[vertex]!!][level] != 'e')
+        check = (state.isNotSet(nextVertex[vertex]!!, level) &&
+                state.isNotSet(precVertex[vertex]!!, level))
         if(check){
             when (vertex) {
                 1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels[level]!!) {
-                    check = check && (state.board[vertex][adiacentLevel] != 'e')
+                    check = check && (state.isNotSet(vertex, adiacentLevel))
                 }
             }
         }
@@ -541,12 +646,14 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) {
+                    if (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt())) {
                         count++
                     }
-                    if(level==1 && (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                            (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker])){
+
+                    State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())
+                    if (level == 1 && (State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                            (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt()))) {
                         count++
                     }
                 }
@@ -582,7 +689,7 @@ object MulinoGame : Game<State, String, Checker> {
         for (position in getPositions(state, checker)) {
             for (adiacentPosition in adiacentPositions[position]!!) {
                 val (vertex, level) = toInternalPositions[adiacentPosition]!!
-                if (state.board[vertex][level] == 'e' && checkMorris(state, position, adiacentPosition, checker))
+                if (state.isNotSet(vertex, level) && checkMorris(state, position, adiacentPosition, checker))
                     return true
             }
         }
@@ -595,7 +702,7 @@ object MulinoGame : Game<State, String, Checker> {
         for (position in getPositions(state, checker)) {
             for (adiacentPosition in adiacentPositions[position]!!) {
                 val (vertex, level) = toInternalPositions[adiacentPosition]!!
-                if (state.board[vertex][level] == 'e' && checkMorris(state, position, adiacentPosition, checker))
+                if (state.isNotSet(vertex, level) && checkMorris(state, position, adiacentPosition, checker))
                     count++
                 if(count==2)
                     return true
@@ -609,18 +716,18 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[nextVertex[nextVertex[vertex]!!]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[precVertex[vertex]!!]!!][level] == checkersToChar[checker])
+                    if (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, nextVertex[nextVertex[vertex]!!]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, precVertex[precVertex[vertex]!!]!!, level, checker.toInt()))
                         return true
 
                 }
                 else -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[vertex][nextLevel[level]!!] == checkersToChar[checker] &&
-                            state.board[vertex][nextLevel[level]!!] == checkersToChar[checker])
+                    if (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt()) &&
+                            State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt()))
                         return true
                 }
             }
@@ -635,29 +742,29 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == charChecker &&
-                            state.board[precVertex[vertex]!!][level] == 'e')
+                    if (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()) &&
+                            state.isNotSet(precVertex[vertex]!!, level))
                         count++
-                    else if (state.board[precVertex[vertex]!!][level] == charChecker &&
-                            state.board[nextVertex[vertex]!!][level] == 'e')
+                    else if (State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt()) &&
+                            state.isNotSet(nextVertex[vertex]!!, level))
                         count++
                     when(level){
                         0->{
-                            if(state.board[vertex][1] == charChecker &&
-                                    state.board[vertex][2] == 'e')
+                            if (State.isSet(state.board, vertex, 1, checker.toInt()) &&
+                                    state.isNotSet(vertex, 2))
                                 count++
                         }
                         1->{
-                            if(state.board[vertex][0] == charChecker &&
-                                    state.board[vertex][2] == 'e')
+                            if (State.isSet(state.board, vertex, 0, checker.toInt()) &&
+                                    state.isNotSet(vertex, 2))
                                 count++
-                            else if (state.board[vertex][2] == charChecker &&
-                                    state.board[vertex][0] == 'e')
+                            else if (State.isSet(state.board, vertex, 2, checker.toInt()) &&
+                                    state.isNotSet(vertex, 0))
                                 count++
                         }
                         2->{
-                            if(state.board[vertex][1] == charChecker &&
-                                    state.board[vertex][0] == 'e')
+                            if (State.isSet(state.board, vertex, 1, checker.toInt()) &&
+                                    state.isNotSet(vertex, 0))
                                 count++
                         }
                     }
@@ -673,55 +780,55 @@ object MulinoGame : Game<State, String, Checker> {
             val (vertex, level) = toInternalPositions[position]!!
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (state.board[nextVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[precVertex[vertex]!!][level] == checkersToChar[checker] &&
-                            state.board[nextVertex[nextVertex[vertex]!!]!!][level] == 'e' &&
-                            state.board[precVertex[precVertex[vertex]!!]!!][level] == 'e')
+                    if (State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt()) &&
+                            State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt()) &&
+                            state.isNotSet(nextVertex[nextVertex[vertex]!!]!!, level) &&
+                            state.isNotSet(precVertex[precVertex[vertex]!!]!!, level))
                         count++
 
                 }
                 else -> {
                     when (level) {
                         1 -> {
-                            if ((state.board[nextVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[precVertex[vertex]!!][nextLevel[level]!!] == 'e') &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
+                            if ((State.isSet(state.board, nextVertex[vertex]!!, nextLevel[level]!!, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                                    (state.isNotSet(precVertex[vertex]!!, nextLevel[level]!!)) &&
+                                    (state.isNotSet(vertex, nextLevel[nextLevel[level]!!]!!)))
                                 count++
-                            if ((state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == 'e') &&
-                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
+                            if ((State.isSet(state.board, nextVertex[vertex]!!, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (state.isNotSet(vertex, nextLevel[nextLevel[level]!!]!!)) &&
+                                    (state.isNotSet(vertex, nextLevel[level]!!)))
                                 count++
-                            if ((state.board[precVertex[vertex]!!][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[nextVertex[vertex]!!][nextLevel[level]!!] =='e') &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
+                            if ((State.isSet(state.board, precVertex[vertex]!!, nextLevel[level]!!, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                                    (state.isNotSet(nextVertex[vertex]!!, nextLevel[level]!!)) &&
+                                    (state.isNotSet(vertex, nextLevel[nextLevel[level]!!]!!)))
                                 count++
-                            if ((state.board[precVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[nextVertex[vertex]!!][nextLevel[nextLevel[level]!!]!!] =='e') &&
-                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
+                            if ((State.isSet(state.board, precVertex[vertex]!!, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (state.isNotSet(nextVertex[vertex]!!, nextLevel[nextLevel[level]!!]!!)) &&
+                                    (state.isNotSet(vertex, nextLevel[level]!!)))
                                 count++
-                            if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
+                            if ((State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                                    (state.isNotSet(precVertex[vertex]!!, level)) &&
+                                    (state.isNotSet(vertex, nextLevel[nextLevel[level]!!]!!)))
                                 count++
-                            if ((state.board[nextVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[precVertex[vertex]!!][level] == 'e') &&
-                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
+                            if ((State.isSet(state.board, nextVertex[vertex]!!, level, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (state.isNotSet(precVertex[vertex]!!, level)) &&
+                                    (state.isNotSet(vertex, nextLevel[level]!!)))
                                 count++
-                            if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[level]!!] == checkersToChar[checker]) &&
-                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == 'e'))
+                            if ((State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[level]!!, checker.toInt())) &&
+                                    (state.isNotSet(nextVertex[vertex]!!, level)) &&
+                                    (state.isNotSet(vertex, nextLevel[nextLevel[level]!!]!!)))
                                 count++
-                            if ((state.board[precVertex[vertex]!!][level] == checkersToChar[checker]) &&
-                                    (state.board[vertex][nextLevel[nextLevel[level]!!]!!] == checkersToChar[checker]) &&
-                                    (state.board[nextVertex[vertex]!!][level] == 'e') &&
-                                    (state.board[vertex][nextLevel[level]!!] == 'e'))
+                            if ((State.isSet(state.board, precVertex[vertex]!!, level, checker.toInt())) &&
+                                    (State.isSet(state.board, vertex, nextLevel[nextLevel[level]!!]!!, checker.toInt())) &&
+                                    (state.isNotSet(nextVertex[vertex]!!, level)) &&
+                                    (state.isNotSet(vertex, nextLevel[level]!!)))
                                 count++
                         }
                     }
@@ -734,7 +841,7 @@ object MulinoGame : Game<State, String, Checker> {
     fun density(state: State, position : String, checker : Checker) : Double{
         var density = 0.0
         for(adiacentPosition in adiacentPositions[position]!!)
-            if(getPiece(state, adiacentPosition)==checker)
+            if (getPiece(state.board, adiacentPosition) == checker)
                 density++
         return density
     }

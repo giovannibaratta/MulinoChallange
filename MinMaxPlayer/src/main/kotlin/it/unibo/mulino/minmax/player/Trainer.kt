@@ -18,6 +18,7 @@ class Trainer : AIPlayer {
     private val player = QLearningPlayerAlternative({ 0.05 })
 
     private fun convert(state: State, player: State.Checker): MinMaxState {
+        /*
         val game = MulinoGame
         //val startTime = System.nanoTime()
         val diagonalsString = Array(8, { charArrayOf('e', 'e', 'e') })
@@ -44,17 +45,47 @@ class Trainer : AIPlayer {
             state.currentPhase == State.Phase.SECOND -> 2
             state.currentPhase == State.Phase.FINAL -> 3
             else -> 1
+        }*/
+        val game = MulinoGame
+        val board = intArrayOf(0, 0)
+        //val startTime = System.nanoTime()
+        //val diagonalsString = Array(8, { charArrayOf('e','e','e')})
+        // mapping dello stato esterno
+        for (position in state.board.keys) {
+            val (vertex, level) = game.toInternalPositions[position]!!
+            when (state.board[position]) {
+                State.Checker.WHITE -> {
+                    board[0] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    //diagonalsString[vertex][level] = 'w'
+                    //game.addPiece(clientState, position, State.Checker.WHITE)
+                }
+                State.Checker.BLACK -> {
+                    //diagonalsString[vertex][level] = 'b'
+                    board[1] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    //game.addPiece(clientState, position, State.Checker.BLACK)
+                }
+            }
         }
+        val whiteChecker = state.whiteCheckers
+        val blackChecker = state.blackCheckers
+        val phase = when {
+            state.currentPhase == State.Phase.SECOND -> 2
+            state.currentPhase == State.Phase.FINAL -> 3
+            else -> 1
+        }
+        //val diagonals :Array<CharArray> = Array(8, {index->game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!!})
+        val clientState = it.unibo.mulino.minmax.player.State(checker = player, board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+
         return clientState
     }
 
     override fun playPhase1(state: State, playerType: State.Checker): Phase1Action {
         val clientState = convert(state, playerType)
         val resAction = when (Math.random() > 0.75) {
-            true -> player.playPhase1(clientState, MulinoGame.getActions(clientState)).first().first
+            true -> player.playPhase1(clientState, MulinoGame.getActions(clientState)).first()//.first
             false -> {
                 val allAction = player.playPhase1(clientState, MulinoGame.getActions(clientState))
-                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size].first
+                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size]//.first
             }
         }
         println("Action " + resAction)
@@ -75,10 +106,10 @@ class Trainer : AIPlayer {
         val clientState = convert(state, playerType)
         //val resAction : String = player.playPhase1(clientState, MulinoGame.getActions(clientState)).first().first
         val resAction = when (Math.random() > 0.75) {
-            true -> player.playPhase2(clientState, MulinoGame.getActions(clientState)).first().first
+            true -> player.playPhase2(clientState, MulinoGame.getActions(clientState)).first()//.first
             false -> {
                 val allAction = player.playPhase2(clientState, MulinoGame.getActions(clientState))
-                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size].first
+                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size]//.first
             }
         }
         println("Action " + resAction)
@@ -95,10 +126,10 @@ class Trainer : AIPlayer {
         val clientState = convert(state, playerType)
         //val resAction : String = player.playPhase1(clientState, MulinoGame.getActions(clientState)).first().first
         val resAction = when (Math.random() > 0.75) {
-            true -> player.playPhase3(clientState, MulinoGame.getActions(clientState)).first().first
+            true -> player.playPhase3(clientState, MulinoGame.getActions(clientState)).first()//.first
             false -> {
                 val allAction = player.playPhase3(clientState, MulinoGame.getActions(clientState))
-                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size].first
+                allAction[((Math.random() * allAction.size).roundToInt()) % allAction.size]//.first
             }
         }
         println("Action " + resAction)

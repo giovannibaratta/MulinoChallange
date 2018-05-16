@@ -131,13 +131,13 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         if (state == null) throw IllegalArgumentException("State is null")
         if (actions == null) throw IllegalArgumentException("Actions is null")
         if (player == null) throw IllegalArgumentException("Player is null")
-        if (depth > 3 || !sortAction)
+        if (depth > 2 || !sortAction)
             return actions
 
         return when (getPhase(state)) {
-            1 -> sorter.playPhase1(state, actions).map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
-            2 -> sorter.playPhase2(state, actions).map { it.first }.toMutableList()
-            3 -> sorter.playPhase3(state, actions).map { it.first }.toMutableList()
+            1 -> sorter.playPhase1(state, actions)//.map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+            2 -> sorter.playPhase2(state, actions)//.map { it.first }.toMutableList()
+            3 -> sorter.playPhase3(state, actions)//.map { it.first }.toMutableList()
             else -> throw IllegalStateException("Fase non valida")
         }
         //if(!sortAction) return actions
@@ -168,34 +168,35 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         }*/
     }
 
-    private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {
-        ChesaniState.Checker.WHITE -> true
-        Checker.BLACK -> false
-        else -> throw IllegalStateException("Checker non valido")
-    })
+    /*
+        private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {
+            ChesaniState.Checker.WHITE -> true
+            Checker.BLACK -> false
+            else -> throw IllegalStateException("Checker non valido")
+        })
 
-    private fun State.toChesaniState(): ChesaniState {
-        val state = ChesaniState()
-        state.blackCheckers = this.checkers[1]
-        state.whiteCheckers = this.checkers[0]
-        state.currentPhase = when (this.currentPhase) {
-            1 -> ChesaniState.Phase.FIRST
-            2 -> ChesaniState.Phase.SECOND
-            3 -> ChesaniState.Phase.FINAL
-            else -> throw IllegalStateException("Fase non valida")
+        private fun State.toChesaniState(): ChesaniState {
+            val state = ChesaniState()
+            state.blackCheckers = this.checkers[1]
+            state.whiteCheckers = this.checkers[0]
+            state.currentPhase = when (this.currentPhase) {
+                1 -> ChesaniState.Phase.FIRST
+                2 -> ChesaniState.Phase.SECOND
+                3 -> ChesaniState.Phase.FINAL
+                else -> throw IllegalStateException("Fase non valida")
+            }
+            state.blackCheckersOnBoard = this.checkersOnBoard[1]
+            state.whiteCheckersOnBoard = this.checkersOnBoard[0]
+
+            this.board.forEachIndexed { index, charArray ->
+                state.board.put(toExternalPositions.get(Pair(index, 0)), charArray[0].toChecker())
+                state.board.put(toExternalPositions.get(Pair(index, 1)), charArray[1].toChecker())
+                state.board.put(toExternalPositions.get(Pair(index, 2)), charArray[2].toChecker())
+            }
+
+            return state
         }
-        state.blackCheckersOnBoard = this.checkersOnBoard[1]
-        state.whiteCheckersOnBoard = this.checkersOnBoard[0]
-
-        this.board.forEachIndexed { index, charArray ->
-            state.board.put(toExternalPositions.get(Pair(index, 0)), charArray[0].toChecker())
-            state.board.put(toExternalPositions.get(Pair(index, 1)), charArray[1].toChecker())
-            state.board.put(toExternalPositions.get(Pair(index, 2)), charArray[2].toChecker())
-        }
-
-        return state
-    }
-
+    */
     private val toExternalPositions = hashMapOf(
             Pair(Pair(0, 0), "a1"),
             Pair(Pair(1, 0), "a4"),
@@ -266,23 +267,24 @@ fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
     return mutableList
 }
 
+/*
 fun main(args: Array<String>) {
 
-    var newState = State(checker = Checker.WHITE, checkers = intArrayOf(0,0), checkersOnBoard = intArrayOf(9,5), currentPhase = 2)
-    MulinoGame.addPiece(newState, "a1",Checker.WHITE)
-    MulinoGame.addPiece(newState, "a7",Checker.WHITE)
+    var newState = State(checker = Checker.WHITE, checkers = intArrayOf(0, 0), checkersOnBoard = intArrayOf(9, 5), currentPhase = 2)
+    MulinoGame.addPiece(newState, "a1", Checker.WHITE)
+    MulinoGame.addPiece(newState, "a7", Checker.WHITE)
     MulinoGame.addPiece(newState, "b4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c3",Checker.WHITE)
-    MulinoGame.addPiece(newState, "d2",Checker.WHITE)
+    MulinoGame.addPiece(newState, "c3", Checker.WHITE)
+    MulinoGame.addPiece(newState, "d2", Checker.WHITE)
     MulinoGame.addPiece(newState, "d5",Checker.WHITE)
-    MulinoGame.addPiece(newState, "e4",Checker.WHITE)
+    MulinoGame.addPiece(newState, "e4", Checker.WHITE)
     MulinoGame.addPiece(newState, "f4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "g4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c5",Checker.BLACK)
+    MulinoGame.addPiece(newState, "g4", Checker.WHITE)
+    MulinoGame.addPiece(newState, "c5", Checker.BLACK)
     MulinoGame.addPiece(newState, "e5",Checker.BLACK)
-    MulinoGame.addPiece(newState, "e3",Checker.BLACK)
-    MulinoGame.addPiece(newState, "d3",Checker.BLACK)
-    MulinoGame.addPiece(newState, "f2",Checker.BLACK)
+    MulinoGame.addPiece(newState, "e3", Checker.BLACK)
+    MulinoGame.addPiece(newState, "d3", Checker.BLACK)
+    MulinoGame.addPiece(newState, "f2", Checker.BLACK)
 
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
@@ -298,3 +300,4 @@ fun main(args: Array<String>) {
     println("Azione scelta: $action")
 
 }
+        */

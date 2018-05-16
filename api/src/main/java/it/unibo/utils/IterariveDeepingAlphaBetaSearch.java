@@ -91,10 +91,12 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
         List<A> results = orderActions(state, game.getActions(state), player, 0);
         setLogEnabled(true);
         timer.start();
+        /*
         if(!limit)
             currDepthLimit = 5;
         else
-            currDepthLimit = 0;
+            currDepthLimit = 0;*/
+        currDepthLimit = 0;
         do {
             incrementDepthLimit();
             if (logEnabled)
