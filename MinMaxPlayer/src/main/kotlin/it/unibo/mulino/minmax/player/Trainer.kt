@@ -78,7 +78,7 @@ class Trainer : AIPlayer {
             State.Checker.WHITE -> MulinoGame.WHITE_PLAYER
             State.Checker.BLACK -> MulinoGame.BLACK_PLAYER
             else -> throw IllegalStateException("Player non valido")
-        }, board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+        }, board = board, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
 
         return clientState
     }

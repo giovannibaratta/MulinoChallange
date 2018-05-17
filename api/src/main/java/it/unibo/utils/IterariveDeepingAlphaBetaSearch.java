@@ -1,11 +1,8 @@
 package it.unibo.utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 
 
@@ -87,7 +84,7 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
      * subsequent depth-limited search runs.
      */
     @Override
-    public A makeDecision(S state) throws ExecutionException {
+    public A makeDecision(S state) {
         metrics = new Metrics();
         metrics.set(METRICS_PRUNE, 0);
         StringBuffer logText = null;
@@ -102,9 +99,10 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             currDepthLimit = 0;*/
 
         // creo il thread pool
-        ArrayBlockingQueue<ParallelComputation> threadPool = new ArrayBlockingQueue<>(2);
 
-        try {
+        //ArrayBlockingQueue<ParallelComputation> threadPool = new ArrayBlockingQueue<>(2);
+
+       /* try {
             ParallelComputation thread = new ParallelComputation();
             threadPool.put(thread);
             new Thread(thread).start();
@@ -119,8 +117,39 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
         Semaphore wait = new Semaphore(threadPool.size());
         List<ParallelComputation> workingThread = Collections.synchronizedList(new ArrayList<>());
         Object mutex = new Object();
-
+*/
         currDepthLimit = 0;
+
+        do {
+            incrementDepthLimit();
+            if (logEnabled)
+                logText = new StringBuffer("depth " + currDepthLimit + ": ");
+            heuristicEvaluationUsed = false;
+            ActionStore<A> newResults = new ActionStore<>();
+            for (A action : results) {
+                double value = minValue(game.getResult(state, action), player, Double.NEGATIVE_INFINITY,
+                        Double.POSITIVE_INFINITY, 1);
+                if (timer.timeOutOccurred())
+                    break; // exit from action loop
+                newResults.add(action, value);
+                if (logEnabled)
+                    logText.append(action).append("->").append(value).append(" ");
+            }
+            if (logEnabled)
+                System.out.println(logText);
+            if (newResults.size() > 0) {
+                results = newResults.actions;
+                if (!timer.timeOutOccurred()) {
+                    if (hasSafeWinner(newResults.utilValues.get(0)))
+                        break; // exit from iterative deepening loop
+                    else if (newResults.size() > 1
+                            && isSignificantlyBetter(newResults.utilValues.get(0), newResults.utilValues.get(1)))
+                        break; // exit from iterative deepening loop
+                }
+            }
+        } while (!timer.timeOutOccurred() && heuristicEvaluationUsed);
+
+        /*
         do {
             incrementDepthLimit();
             if (logEnabled)
@@ -129,7 +158,7 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
             ActionStore<A> newResults = new ActionStore<>();
 
 
-
+*/
             /* OLD
 
             for (A action : results) {
@@ -141,6 +170,7 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
                 if (logEnabled)
                     logText.append(action).append("->").append(value).append(" \n");
             }*/
+            /*
             Object mutex2 = new Object();
             //synchronized (mutex) {
             for (int i = 0; i < results.size(); i++) {
@@ -167,7 +197,9 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
                 if (timer.timeOutOccurred())
                     break; // exit from action loop
             }
-            //}
+            //
+            }*/
+        /*}
 
             if (logEnabled)
                 System.out.println(logText);
@@ -180,12 +212,12 @@ public class IterariveDeepingAlphaBetaSearch<S, A, P> implements AdversarialSear
                             && isSignificantlyBetter(newResults.utilValues.get(0), newResults.utilValues.get(1)))
                         break; // exit from iterative deepening loop
                 }
-            }
+            }*/
             //System.out.println("Depth "+getMetrics().getInt(METRICS_MAX_DEPTH)+" complete. Nodes expanded "+getMetrics().getInt(METRICS_NODES_EXPANDED)+ " Best action :"+newResults.actions.get(0)+" "+newResults.utilValues.get(0)+".");
-        } while (!timer.timeOutOccurred() && heuristicEvaluationUsed);
+        //} while (!timer.timeOutOccurred() && heuristicEvaluationUsed);
 
-        threadPool.forEach((ParallelComputation p) -> p.stopWork());
-        workingThread.forEach((ParallelComputation p) -> p.stopWork());
+        //threadPool.forEach((ParallelComputation p) -> p.stopWork());
+        //workingThread.forEach((ParallelComputation p) -> p.stopWork());
 
         return results.get(0);
     }

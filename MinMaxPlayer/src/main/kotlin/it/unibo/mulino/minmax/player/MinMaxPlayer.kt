@@ -46,17 +46,22 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
             }
         }
 
-        val phase = when (state.currentPhase) {
-            ChesaniState.Phase.FIRST -> 1
-            ChesaniState.Phase.SECOND -> 2
-            ChesaniState.Phase.FINAL -> 3
-            null -> throw IllegalStateException("Il server ha inviato una fase un null")
+        val (playerChekersHand, playerCheckerBoard) = when (player) {
+            it.unibo.ai.didattica.mulino.domain.State.Checker.WHITE -> Pair(state.whiteCheckers, state.whiteCheckersOnBoard)
+            it.unibo.ai.didattica.mulino.domain.State.Checker.BLACK -> Pair(state.blackCheckers, state.blackCheckersOnBoard)
+            else -> throw IllegalStateException("Checker non valido")
+        }
+
+        val phase = when {
+            playerChekersHand > 0 -> 1
+            playerChekersHand == 0 && playerCheckerBoard > 3 -> 2
+            playerChekersHand == 0 && playerCheckerBoard <= 3 -> 3
+            else -> throw IllegalStateException("Fase non riconosciuta")
         }
 
         val clientState = State(
                 playerType = player.toInt(),
                 board = board,
-                currentPhase = phase,
                 checkers = intArrayOf(state.whiteCheckers, state.blackCheckers),
                 checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard)
         )

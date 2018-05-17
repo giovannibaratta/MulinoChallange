@@ -11,7 +11,6 @@ class StateTest {
         val state = MinMaxState(
                 playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
-                currentPhase = 1,
                 checkers = intArrayOf(0, 0),
                 checkersOnBoard = intArrayOf(0, 0),
                 board = intArrayOf(0, 0))
@@ -29,7 +28,6 @@ class StateTest {
         val state = MinMaxState(
                 playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
-                currentPhase = 1,
                 checkers = intArrayOf(0, 0),
                 checkersOnBoard = intArrayOf(1, 0),
                 board = intArrayOf(1, 0))
@@ -52,7 +50,6 @@ class StateTest {
         val state = MinMaxState(
                 playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
-                currentPhase = 1,
                 checkers = intArrayOf(0, 0),
                 checkersOnBoard = intArrayOf(2, 0),
                 board = intArrayOf(1 + 2048, 0))

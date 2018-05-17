@@ -6,8 +6,14 @@ data class State(
         val board: IntArray = intArrayOf(0, 0),
         val checkers: IntArray = intArrayOf(9, 9),
         val checkersOnBoard: IntArray = intArrayOf(0, 0),
-        val currentPhase: Int = 1,
         val closedMorris: Boolean = false) {
+
+    val currentPhase = when {
+        checkers[playerType] > 0 -> 1
+        checkers[playerType] == 0 && checkersOnBoard[playerType] > 3 -> 2
+        checkers[playerType] == 0 && checkersOnBoard[playerType] <= 3 -> 3
+        else -> throw IllegalStateException("Fase non valida")
+    }
 
     override fun toString(): String {
         val sb = StringBuilder()

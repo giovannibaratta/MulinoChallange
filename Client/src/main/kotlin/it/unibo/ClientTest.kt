@@ -41,6 +41,7 @@ fun main(args: Array<String>) {
     val myClientW = "java -jar client.jar White MinMax"
     val myClientB = "java -jar client.jar Black MinMax"
     var sconfitte = 0
+    var partite = 0
     var vittorie = 0
     var pServer: Process? = null
     var pWhite: Process? = null
@@ -55,7 +56,7 @@ fun main(args: Array<String>) {
 
     for (i in enemyCmd.indices) {
 
-        println("\n\n!! Avversario $player\n\n")
+        println("\n\n!! Avversario ${enemyCmd[i]}\n\n")
 
         thread {
             pServer = Runtime.getRuntime().exec("java -jar server.jar")
@@ -73,6 +74,7 @@ fun main(args: Array<String>) {
                     }
                     line = buf.readLine()
                 }
+                partite++
             }
             thread {
                 var line = err.readLine()
@@ -153,7 +155,7 @@ fun main(args: Array<String>) {
         println("\nFine parita $i\n")
 
 
-        println("\n\n\n STAT PARZIALE $vittorie vittore su ${vittorie + sconfitte}\n\n\n")
+        println("\n\n\n STAT PARZIALE $vittorie vittore su ${partite}\n\t$sconfitte sconfitte su ${partite}\n\n")
     }
 
     for (i in enemyCmd.indices) {
@@ -254,9 +256,9 @@ fun main(args: Array<String>) {
         println("\nFine parita $i\n")
 
 
-        println("\n\n\n STAT PARZIALE $vittorie vittore su ${vittorie + sconfitte}\n\n\n")
+        println("\n\n\n STAT PARZIALE $vittorie vittore su ${partite}\n\t$sconfitte sconfitte su ${partite}\n\n")
     }
 
     println("Fine competizione")
-    println("$vittorie vittore su ${vittorie + sconfitte}")
+    println("$vittorie vittore su ${partite}\n\t$sconfitte sconfitte su ${partite}\n\n")
 }
