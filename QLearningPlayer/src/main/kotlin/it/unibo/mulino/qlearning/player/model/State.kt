@@ -7,10 +7,10 @@ import java.util.regex.Pattern
 import kotlin.math.max
 import it.unibo.ai.didattica.mulino.domain.State as ExternalState
 
-internal class State(externalGrid: Matrix<Type>? = null,
-                     val isWhiteTurn: Boolean,
-                     val whiteHandCount: Int,
-                     val blackHandCount: Int) {
+class State(externalGrid: Matrix<Type>? = null,
+            val isWhiteTurn: Boolean,
+            val whiteHandCount: Int,
+            val blackHandCount: Int) {
 
     var grid: Matrix<Type>
     val boardSize: Int

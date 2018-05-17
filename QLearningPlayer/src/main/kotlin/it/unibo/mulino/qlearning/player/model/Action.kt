@@ -2,9 +2,9 @@ package it.unibo.mulino.qlearning.player.model
 
 import java.util.*
 
-internal data class Action private constructor(val from: Optional<Position>,
-                                               val to: Optional<Position>,
-                                               val remove: Optional<Position>) {
+data class Action private constructor(val from: Optional<Position>,
+                                      val to: Optional<Position>,
+                                      val remove: Optional<Position>) {
 
     companion object {
         fun buildPhase1(to: Position, remove: Optional<Position>) = Action(Optional.empty(), Optional.of(to), remove)

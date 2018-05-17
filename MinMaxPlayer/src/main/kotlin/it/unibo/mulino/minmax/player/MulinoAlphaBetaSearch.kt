@@ -1,12 +1,17 @@
 package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
-import it.unibo.utils.*
+import it.unibo.mulino.qlearning.player.model.Position
+import it.unibo.utils.FibonacciHeap
+import it.unibo.utils.IterariveDeepingAlphaBetaSearch
+import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
+import it.unibo.mulino.qlearning.player.model.State as QLearningState
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
-                                  utilMin: Double,
-                                  utilMax: Double,
-                                  time: Int) : IterariveDeepingAlphaBetaSearch<State, String, Checker>(MulinoGame, utilMin, utilMax, time) {
+                            utilMin: Double,
+                            utilMax: Double,
+                            time: Int,
+                            private val sortAction: Boolean = false) : IterariveDeepingAlphaBetaSearch<State, String, Int>(MulinoGame, utilMin, utilMax, time) {
 
     private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
     private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])
@@ -18,63 +23,75 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val doubleMorrisCoeff = coefficients[11]
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
+    private var ordered = 0
     override fun makeDecision(state: State?): String {
-        return super.makeDecision(state)
+        if (state == null) throw IllegalArgumentException("Lo stato è null")
+
+        if (state.currentPhase == 1 || state.currentPhase == 2) {
+            this.limit = false
+        }
+        ordered = 0
+        val decision = super.makeDecision(state)
+        println("ordered $ordered")
+        return decision
     }
 
-    override fun eval(state: State?, player: Checker?): Double {
+    override fun eval(state: State?, player: Int?): Double {
+        if (state == null) throw IllegalArgumentException("State is null")
+        if (player == null) throw IllegalArgumentException("Player is null")
+
         var amount = super.eval(state, player)
         val game = game as MulinoGame
-        var opposite = game.opposite[player]!!
-        val intPlayer = game.checkersToInt[player]!!
-        val intOpposite =  game.checkersToInt[opposite]!!
-        when(state!!.currentPhase) {
+        val intOpposite = Math.abs(game.getPlayer(state) - 1)
+        val intPlayer = game.getPlayer(state)
+        //val intOpposite =  game.checkersToInt[opposite]!!
+        when (state.currentPhase) {
             1 -> {
-                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
-                        blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
+                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, intOpposite)) +
+                        blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, intOpposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite] - state.checkers[intPlayer])) +
-                        num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, opposite)) +
-                        num3PiecesCoeff[0] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, opposite))
+                        num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, intOpposite)) +
+                        num3PiecesCoeff[0] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, intOpposite))
                 if (state.closedMorris){
-                    when (game.opposite[state.checker]) {
+                    when (game.opposite(state.playerType)) {
                         player -> amount += closedMorrisCoeff[0]
-                        opposite ->amount -= closedMorrisCoeff[0]
+                        intOpposite -> amount -= closedMorrisCoeff[0]
                     }
                 }
             }
             2 -> {
-                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player!!) - game.getNumMorrises(state, opposite)) +
-                        blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, opposite) - game.getBlockedPieces(state, player)) +
+                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, intOpposite)) +
+                        blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, intOpposite) - game.getBlockedPieces(state, player)) +
                         piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
                 if (state.closedMorris){
-                    when (game.opposite[state.checker]) {
+                    when (game.opposite(state.playerType)) {
                         player -> amount += closedMorrisCoeff[1]
-                        opposite ->amount -= closedMorrisCoeff[1]
+                        intOpposite -> amount -= closedMorrisCoeff[1]
                     }
                 }
                 if (game.hasOpenedMorris(state, player))
                     amount += openedMorrisCoeff
                 if (game.hasDoubleMorris(state, player))
                     amount += doubleMorrisCoeff
-                if (game.hasOpenedMorris(state, opposite))
+                if (game.hasOpenedMorris(state, intOpposite))
                     amount -= openedMorrisCoeff
-                if (game.hasDoubleMorris(state, opposite))
+                if (game.hasDoubleMorris(state, intOpposite))
                     amount -= doubleMorrisCoeff
             }
             3 -> {
                 var amountPlayer = 0.0
                 var amountOpposite = 0.00
                 if (state.checkersOnBoard[intPlayer] == 3) {
-                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player!!) +
+                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player) +
                             num3PiecesCoeff[1] * game.getNum3Conf(state, player)
-                    if (state.closedMorris && game.opposite[state.checker] == player) {
+                    if (state.closedMorris && game.opposite(state.playerType) == player) {
                         amountPlayer += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player!!) +
-                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, opposite)  +
+                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player) +
+                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, intOpposite) +
                             piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
-                    if (state.closedMorris && game.opposite[state.checker]==player) {
+                    if (state.closedMorris && game.opposite(state.playerType) == player) {
                         amountPlayer += closedMorrisCoeff[1]
                     }
                     if (game.hasOpenedMorris(state, player))
@@ -84,72 +101,178 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 }
 
                 if (state.checkersOnBoard[intOpposite] == 3) {
-                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, opposite!!) +
-                            num3PiecesCoeff[1] * game.getNum3Conf(state, opposite)
-                    if (state.closedMorris && game.opposite[state.checker] == opposite) {
+                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, intOpposite) +
+                            num3PiecesCoeff[1] * game.getNum3Conf(state, intOpposite)
+                    if (state.closedMorris && game.opposite(state.playerType) == intOpposite) {
                         amountOpposite += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountOpposite =  morrisesNumberCoeff[1] * game.getNumMorrises(state, opposite!!) +
+                    amountOpposite = morrisesNumberCoeff[1] * game.getNumMorrises(state, intOpposite) +
                             blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player)  +
                             piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
-                    if (state.closedMorris && game.opposite[state.checker]==opposite) {
+                    if (state.closedMorris && game.opposite(state.playerType) == intOpposite) {
                         amountOpposite += closedMorrisCoeff[1]
                     }
-                    if (game.hasOpenedMorris(state, opposite))
+                    if (game.hasOpenedMorris(state, intOpposite))
                         amountOpposite += openedMorrisCoeff
-                    if (game.hasDoubleMorris(state, opposite))
+                    if (game.hasDoubleMorris(state, intOpposite))
                         amountOpposite += doubleMorrisCoeff
                 }
-                amount+=amountPlayer-amountOpposite
+                amount += amountPlayer - amountOpposite
             }
         }
         //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
         return amount
     }
 
-    /*
-    override fun orderActions(state: State?, actions: MutableList<String>?, player: Checker?, depth: Int): MutableList<String> {
-        val orderedActions = FibonacciHeap<String>()
-        val game = game as MulinoGame
-        for(action in actions!!){
-            /*var value = game.density(state!!, action.substring(1,3), player!!)
-            if(action.length>3)
-                value = game.density(state!!, action.substring(3,5), player!!) - value
-            */
-            orderedActions.enqueue(action, action.length.toDouble())
+    private val sorter = QLearningPlayerAlternative({ 0.0 })
+
+    override fun orderActions(state: State?, actions: MutableList<String>?, player: Int?, depth: Int): MutableList<String> {
+        if (state == null) throw IllegalArgumentException("State is null")
+        if (actions == null) throw IllegalArgumentException("Actions is null")
+        if (player == null) throw IllegalArgumentException("Player is null")
+        if (depth > 2 || !sortAction)
+            return actions
+
+        return when (getPhase(state)) {
+            1 -> sorter.playPhase1(state, actions)//.map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+            2 -> sorter.playPhase2(state, actions)//.map { it.first }.toMutableList()
+            3 -> sorter.playPhase3(state, actions)//.map { it.first }.toMutableList()
+            else -> throw IllegalStateException("Fase non valida")
         }
-        return orderedActions.dequeueAll()
+        //if(!sortAction) return actions
+        //println("Sorting")
+        /*return when (getPhase(state)) {
+            1 -> sorter.playPhase1(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "1${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "1${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+            2 -> sorter.playPhase2(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()
+            3 -> sorter.playPhase3(state.remapToQLearningState(player)).map {
+                //println("Action ${it.first} -> ${it.second}")
+                when (it.first.remove.isPresent) {
+                    true -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+                    false -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+                }
+            }.toMutableList()
+            else -> throw IllegalStateException("Fase non valida")
+        }*/
     }
+
+    /*
+        private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {
+            ChesaniState.Checker.WHITE -> true
+            Checker.BLACK -> false
+            else -> throw IllegalStateException("Checker non valido")
+        })
+
+        private fun State.toChesaniState(): ChesaniState {
+            val state = ChesaniState()
+            state.blackCheckers = this.checkers[1]
+            state.whiteCheckers = this.checkers[0]
+            state.currentPhase = when (this.currentPhase) {
+                1 -> ChesaniState.Phase.FIRST
+                2 -> ChesaniState.Phase.SECOND
+                3 -> ChesaniState.Phase.FINAL
+                else -> throw IllegalStateException("Fase non valida")
+            }
+            state.blackCheckersOnBoard = this.checkersOnBoard[1]
+            state.whiteCheckersOnBoard = this.checkersOnBoard[0]
+
+            this.board.forEachIndexed { index, charArray ->
+                state.board.put(toExternalPositions.get(Pair(index, 0)), charArray[0].toChecker())
+                state.board.put(toExternalPositions.get(Pair(index, 1)), charArray[1].toChecker())
+                state.board.put(toExternalPositions.get(Pair(index, 2)), charArray[2].toChecker())
+            }
+
+            return state
+        }
     */
+    private val toExternalPositions = hashMapOf(
+            Pair(Pair(0, 0), "a1"),
+            Pair(Pair(1, 0), "a4"),
+            Pair(Pair(2, 0), "a7"),
+            Pair(Pair(0, 1), "b2"),
+            Pair(Pair(1, 1), "b4"),
+            Pair(Pair(2, 1), "b6"),
+            Pair(Pair(0, 2), "c3"),
+            Pair(Pair(1, 2), "c4"),
+            Pair(Pair(2, 2), "c5"),
+            Pair(Pair(3, 2), "d5"),
+            Pair(Pair(3, 1), "d6"),
+            Pair(Pair(3, 0), "d7"),
+            Pair(Pair(7, 0), "d1"),
+            Pair(Pair(7, 1), "d2"),
+            Pair(Pair(7, 2), "d3"),
+            Pair(Pair(6, 2), "e3"),
+            Pair(Pair(5, 2), "e4"),
+            Pair(Pair(4, 2), "e5"),
+            Pair(Pair(6, 1), "f2"),
+            Pair(Pair(5, 1), "f4"),
+            Pair(Pair(4, 1), "f6"),
+            Pair(Pair(6, 0), "g1"),
+            Pair(Pair(5, 0), "g4"),
+            Pair(Pair(4, 0), "g7")
+    )
+
+    private fun Char.toChecker() = when (this) {
+        'e' -> ChesaniState.Checker.EMPTY
+        'w' -> ChesaniState.Checker.WHITE
+        'b' -> ChesaniState.Checker.BLACK
+        else -> throw  IllegalArgumentException("Non esiste un mapping per $this")
+    }
+
+    private fun Position.toExternal(): String {
+        val xPos: Char = 'a' + this.x
+        val yPos: String = (this.y + 1).toString()
+        return xPos + yPos
+    }
+
+    private fun getPhase(state: State) = when {
+        state.currentPhase == 1 -> 1
+        state.currentPhase == 2 -> 2
+        state.currentPhase == 3 && state.checkersOnBoard[state.playerType] > 3 -> 2
+        state.currentPhase == 3 && state.checkersOnBoard[state.playerType] <= 3 -> 2
+        else -> throw IllegalStateException("Fase non riconosciuta")
+    }
 
 }
 
 fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
     val mutableList = arrayListOf<T>()
-    while(!this.isEmpty){
+    while (!this.isEmpty) {
         mutableList.add(this.dequeueMin().value)
     }
     return mutableList
 }
 
+/*
 fun main(args: Array<String>) {
 
-    var newState = State(checker = Checker.WHITE, checkers = intArrayOf(0,0), checkersOnBoard = intArrayOf(9,5), currentPhase = 2)
-    MulinoGame.addPiece(newState, "a1",Checker.WHITE)
-    MulinoGame.addPiece(newState, "a7",Checker.WHITE)
+    var newState = State(playerType = Checker.WHITE, checkers = intArrayOf(0, 0), checkersOnBoard = intArrayOf(9, 5), currentPhase = 2)
+    MulinoGame.addPiece(newState, "a1", Checker.WHITE)
+    MulinoGame.addPiece(newState, "a7", Checker.WHITE)
     MulinoGame.addPiece(newState, "b4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c3",Checker.WHITE)
-    MulinoGame.addPiece(newState, "d2",Checker.WHITE)
+    MulinoGame.addPiece(newState, "c3", Checker.WHITE)
+    MulinoGame.addPiece(newState, "d2", Checker.WHITE)
     MulinoGame.addPiece(newState, "d5",Checker.WHITE)
-    MulinoGame.addPiece(newState, "e4",Checker.WHITE)
+    MulinoGame.addPiece(newState, "e4", Checker.WHITE)
     MulinoGame.addPiece(newState, "f4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "g4",Checker.WHITE)
-    MulinoGame.addPiece(newState, "c5",Checker.BLACK)
+    MulinoGame.addPiece(newState, "g4", Checker.WHITE)
+    MulinoGame.addPiece(newState, "c5", Checker.BLACK)
     MulinoGame.addPiece(newState, "e5",Checker.BLACK)
-    MulinoGame.addPiece(newState, "e3",Checker.BLACK)
-    MulinoGame.addPiece(newState, "d3",Checker.BLACK)
-    MulinoGame.addPiece(newState, "f2",Checker.BLACK)
+    MulinoGame.addPiece(newState, "e3", Checker.BLACK)
+    MulinoGame.addPiece(newState, "d3", Checker.BLACK)
+    MulinoGame.addPiece(newState, "f2", Checker.BLACK)
 
     /*
     initialState.addPiece(Pair('f',4), Checker.WHITE)
@@ -165,3 +288,4 @@ fun main(args: Array<String>) {
     println("Azione scelta: $action")
 
 }
+        */

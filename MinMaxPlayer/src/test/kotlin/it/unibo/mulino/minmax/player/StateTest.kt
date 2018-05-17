@@ -1,15 +1,15 @@
 package it.unibo.mulino.minmax.player
 
-import it.unibo.ai.didattica.mulino.domain.State
 import org.junit.Assert
 import org.junit.Test
+import it.unibo.mulino.minmax.player.State as MinMaxState
 
 class StateTest {
 
     @Test
     fun testIsSet() {
-        val state = State(
-                checker = State.Checker.WHITE,
+        val state = MinMaxState(
+                playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
                 currentPhase = 1,
                 checkers = intArrayOf(0, 0),
@@ -18,16 +18,16 @@ class StateTest {
 
         for (x in 0 until 8) {
             for (y in 0 until 3) {
-                Assert.assertFalse(state.isSet(x, y, 0))
-                Assert.assertFalse(state.isSet(x, y, 1))
+                Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 0))
+                Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 1))
             }
         }
     }
 
     @Test
     fun testIsSet2() {
-        val state = State(
-                checker = State.Checker.WHITE,
+        val state = MinMaxState(
+                playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
                 currentPhase = 1,
                 checkers = intArrayOf(0, 0),
@@ -37,11 +37,11 @@ class StateTest {
         for (x in 0 until 8) {
             for (y in 0 until 3) {
                 if (x == 0 && y == 0) {
-                    Assert.assertFalse(state.isSet(x, y, 1))
-                    Assert.assertTrue(state.isSet(x, y, 0))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 1))
+                    Assert.assertTrue(MinMaxState.isSet(state.board, x, y, 0))
                 } else {
-                    Assert.assertFalse(state.isSet(x, y, 0))
-                    Assert.assertFalse(state.isSet(x, y, 1))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 0))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 1))
                 }
             }
         }
@@ -49,8 +49,8 @@ class StateTest {
 
     @Test
     fun testIsSet3() {
-        val state = State(
-                checker = State.Checker.WHITE,
+        val state = MinMaxState(
+                playerType = MulinoGame.WHITE_PLAYER,
                 closedMorris = false,
                 currentPhase = 1,
                 checkers = intArrayOf(0, 0),
@@ -60,11 +60,11 @@ class StateTest {
         for (x in 0 until 8) {
             for (y in 0 until 3) {
                 if ((x == 0 && y == 0) || (x == 3 && y == 0)) {
-                    Assert.assertFalse(state.isSet(x, y, 1))
-                    Assert.assertTrue(state.isSet(x, y, 0))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 1))
+                    Assert.assertTrue(MinMaxState.isSet(state.board, x, y, 0))
                 } else {
-                    Assert.assertFalse(state.isSet(x, y, 0))
-                    Assert.assertFalse(state.isSet(x, y, 1))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 0))
+                    Assert.assertFalse(MinMaxState.isSet(state.board, x, y, 1))
                 }
             }
         }

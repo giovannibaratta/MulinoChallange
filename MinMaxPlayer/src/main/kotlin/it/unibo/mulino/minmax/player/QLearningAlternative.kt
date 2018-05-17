@@ -235,27 +235,26 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
     private val numMorrisMultiplier = 0.1
 
     private val numMorris = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNumMorrises(newState, oldState.checker) * numMorrisMultiplier
+        MulinoGame.getNumMorrises(newState, oldState.playerType) * numMorrisMultiplier
     }
 
     private val blockedOppPiecesMultiplier = 0.1
 
     private val blockedOppPieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
         MulinoGame.getBlockedPieces(newState,
-                MulinoGame.opposite[oldState.checker]
-                        ?: throw IllegalStateException("Checker non valido")) * blockedOppPiecesMultiplier
+                MulinoGame.opposite(oldState.playerType)) * blockedOppPiecesMultiplier
     }
 
     private val num2PiecesMultiplier = 0.1
 
     private val num2Pieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNum2Conf(newState, oldState.checker) * num2PiecesMultiplier
+        MulinoGame.getNum2Conf(newState, oldState.playerType) * num2PiecesMultiplier
     }
 
     private val num3PiecesMultiplier = 0.1
 
     private val num3Pieces = { oldState: MinMaxState, action: String, newState: MinMaxState ->
-        MulinoGame.getNum3Conf(newState, oldState.checker) * num3PiecesMultiplier
+        MulinoGame.getNum3Conf(newState, oldState.playerType) * num3PiecesMultiplier
     }
 
     private val closedMorrisMultiplier = 1.0
@@ -292,9 +291,9 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
     /*********************
      *        PESI       *
      *********************/
-    var phase1Weights = Array(featuresPhase12.size, { 0.0 })//arrayOf(25.065347185835915, 8.120451862065464, 21.83812495653307, -0.07875853985660229, 12.517939737970769, 0.0, 17.780175482345225, 16.479086811550996, 1.44187040765813, 0.5016830790419284, 0.0, 0.0)//Array(featuresPhase12.size, { 0.0 })
-    var phase2Weights = Array(featuresPhase12.size, { 0.0 })//arrayOf(-121.96280895885754, 19.1920450275173, 24.565676295141316, -2.351887101391042, 2.7862368418070553, 12.099574649367565, -59.57818574799392, 53.643561081433624, 20.273282881453085, 1.7121165852286528, 0.0, -0.7076994719957775)//Array(featuresPhase12.size, { 0.0 })//Array(featuresPhase12.size, { 0.0 })
-    var phaseFinalWeights = Array(featuresPhase3.size, { 0.0 })//arrayOf(461903.2801724984, -68616.28851323506, 399.22803314956474, 93201.28607053285, 109642.6395717584, 18.019790475383406, 0.0, 63774.095512827655)//Array(featuresPhase3.size, { 0.0 })
+    var phase1Weights = DoubleArray(featuresPhase12.size, { 0.0 })//arrayOf(25.065347185835915, 8.120451862065464, 21.83812495653307, -0.07875853985660229, 12.517939737970769, 0.0, 17.780175482345225, 16.479086811550996, 1.44187040765813, 0.5016830790419284, 0.0, 0.0)//Array(featuresPhase12.size, { 0.0 })
+    var phase2Weights = DoubleArray(featuresPhase12.size, { 0.0 })//arrayOf(-121.96280895885754, 19.1920450275173, 24.565676295141316, -2.351887101391042, 2.7862368418070553, 12.099574649367565, -59.57818574799392, 53.643561081433624, 20.273282881453085, 1.7121165852286528, 0.0, -0.7076994719957775)//Array(featuresPhase12.size, { 0.0 })//Array(featuresPhase12.size, { 0.0 })
+    var phaseFinalWeights = DoubleArray(featuresPhase3.size, { 0.0 })//arrayOf(461903.2801724984, -68616.28851323506, 399.22803314956474, 93201.28607053285, 109642.6395717584, 18.019790475383406, 0.0, 63774.095512827655)//Array(featuresPhase3.size, { 0.0 })
     //</editor-fold desc="Features">
     //TODO("Reward blocco struttura ad L")
     //<editor-fold desc="Reward">
@@ -504,17 +503,17 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
     private val phase1Reward = { oldState: MinMaxState, action: String, newState: MinMaxState ->
 
         var reward = 0.0
-        if (!MulinoGame.hasOpenedMorris(oldState, oldState.checker)
-                && MulinoGame.hasOpenedMorris(newState, oldState.checker))
+        if (!MulinoGame.hasOpenedMorris(oldState, oldState.playerType)
+                && MulinoGame.hasOpenedMorris(newState, oldState.playerType))
             reward += 1.0
 
         if (newState.closedMorris)
             reward += 5.0
 
-        val myBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldState.checker) -
-                MulinoGame.getBlockedPieces(newState, oldState.checker)
+        val myBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldState.playerType) -
+                MulinoGame.getBlockedPieces(newState, oldState.playerType)
 
-        val opposite = MulinoGame.opposite[oldState.checker] ?: throw IllegalStateException("Checker non valido")
+        val opposite = MulinoGame.opposite(oldState.playerType)
         val enemyBlockedDiff = MulinoGame.getBlockedPieces(oldState, opposite) -
                 MulinoGame.getBlockedPieces(newState, opposite)
 
@@ -528,7 +527,7 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
         else if (enemyBlockedDiff < 0)
             reward += 0.5
 
-        if (MulinoGame.isWinner(newState, oldState.checker))
+        if (MulinoGame.isWinner(newState, oldState.playerType))
             reward += 25.0
 
         reward

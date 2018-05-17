@@ -38,7 +38,7 @@ class Trainer : AIPlayer {
             }
         }
         val diagonals: Array<CharArray> = Array(8, { index -> game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!! })
-        val clientState = MinMaxState(checker = player, board = diagonals, checkers = intArrayOf(state.whiteCheckers, state.blackCheckers), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+        val clientState = MinMaxState(playerType = player, board = diagonals, checkers = intArrayOf(state.whiteCheckers, state.blackCheckers), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
         clientState.checkers[0] = state.whiteCheckers
         clientState.checkers[1] = state.blackCheckers
         clientState.currentPhase = when {
@@ -52,16 +52,16 @@ class Trainer : AIPlayer {
         //val diagonalsString = Array(8, { charArrayOf('e','e','e')})
         // mapping dello stato esterno
         for (position in state.board.keys) {
-            val (vertex, level) = game.toInternalPositions[position]!!
+            val intPosition = game.toInternalPositions[position]!!
             when (state.board[position]) {
                 State.Checker.WHITE -> {
-                    board[0] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    board[0] += it.unibo.mulino.minmax.player.State.position[intPosition]
                     //diagonalsString[vertex][level] = 'w'
                     //game.addPiece(clientState, position, State.Checker.WHITE)
                 }
                 State.Checker.BLACK -> {
                     //diagonalsString[vertex][level] = 'b'
-                    board[1] += it.unibo.mulino.minmax.player.State.position[vertex * 3 + level]
+                    board[1] += it.unibo.mulino.minmax.player.State.position[intPosition]
                     //game.addPiece(clientState, position, State.Checker.BLACK)
                 }
             }
@@ -74,7 +74,11 @@ class Trainer : AIPlayer {
             else -> 1
         }
         //val diagonals :Array<CharArray> = Array(8, {index->game.diagonals["${diagonalsString[index][0]}${diagonalsString[index][1]}${diagonalsString[index][2]}"]!!})
-        val clientState = it.unibo.mulino.minmax.player.State(checker = player, board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
+        val clientState = it.unibo.mulino.minmax.player.State(playerType = when (player) {
+            State.Checker.WHITE -> MulinoGame.WHITE_PLAYER
+            State.Checker.BLACK -> MulinoGame.BLACK_PLAYER
+            else -> throw IllegalStateException("Player non valido")
+        }, board = board, currentPhase = phase, checkers = intArrayOf(whiteChecker, blackChecker), checkersOnBoard = intArrayOf(state.whiteCheckersOnBoard, state.blackCheckersOnBoard))
 
         return clientState
     }
