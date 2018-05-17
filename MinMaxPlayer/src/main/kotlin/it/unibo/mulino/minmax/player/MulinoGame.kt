@@ -99,30 +99,30 @@ object MulinoGame : Game<State, String, Int> {
     )*/
 
     private val adiacentPositions = arrayOf(
-            intArrayOf(21, 3),
-            intArrayOf(22, 4),
-            intArrayOf(23, 8),
-            intArrayOf(0, 6, 4),
-            intArrayOf(1, 7, 8, 3),
-            intArrayOf(2, 8, 4),
-            intArrayOf(3, 9),
-            intArrayOf(4, 10),
-            intArrayOf(8, 11),
-            intArrayOf(6, 12, 10),
-            intArrayOf(7, 13, 11, 9),
-            intArrayOf(8, 14, 10),
-            intArrayOf(9, 15),
-            intArrayOf(10, 16),
-            intArrayOf(17, 11),
-            intArrayOf(18, 12, 16),
-            intArrayOf(19, 13, 17, 15),
-            intArrayOf(20, 14, 16),
-            intArrayOf(21, 15),
-            intArrayOf(22, 16),
-            intArrayOf(23, 17),
-            intArrayOf(0, 18, 22),
-            intArrayOf(1, 19, 21, 23),
-            intArrayOf(2, 20, 22)
+            intArrayOf(21, 3), // 0
+            intArrayOf(22, 4), // 1
+            intArrayOf(23, 5), // 2
+            intArrayOf(0, 6, 4), // 3
+            intArrayOf(1, 7, 5, 3), // 4
+            intArrayOf(2, 8, 4), // 5
+            intArrayOf(3, 9), // 6
+            intArrayOf(4, 10), // 7
+            intArrayOf(5, 11), // 8
+            intArrayOf(6, 12, 10), // 9
+            intArrayOf(7, 13, 11, 9), // 10
+            intArrayOf(8, 14, 10), // 11
+            intArrayOf(9, 15), // 12
+            intArrayOf(10, 16), // 13
+            intArrayOf(17, 11), // 14
+            intArrayOf(18, 12, 16), // 15
+            intArrayOf(19, 13, 17, 15), // 16
+            intArrayOf(20, 14, 16), // 17
+            intArrayOf(21, 15), // 18
+            intArrayOf(22, 16), // 19
+            intArrayOf(23, 17), // 20
+            intArrayOf(0, 18, 22), // 21
+            intArrayOf(1, 19, 21, 23), // 22
+            intArrayOf(2, 20, 22) // 23
     )
 
     private val nextVertex = hashMapOf(
@@ -695,26 +695,33 @@ object MulinoGame : Game<State, String, Int> {
     }
 
 }
-/*
+
+
 fun main(args: Array<String>) {
 
-    var board = intArrayOf(0,0)
-    board = MulinoGame.addPiece(board,"c5",0);
-    board = MulinoGame.addPiece(board,"g4",0);
-    board = MulinoGame.addPiece(board,"c4",0);
-    board = MulinoGame.addPiece(board,"b4",0);
-    board = MulinoGame.addPiece(board,"a4",0);
-    board = MulinoGame.addPiece(board,"e3",0);
-    board = MulinoGame.addPiece(board,"d3",0);
-    board = MulinoGame.addPiece(board,"c3",0);
-    board = MulinoGame.addPiece(board,"d1",0);
-    board = MulinoGame.addPiece(board,"b2",1);
-    board = MulinoGame.addPiece(board,"f2",1);
-    board = MulinoGame.addPiece(board,"g1",1);
-    val state = State(1,board, intArrayOf(0,0), intArrayOf(9,3),3,false);
+    var board = intArrayOf(0, 0)
+    board = MulinoGame.addPiece(board, 9, 0)
+    board = MulinoGame.addPiece(board, 12, 0)
+    board = MulinoGame.addPiece(board, 14, 0)
+    board = MulinoGame.addPiece(board, 19, 0)
+    board = MulinoGame.addPiece(board, 18, 0)
+    board = MulinoGame.addPiece(board, 2, 0)
+    board = MulinoGame.addPiece(board, 6, 1)
+    board = MulinoGame.addPiece(board, 10, 1)
+    board = MulinoGame.addPiece(board, 13, 1)
+    board = MulinoGame.addPiece(board, 5, 1)
+    board = MulinoGame.addPiece(board, 15, 1)
+    board = MulinoGame.addPiece(board, 16, 1)
+    board = MulinoGame.addPiece(board, 17, 1)
 
-    val actions = MulinoGame.getActions(state);
-*/
+    board = MulinoGame.addPiece(board, 22, 1)
+
+    board = MulinoGame.addPiece(board, 21, 1)
+    val state = State(0, board, intArrayOf(0, 0), intArrayOf(6, 9),
+            2, false)
+
+    val actions = MulinoGame.getActions(state)
+}
     /*
     val state = State(Checker.WHITE)
     //println("Turno: ${state.playerType}")

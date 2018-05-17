@@ -38,8 +38,8 @@ fun main(args: Array<String>) {
             "Black"
     )
 
-    val myClientW = "java -jar client.jar White qLearningApprendimento"
-    val myClientB = "java -jar client.jar Black qLearningApprendimento"
+    val myClientW = "java -jar client.jar White MinMax"
+    val myClientB = "java -jar client.jar Black MinMax"
     var sconfitte = 0
     var vittorie = 0
     var pServer: Process? = null
