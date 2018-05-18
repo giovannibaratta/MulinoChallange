@@ -13,8 +13,8 @@ fun main(args: Array<String>) {
             "java -jar botquix.jar",
             "java -jar cook.jar",
             "java -jar deep.jar",
-            "java -jar ginew.jar",
             "java -jar gallina.jar",
+            "java -jar ginew.jar",
             "java -jar unknown.jar"
     )
 

@@ -102,7 +102,7 @@ object MulinoGame : Game<State, String, Int> {
     private fun nextVertex(vertex: Int) = (vertex + 1) % 8
     private fun nextLevel(level: Int) = (level + 1) % 3
     private fun previousVertex(vertex: Int) = when (vertex) {
-        0 -> 6
+        0 -> 7
         else -> vertex - 1
     }
 
