@@ -20,6 +20,7 @@ data class State(
         sb.append("CurrentPhase : ${currentPhase}\tPlayerType : $playerType\n")
         sb.append("WhiteHand : ${checkers[0]}\tBlackHand : ${checkers[1]}\n")
         sb.append("WhiteBoard : ${checkersOnBoard[0]}\tBlackBoard : ${checkersOnBoard[1]}\n\n")
+        sb.append("board value : ${board[0]} ${board[1]}")
         sb.append("${positionToExternal(board, 2, 0)}\t\t${positionToExternal(board, 3, 0)}\t\t${positionToExternal(board, 4, 0)}\n")
         sb.append("\t${positionToExternal(board, 2, 1)}\t${positionToExternal(board, 3, 1)}\t${positionToExternal(board, 4, 1)}\t\n")
         sb.append("\t\t${positionToExternal(board, 2, 2)}${positionToExternal(board, 3, 2)}${positionToExternal(board, 4, 2)}\t\t\n")

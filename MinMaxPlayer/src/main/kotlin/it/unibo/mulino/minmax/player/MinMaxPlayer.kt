@@ -132,3 +132,78 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
     override fun matchStart() {}
     override fun matchEnd() {}
 }
+
+fun main(args: Array<String>) {
+
+    /* stato buggato no isterminal */
+//var board = intArrayOf(6206,12067969)
+    //  println(MulinoGame.isTerminal(State(0,board, intArrayOf(0,0), intArrayOf(7,8))))
+
+
+    // genera -inf
+    var board = intArrayOf(0, 0)
+
+    MulinoGame.addPiece(board, 6, 0)
+
+    MulinoGame.addPiece(board, 9, 0)
+
+    MulinoGame.addPiece(board, 7, 0)
+
+    MulinoGame.addPiece(board, 11, 0)
+
+    MulinoGame.addPiece(board, 3, 0)
+
+    MulinoGame.addPiece(board, 1, 0)
+
+    MulinoGame.addPiece(board, 22, 0)
+
+
+    // neri
+    MulinoGame.addPiece(board, 12, 1)
+
+    MulinoGame.addPiece(board, 10, 1)
+
+    MulinoGame.addPiece(board, 5, 1)
+
+    MulinoGame.addPiece(board, 15, 1)
+
+    MulinoGame.addPiece(board, 20, 1)
+
+    MulinoGame.addPiece(board, 19, 1)
+
+    MulinoGame.addPiece(board, 0, 1)
+
+    MulinoGame.addPiece(board, 18, 1)
+    val state = State(0, board, intArrayOf(1, 1), intArrayOf(7, 8), false)
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, Int.MAX_VALUE / 2000, sortAction = false)
+    println(search.makeDecision(state))
+
+
+//    val state = State(0, board, intArrayOf(1, 1), intArrayOf(7, 8), false)
+//    */
+//    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, Int.MAX_VALUE/2000, sortAction = false)
+//    //println(search.makeDecision(state))
+//    val board = intArrayOf(14894,11322385)
+//    MulinoGame.removePiece(board,MulinoGame.toInternalPositions["d5"]!!)
+//    MulinoGame.addPiece(board,MulinoGame.toInternalPositions["c5"]!!,0)
+//    val state = State(0,board, intArrayOf(0,0), intArrayOf(8,9),false)
+//
+//    //var alpha = Double.NEGATIVE_INFINITY
+//    //var beta = -77.0
+//    //var value : Double = Double.NEGATIVE_INFINITY
+///*
+//    for (action in MulinoGame.getActions(state)) {
+//        value = Math.max(value, minValue(game.getResult(state, action), //
+//                player, alpha, beta, depth + 1))
+//        if (value >= beta) {
+//            metrics.incrementInt(METRICS_PRUNE)
+//            return value
+//        }
+//        alpha = Math.max(alpha, value)
+//    }
+//
+//    search.currDepthLimit = 9
+//    val value = search.minValue(state, 0,Double.NEGATIVE_INFINITY,-77.0,6)
+//    */
+//    println(MulinoGame.getActions(state))
+}

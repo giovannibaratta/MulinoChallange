@@ -299,7 +299,7 @@ object MulinoGame : Game<State, String, Int> {
     override fun isTerminal(state: State?): Boolean =
             isWinner(state!!, WHITE_PLAYER) || isWinner(state, BLACK_PLAYER)
 
-    private fun getPiece(board: IntArray, position: Int): Checker {
+    fun getPiece(board: IntArray, position: Int): Checker {
         when {
             State.isSet(board, position, 0) && !State.isSet(board, position, 1) -> return Checker.WHITE
             !State.isSet(board, position, 0) && State.isSet(board, position, 1) -> return Checker.BLACK
@@ -314,7 +314,7 @@ object MulinoGame : Game<State, String, Int> {
         board[playerType] += State.position[position]
     }
 
-    private fun removePiece(board: IntArray, position: Int) = when {
+    fun removePiece(board: IntArray, position: Int) = when {
         State.isSet(board, position, 0) -> board[0] -= State.position[position]
         State.isSet(board, position, 1) -> board[1] -= State.position[position]
         else -> throw IllegalStateException("In $position non c'è nessun pezzo")
@@ -401,42 +401,45 @@ object MulinoGame : Game<State, String, Int> {
         return check
     }
 
-    // TODO("Controllare da qui in poi")
 
+    private fun checkNoMoves(state: State, playerType: Int): Boolean {
+        for (position in getPositions(state, playerType))
+            if (!checkNoMoves(state, position, playerType))
+                return false
+        return true
+    }
 
-
-
-
-
-
-
-
-
-
-    private fun checkNoMoves(state: State, playerType: Int): Boolean =
-            getBlockedPieces(state, playerType) == state.checkersOnBoard[playerType]
-
-
+    /**
+     * true se il player non si può muovere
+     */
     private fun checkNoMoves(state: State, position: Int, playerType: Int): Boolean {
-        var check = false
         val vertex = delinearizeVertex[position]
         val level = deliearizeLevel[position]
-        check = (State.isNotSet(state.board, nextVertex(vertex), level) &&
+
+        if (State.isNotSet(state.board, nextVertex(vertex), level) ||
                 State.isNotSet(state.board, previousVertex(vertex), level))
-        if(check){
-            when (vertex) {
-                1, 3, 5, 7 -> for (adiacentLevel in adiacentLevels[level]!!) {
-                    check = check && (State.isNotSet(state.board, vertex, adiacentLevel))
-                }
+        // si può muovere
+            return false
+
+        // TODO("Possibile cambiare in vertex %2 != 0")
+        when (vertex) {
+            1, 3, 5, 7 -> {
+                for (adiacentLevel in adiacentLevels[level]!!)
+                // TODO("chekc && è ridondante")
+                    if (State.isNotSet(state.board, vertex, adiacentLevel))
+                        return false
+
             }
         }
-        return check
+        return true // tutte occupare
     }
+
+    // TODO("Controllare da qui in poi")
 
     fun getBlockedPieces(state: State, playerType: Int): Int {
         var count = 0
-        for (adversarialPosition in getPositions(state, playerType))
-            if (checkNoMoves(state, adversarialPosition, playerType))
+        for (position in getPositions(state, playerType))
+            if (checkNoMoves(state, position, playerType))
                 count++
         return count
     }
@@ -452,8 +455,6 @@ object MulinoGame : Game<State, String, Int> {
                             State.isSet(state.board, previousVertex(vertex), level, playerType)) {
                         count++
                     }
-
-                    State.isSet(state.board, vertex, nextLevel(level), playerType)
                     if (level == 1 && (State.isSet(state.board, vertex, nextLevel(level), playerType)) &&
                             (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType))) {
                         count++
@@ -616,20 +617,13 @@ object MulinoGame : Game<State, String, Int> {
     }
 
     fun isWinner(state: State, playerType: Int): Boolean {
-        //var opposite =
         val intOpposite = Math.abs(playerType - 1)
-        when(state.currentPhase){
-            1->{
-                return ((state.checkers[intOpposite]==0) && (state.checkersOnBoard[intOpposite] < 3))
-            }
-            2->{
-                return (state.checkersOnBoard[intOpposite] < 3) || (checkNoMoves(state, intOpposite))
-            }
-            3->{
-                return (state.checkersOnBoard[intOpposite] < 3)
-            }
+        return when (state.currentPhase) {
+            1 -> ((state.checkers[intOpposite] == 0) && (state.checkersOnBoard[intOpposite] < 3))
+            2 -> (state.checkersOnBoard[intOpposite] < 3) || (checkNoMoves(state, intOpposite))
+            3 -> state.checkersOnBoard[intOpposite] < 3
+            else -> throw IllegalStateException("Fase non valida")
         }
-        return false
     }
 
     fun printState(state : State): String {
@@ -648,7 +642,6 @@ object MulinoGame : Game<State, String, Int> {
 
 
 fun main(args: Array<String>) {
-
 
     var board = intArrayOf(0, 0)
     MulinoGame.addPiece(board, 0, 0)
@@ -674,4 +667,5 @@ fun main(args: Array<String>) {
     val state = State(0, board, intArrayOf(0, 0), intArrayOf(6, 9), false)
 
     val actions = MulinoGame.getActions(state)
+
 }
