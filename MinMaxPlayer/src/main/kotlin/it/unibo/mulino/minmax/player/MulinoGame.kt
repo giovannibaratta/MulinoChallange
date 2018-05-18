@@ -1,9 +1,8 @@
 package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
-import it.unibo.utils.Game
 
-object MulinoGame : Game<State, String, Int> {
+object MulinoGame : Game() {
 
     const val WHITE_PLAYER = 0
     const val BLACK_PLAYER = 1
@@ -122,9 +121,12 @@ object MulinoGame : Game<State, String, Int> {
 
     fun opposite(playerType: Int) = Math.abs(playerType - 1)
 
-    override fun getInitialState(): State = State(playerType = WHITE_PLAYER, board = intArrayOf(0, 0), checkers = intArrayOf(9, 9), checkersOnBoard = intArrayOf(0, 0), closedMorris = false)
+    override val initialState: State
+        get() = State(playerType = WHITE_PLAYER, board = intArrayOf(0, 0), checkers = intArrayOf(9, 9), checkersOnBoard = intArrayOf(0, 0), closedMorris = false)
+    override val players: IntArray
+        get() = intArrayOf(WHITE_PLAYER, BLACK_PLAYER)
+
     override fun getPlayer(state: State): Int = state.playerType
-    override fun getPlayers(): Array<Int> = arrayOf(WHITE_PLAYER, BLACK_PLAYER)
 
     override fun getUtility(state: State, player: Int): Double =
             when (player) {
@@ -140,8 +142,8 @@ object MulinoGame : Game<State, String, Int> {
                 }
             }
 
-    private fun getPhase1Action(state: State): MutableList<String> {
-        val actions = mutableListOf<String>() // possibili azioni per il player in questo stato
+    private fun getPhase1Action(state: State): IntArray {
+        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val emptyPositions = getEmptyPositions(state)
@@ -152,22 +154,22 @@ object MulinoGame : Game<State, String, Int> {
                 var added = 0
                 for (enemyPosition in enemyPositions)
                     if (!checkMorris(state, enemyPosition, enemyIndex)) {
-                        actions.add(ActionMapper.azioniFase1ConRemove[emptyPosition][enemyPosition])
+                        actions.add(ActionMapper.generateHashPh1(emptyPosition, enemyPosition))
                         added++
                     }
                 if (added == 0 && enemyPositions.size > 0)
                 // tutte le pedine sono bloccate in un mill
                     for (enemyPosition in enemyPositions)
-                        actions.add(ActionMapper.azioniFase1ConRemove[emptyPosition][enemyPosition])
+                        actions.add(ActionMapper.generateHashPh1(emptyPosition, enemyPosition))
             } else
             // aggiungo l'azione senza remove
-                actions.add(ActionMapper.azioniFase1SenzaRemove[emptyPosition])
+                actions.add(ActionMapper.generateHashPh1(emptyPosition))
         }
-        return actions
+        return actions.toIntArray()
     }
 
-    private fun getPhase2Action(state: State): MutableList<String> {
-        val actions = mutableListOf<String>() // possibili azioni per il player in questo stato
+    private fun getPhase2Action(state: State): IntArray {
+        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val playerPositions = getPositions(state, playerIndex)
@@ -184,24 +186,24 @@ object MulinoGame : Game<State, String, Int> {
                         var added = 0
                         for (enemyPosition in enemyPositions)
                             if (!checkMorris(state, enemyPosition, enemyIndex)) {
-                                actions.add(ActionMapper.azioniFase2ConRemove[playerPosition][adiacentPlayerPosition][enemyPosition])
+                                actions.add(ActionMapper.generateHashPh23(playerPosition, adiacentPlayerPosition, enemyPosition))
                                 added++
                             }
                         if (added == 0 && enemyPositions.size > 0)
                         // tutte le pedine sono bloccate in un mill
                             for (enemyPosition in enemyPositions)
-                                actions.add(ActionMapper.azioniFase2ConRemove[playerPosition][adiacentPlayerPosition][enemyPosition])
+                                actions.add(ActionMapper.generateHashPh23(playerPosition, adiacentPlayerPosition, enemyPosition))
                     } else
                     // aggiungo l'azione senza remove
-                        actions.add(ActionMapper.azioniFase2SenzaRemove[playerPosition][adiacentPlayerPosition])
+                        actions.add(ActionMapper.generateHashPh23(playerPosition, adiacentPlayerPosition))
                 }
             }
 
-        return actions
+        return actions.toIntArray()
     }
 
-    private fun getPhase3Action(state: State): MutableList<String> {
-        val actions = mutableListOf<String>() // possibili azioni per il player in questo stato
+    private fun getPhase3Action(state: State): IntArray {
+        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val emptyPositions = getEmptyPositions(state)
@@ -215,24 +217,24 @@ object MulinoGame : Game<State, String, Int> {
                     var added = 0
                     for (enemyPosition in enemyPositions)
                         if (!checkMorris(state, enemyPosition, enemyIndex)) {
-                            actions.add(ActionMapper.azioniFase3ConRemove[playerPosition][emptyPosition][enemyPosition])
+                            actions.add(ActionMapper.generateHashPh23(playerPosition, emptyPosition, enemyPosition))
                             added++
                         }
                     if (added == 0 && enemyPositions.size > 0)
                     // tutte le pedine sono bloccate in un mill
                         for (enemyPosition in enemyPositions)
-                            actions.add(ActionMapper.azioniFase3ConRemove[playerPosition][emptyPosition][enemyPosition])
+                            actions.add(ActionMapper.generateHashPh23(playerPosition, emptyPosition, enemyPosition))
                 } else
                 // aggiungo l'azione senza remove
-                    actions.add(ActionMapper.azioniFase3SenzaRemove[playerPosition][emptyPosition])
+                    actions.add(ActionMapper.generateHashPh23(playerPosition, emptyPosition))
             }
 
-        return actions
+        return actions.toIntArray()
     }
 
-    override fun getActions(state: State?): MutableList<String> {
-        if (state == null)
-            throw IllegalArgumentException("State is  null")
+    override fun getActions(state: State): IntArray {
+        //if (state == null)
+        //   throw IllegalArgumentException("State is  null")
 
         // assumo di aver ricevuto una fase corretta
         return when (state.currentPhase) {
@@ -243,9 +245,9 @@ object MulinoGame : Game<State, String, Int> {
         }
     }
 
-    // TODO("Cambiare azione in intero")
-    override fun getResult(state: State?, action: String): State {
-        if (state == null) throw IllegalArgumentException("State is null")
+    // TODO("Manca un controllo di coerenza, assumo che l'azione sia valida")
+    override fun getResult(state: State, actionHash: Int): State {
+        //if (state == null) throw IllegalArgumentException("State is null")
 
         // copio lo stato precedente
         val playerIndex = state.playerType
@@ -255,6 +257,21 @@ object MulinoGame : Game<State, String, Int> {
         val newBoard = intArrayOf(state.board[0], state.board[1])
         var newClosedMorris = false
 
+        val action = ActionMapper.actionMap[actionHash]!!
+        if (action.from != -1)
+            removePiece(board = newBoard, position = action.from)
+        else {
+            newCheckers[playerIndex]-- // non c'è la from quindi è fase 1
+            newBoardCheckers[playerIndex]++
+        }
+        addPiece(board = newBoard, position = action.to, playerType = playerIndex)
+        if (action.remove != -1) {
+            removePiece(board = newBoard, position = action.remove)
+            newBoardCheckers[enemyIndex]--
+            newClosedMorris = true
+        }
+
+        /*
         when(action.get(0)){
             '1' ->{
                 addPiece(newBoard, toInternalPositions[action.substring(1, 3)]!!, playerIndex)
@@ -290,14 +307,14 @@ object MulinoGame : Game<State, String, Int> {
                     newClosedMorris = true
                 }
             }
-        }
+        }*/
         //val totalTime = System.nanoTime()-startTime
         //println("Action ${state.playerType}: $action -> State : ${printState(newState)}")
         return State(playerType = enemyIndex, board = newBoard, checkers = newCheckers, checkersOnBoard = newBoardCheckers, closedMorris = newClosedMorris)
     }
 
-    override fun isTerminal(state: State?): Boolean =
-            isWinner(state!!, WHITE_PLAYER) || isWinner(state, BLACK_PLAYER)
+    override fun isTerminal(state: State): Boolean =
+            isWinner(state, WHITE_PLAYER) || isWinner(state, BLACK_PLAYER)
 
     fun getPiece(board: IntArray, position: Int): Checker {
         when {

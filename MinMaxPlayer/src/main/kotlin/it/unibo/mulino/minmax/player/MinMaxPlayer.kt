@@ -1,10 +1,10 @@
 package it.unibo.mulino.minmax.player
 
-import it.unibo.ai.didattica.mulino.actions.Action
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.mulino.player.AIPlayer
+import it.unibo.ai.didattica.mulino.actions.Action as ChesaniAction
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 
 class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
@@ -29,7 +29,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
             play(state, playerType) as PhaseFinalAction
 
 
-    private fun play(state: ChesaniState, player: ChesaniState.Checker): Action {
+    private fun play(state: ChesaniState, player: ChesaniState.Checker): ChesaniAction {
         val game = MulinoGame
         // board iniziale vuota da riempire con le pedine ricevute dal server
         val board = intArrayOf(0, 0)
@@ -67,7 +67,57 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
         //val totalTime = System.nanoTime()-startTime
         //println("Tempo inizializzazione: $totalTime")
         val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, timeLimit, sortAction = false)
-        val actionString = search.makeDecision(clientState)
+        val actionHashCode = search.makeDecision(clientState)
+        val action = ActionMapper.actionMap[actionHashCode]!!
+
+        // TODO("Assumo azione corretta, da verificare")
+
+        when (state.currentPhase) {
+            ChesaniState.Phase.FIRST -> {
+                val ph1Action = Phase1Action()
+                if (action.remove != -1) {
+                    val removeVertex = MulinoGame.delinearizeVertex[action.remove]
+                    val removeLevel = MulinoGame.deliearizeLevel[action.remove]
+                    ph1Action.removeOpponentChecker = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]!!
+                }
+                val toVertex = MulinoGame.delinearizeVertex[action.to]
+                val toLevel = MulinoGame.deliearizeLevel[action.to]
+                ph1Action.putPosition = MulinoGame.toExternalPositions[Pair(toVertex, toLevel)]!!
+                return ph1Action
+            }
+            ChesaniState.Phase.SECOND -> {
+                val ph2Action = Phase2Action()
+                if (action.remove != -1) {
+                    val removeVertex = MulinoGame.delinearizeVertex[action.remove]
+                    val removeLevel = MulinoGame.deliearizeLevel[action.remove]
+                    ph2Action.removeOpponentChecker = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]!!
+                }
+                val toVertex = MulinoGame.delinearizeVertex[action.to]
+                val toLevel = MulinoGame.deliearizeLevel[action.to]
+                val fromVertex = MulinoGame.delinearizeVertex[action.from]
+                val fromLevel = MulinoGame.deliearizeLevel[action.from]
+                ph2Action.to = MulinoGame.toExternalPositions[Pair(toVertex, toLevel)]!!
+                ph2Action.from = MulinoGame.toExternalPositions[Pair(fromVertex, fromLevel)]!!
+                return ph2Action
+            }
+            ChesaniState.Phase.FINAL -> {
+                val ph3Action = PhaseFinalAction()
+                if (action.remove != -1) {
+                    val removeVertex = MulinoGame.delinearizeVertex[action.remove]
+                    val removeLevel = MulinoGame.deliearizeLevel[action.remove]
+                    ph3Action.removeOpponentChecker = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]!!
+                }
+                val toVertex = MulinoGame.delinearizeVertex[action.to]
+                val toLevel = MulinoGame.deliearizeLevel[action.to]
+                val fromVertex = MulinoGame.delinearizeVertex[action.from]
+                val fromLevel = MulinoGame.deliearizeLevel[action.from]
+                ph3Action.to = MulinoGame.toExternalPositions[Pair(toVertex, toLevel)]!!
+                ph3Action.from = MulinoGame.toExternalPositions[Pair(fromVertex, fromLevel)]!!
+                return ph3Action
+            }
+            null -> throw IllegalStateException("phase non valida")
+        }
+        /*
         when (actionString[0]) {
             '1'->{
                 val action = Phase1Action()
@@ -103,8 +153,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
                 println("Azione $action")
                 return action
             }
-        }
-        return Phase1Action()
+        }*/
     }
 
     fun it.unibo.ai.didattica.mulino.domain.State.Checker.toInt() = when (this) {

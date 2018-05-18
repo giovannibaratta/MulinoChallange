@@ -30,7 +30,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             orderActions = { s, al, p, d -> al },
             maxTime = timeLimit)
 
-    fun makeDecision(state: State): String = iterativeSearch.makeDecision(state)
+    fun makeDecision(state: State): Action = iterativeSearch.makeDecision(state)
 
     /*override fun makeDecision(state: State?): String {
         if (state == null) throw IllegalArgumentException("Lo stato è null")
@@ -246,7 +246,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return amount
     }*/
 
-    private val sorter = QLearningPlayerAlternative({ 0.0 })
+    //private val sorter = QLearningPlayerAlternative({ 0.0 })
 
 
 //    override fun orderActions(state: State?, actions: MutableList<String>?, player: Int?, depth: Int): MutableList<String> {
