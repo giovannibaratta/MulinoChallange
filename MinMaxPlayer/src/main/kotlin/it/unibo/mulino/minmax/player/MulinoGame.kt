@@ -178,7 +178,8 @@ object MulinoGame : Game<State, String, Int> {
                 // se la posizione è libera aggiungo la mossa
                 if (getPiece(state.board, adiacentPlayerPosition) == Checker.EMPTY) {
                     // verifico la chiusura del mill
-                    if (checkMorris(state, adiacentPlayerPosition, playerIndex)) {
+                    // modificato da remoto
+                    if (checkMorris(state, playerPosition, adiacentPlayerPosition, playerIndex)) {
                         // chiuso un mill devo rimuovere
                         var added = 0
                         for (enemyPosition in enemyPositions)
@@ -420,7 +421,7 @@ object MulinoGame : Game<State, String, Int> {
         var check = false
         val vertex = delinearizeVertex[position]
         val level = deliearizeLevel[position]
-        check = (State.isNotSet(state.board, nextVertex(level), level) &&
+        check = (State.isNotSet(state.board, nextVertex(vertex), level) &&
                 State.isNotSet(state.board, previousVertex(vertex), level))
         if(check){
             when (vertex) {
@@ -447,7 +448,7 @@ object MulinoGame : Game<State, String, Int> {
             val level = deliearizeLevel[position]
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (State.isSet(state.board, nextVertex(level), level, playerType) &&
+                    if (State.isSet(state.board, nextVertex(vertex), level, playerType) &&
                             State.isSet(state.board, previousVertex(vertex), level, playerType)) {
                         count++
                     }
@@ -482,15 +483,15 @@ object MulinoGame : Game<State, String, Int> {
             val level = deliearizeLevel[position]
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (State.isSet(state.board, nextVertex(level), level, playerType) &&
-                            State.isSet(state.board, nextVertex(nextVertex(level)), level, playerType) &&
+                    if (State.isSet(state.board, nextVertex(vertex), level, playerType) &&
+                            State.isSet(state.board, nextVertex(nextVertex(vertex)), level, playerType) &&
                             State.isSet(state.board, previousVertex(vertex), level, playerType) &&
                             State.isSet(state.board, previousVertex(previousVertex(vertex)), level, playerType))
                         return true
 
                 }
                 else -> {
-                    if (State.isSet(state.board, nextVertex(level), level, playerType) &&
+                    if (State.isSet(state.board, nextVertex(vertex), level, playerType) &&
                             State.isSet(state.board, previousVertex(vertex), level, playerType) &&
                             State.isSet(state.board, vertex, nextLevel(level), playerType) &&
                             State.isSet(state.board, vertex, nextLevel(level), playerType))
@@ -509,11 +510,11 @@ object MulinoGame : Game<State, String, Int> {
             val level = deliearizeLevel[position]
             when (vertex) {
                 1, 3, 5, 7 -> {
-                    if (State.isSet(state.board, nextVertex(level), level, playerType) &&
+                    if (State.isSet(state.board, nextVertex(vertex), level, playerType) &&
                             State.isNotSet(state.board, previousVertex(vertex), level))
                         count++
                     else if (State.isSet(state.board, previousVertex(vertex), level, playerType) &&
-                            State.isNotSet(state.board, nextVertex(level), level))
+                            State.isNotSet(state.board, nextVertex(vertex), level))
                         count++
                     when(level){
                         0->{
@@ -548,9 +549,9 @@ object MulinoGame : Game<State, String, Int> {
             val level = deliearizeLevel[position]
             when (vertex) {
                 0, 2, 4, 6 -> {
-                    if (State.isSet(state.board, nextVertex(level), level, playerType) &&
+                    if (State.isSet(state.board, nextVertex(vertex), level, playerType) &&
                             State.isSet(state.board, previousVertex(vertex), level, playerType) &&
-                            State.isNotSet(state.board, nextVertex(nextVertex(level)), level) &&
+                            State.isNotSet(state.board, nextVertex(nextVertex(vertex)), level) &&
                             State.isNotSet(state.board, previousVertex(previousVertex(vertex)), level))
                         count++
 
@@ -558,44 +559,44 @@ object MulinoGame : Game<State, String, Int> {
                 else -> {
                     when (level) {
                         1 -> {
-                            if ((State.isSet(state.board, nextVertex(level), nextLevel(level), playerType)) &&
+                            if ((State.isSet(state.board, nextVertex(vertex), nextLevel(level), playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(level), playerType)) &&
                                     (State.isNotSet(state.board, previousVertex(vertex), nextLevel(level))) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
                                 count++
-                            if ((State.isSet(state.board, nextVertex(level), nextLevel(nextLevel(level)), playerType)) &&
+                            if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType)) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(level))))
                                 count++
                             if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(level), playerType)) &&
-                                    (State.isNotSet(state.board, nextVertex(level), nextLevel(level))) &&
+                                    (State.isNotSet(state.board, nextVertex(vertex), nextLevel(level))) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
                                 count++
                             if ((State.isSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)), playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType)) &&
-                                    (State.isNotSet(state.board, nextVertex(level), nextLevel(nextLevel(level)))) &&
+                                    (State.isNotSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)))) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(level))))
                                 count++
-                            if ((State.isSet(state.board, nextVertex(level), level, playerType)) &&
+                            if ((State.isSet(state.board, nextVertex(vertex), level, playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(level), playerType)) &&
                                     (State.isNotSet(state.board, previousVertex(vertex), level)) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
                                 count++
-                            if ((State.isSet(state.board, nextVertex(level), level, playerType)) &&
+                            if ((State.isSet(state.board, nextVertex(vertex), level, playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType)) &&
                                     (State.isNotSet(state.board, previousVertex(vertex), level)) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(level))))
                                 count++
                             if ((State.isSet(state.board, previousVertex(vertex), level, playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(level), playerType)) &&
-                                    (State.isNotSet(state.board, nextVertex(level), level)) &&
+                                    (State.isNotSet(state.board, nextVertex(vertex), level)) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
                                 count++
                             if ((State.isSet(state.board, previousVertex(vertex), level, playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType)) &&
-                                    (State.isNotSet(state.board, nextVertex(level), level)) &&
+                                    (State.isNotSet(state.board, nextVertex(vertex), level)) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(level))))
                                 count++
                         }

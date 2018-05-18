@@ -1,6 +1,5 @@
 package it.unibo.mulino.minmax.player
 
-import it.unibo.ai.didattica.mulino.domain.State.Checker
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.utils.FibonacciHeap
 import it.unibo.utils.IterariveDeepingAlphaBetaSearch
@@ -37,85 +36,92 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     }
 
     override fun eval(state: State?, player: Int?): Double {
+        //if (state == null) throw IllegalArgumentException("State is null")
+        //if (player == null) throw IllegalArgumentException("Player is null")
+
+        var amount = super.eval(state, player)
+
         if (state == null) throw IllegalArgumentException("State is null")
         if (player == null) throw IllegalArgumentException("Player is null")
 
-        var amount = super.eval(state, player)
+
         val game = game as MulinoGame
-        val intOpposite = Math.abs(game.getPlayer(state) - 1)
-        val intPlayer = game.getPlayer(state)
+        val statePlayer = state.playerType
+        val stateOpposite = Math.abs(state.playerType - 1)
+        val parOpposite = Math.abs(player - 1)
+        val parPlayer = player
         //val intOpposite =  game.checkersToInt[opposite]!!
         when (state.currentPhase) {
             1 -> {
-                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, intOpposite)) +
-                        blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, intOpposite) - game.getBlockedPieces(state, player)) +
-                        piecesNumberCoeff[0] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite] - (state.checkers[intOpposite] - state.checkers[intPlayer])) +
-                        num2PiecesCoeff[0] * (game.getNum2Conf(state, player) - game.getNum2Conf(state, intOpposite)) +
-                        num3PiecesCoeff[0] * (game.getNum3Conf(state, player) - game.getNum3Conf(state, intOpposite))
+                amount += morrisesNumberCoeff[0] * (game.getNumMorrises(state, parPlayer) - game.getNumMorrises(state, parOpposite)) +
+                        blockedOppPiecesCoeff[0] * (game.getBlockedPieces(state, parOpposite) - game.getBlockedPieces(state, parPlayer)) +
+                        piecesNumberCoeff[0] * (state.checkersOnBoard[statePlayer] - state.checkersOnBoard[stateOpposite] - (state.checkers[stateOpposite] - state.checkers[statePlayer])) +
+                        num2PiecesCoeff[0] * (game.getNum2Conf(state, parPlayer) - game.getNum2Conf(state, parOpposite)) +
+                        num3PiecesCoeff[0] * (game.getNum3Conf(state, parPlayer) - game.getNum3Conf(state, parOpposite))
                 if (state.closedMorris){
                     when (game.opposite(state.playerType)) {
-                        player -> amount += closedMorrisCoeff[0]
-                        intOpposite -> amount -= closedMorrisCoeff[0]
+                        parPlayer -> amount += closedMorrisCoeff[0]
+                        parOpposite -> amount -= closedMorrisCoeff[0]
                     }
                 }
             }
             2 -> {
-                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, player) - game.getNumMorrises(state, intOpposite)) +
-                        blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, intOpposite) - game.getBlockedPieces(state, player)) +
-                        piecesNumberCoeff[1] * (state.checkersOnBoard[intPlayer] - state.checkersOnBoard[intOpposite])
+                amount += morrisesNumberCoeff[1] * (game.getNumMorrises(state, parPlayer) - game.getNumMorrises(state, parOpposite)) +
+                        blockedOppPiecesCoeff[1] * (game.getBlockedPieces(state, parOpposite) - game.getBlockedPieces(state, parPlayer)) +
+                        piecesNumberCoeff[1] * (state.checkersOnBoard[statePlayer] - state.checkersOnBoard[stateOpposite])
                 if (state.closedMorris){
                     when (game.opposite(state.playerType)) {
-                        player -> amount += closedMorrisCoeff[1]
-                        intOpposite -> amount -= closedMorrisCoeff[1]
+                        parPlayer -> amount += closedMorrisCoeff[1]
+                        parOpposite -> amount -= closedMorrisCoeff[1]
                     }
                 }
-                if (game.hasOpenedMorris(state, player))
+                if (game.hasOpenedMorris(state, parPlayer))
                     amount += openedMorrisCoeff
-                if (game.hasDoubleMorris(state, player))
+                if (game.hasDoubleMorris(state, parPlayer))
                     amount += doubleMorrisCoeff
-                if (game.hasOpenedMorris(state, intOpposite))
+                if (game.hasOpenedMorris(state, parOpposite))
                     amount -= openedMorrisCoeff
-                if (game.hasDoubleMorris(state, intOpposite))
+                if (game.hasDoubleMorris(state, parOpposite))
                     amount -= doubleMorrisCoeff
             }
             3 -> {
                 var amountPlayer = 0.0
                 var amountOpposite = 0.00
-                if (state.checkersOnBoard[intPlayer] == 3) {
-                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, player) +
-                            num3PiecesCoeff[1] * game.getNum3Conf(state, player)
-                    if (state.closedMorris && game.opposite(state.playerType) == player) {
+                if (state.checkersOnBoard[statePlayer] == 3) {
+                    amountPlayer = num2PiecesCoeff[1] * game.getNum2Conf(state, parPlayer) +
+                            num3PiecesCoeff[1] * game.getNum3Conf(state, parPlayer)
+                    if (state.closedMorris && game.opposite(state.playerType) == parPlayer) {
                         amountPlayer += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, player) +
-                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, intOpposite) +
-                            piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
-                    if (state.closedMorris && game.opposite(state.playerType) == player) {
+                    amountPlayer = morrisesNumberCoeff[1] * game.getNumMorrises(state, parPlayer) +
+                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, parOpposite) +
+                            piecesNumberCoeff[1] * state.checkersOnBoard[statePlayer]
+                    if (state.closedMorris && game.opposite(state.playerType) == parPlayer) {
                         amountPlayer += closedMorrisCoeff[1]
                     }
-                    if (game.hasOpenedMorris(state, player))
+                    if (game.hasOpenedMorris(state, parPlayer))
                         amountPlayer += openedMorrisCoeff
-                    if (game.hasDoubleMorris(state, player))
+                    if (game.hasDoubleMorris(state, parPlayer))
                         amountPlayer += doubleMorrisCoeff
                 }
 
-                if (state.checkersOnBoard[intOpposite] == 3) {
-                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, intOpposite) +
-                            num3PiecesCoeff[1] * game.getNum3Conf(state, intOpposite)
-                    if (state.closedMorris && game.opposite(state.playerType) == intOpposite) {
+                if (state.checkersOnBoard[stateOpposite] == 3) {
+                    amountOpposite = num2PiecesCoeff[1] * game.getNum2Conf(state, parOpposite) +
+                            num3PiecesCoeff[1] * game.getNum3Conf(state, parOpposite)
+                    if (state.closedMorris && game.opposite(state.playerType) == parOpposite) {
                         amountOpposite += closedMorrisCoeff[2]
                     }
                 } else {
-                    amountOpposite = morrisesNumberCoeff[1] * game.getNumMorrises(state, intOpposite) +
-                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, player)  +
-                            piecesNumberCoeff[1] * state.checkersOnBoard[intPlayer]
-                    if (state.closedMorris && game.opposite(state.playerType) == intOpposite) {
+                    amountOpposite = morrisesNumberCoeff[1] * game.getNumMorrises(state, parOpposite) +
+                            blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, parPlayer) +
+                            piecesNumberCoeff[1] * state.checkersOnBoard[statePlayer]
+                    if (state.closedMorris && game.opposite(state.playerType) == parOpposite) {
                         amountOpposite += closedMorrisCoeff[1]
                     }
-                    if (game.hasOpenedMorris(state, intOpposite))
+                    if (game.hasOpenedMorris(state, parOpposite))
                         amountOpposite += openedMorrisCoeff
-                    if (game.hasDoubleMorris(state, intOpposite))
+                    if (game.hasDoubleMorris(state, parOpposite))
                         amountOpposite += doubleMorrisCoeff
                 }
                 amount += amountPlayer - amountOpposite
