@@ -2,15 +2,14 @@ package it.unibo.mulino.minmax.player
 
 import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.utils.FibonacciHeap
-import it.unibo.utils.IterariveDeepingAlphaBetaSearch
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 import it.unibo.mulino.qlearning.player.model.State as QLearningState
 
 class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                             utilMin: Double,
                             utilMax: Double,
-                            time: Int,
-                            private val sortAction: Boolean = false) : IterariveDeepingAlphaBetaSearch<State, String, Int>(MulinoGame, utilMin, utilMax, time) {
+                            timeLimit: Int,
+                            private val sortAction: Boolean = false) /*: IterariveDeepingAlphaBetaSearch<State, String, Int>(MulinoGame, utilMin, utilMax, time)*/ {
 
     private val closedMorrisCoeff = doubleArrayOf(coefficients[0],coefficients[6], coefficients[15])
     private val morrisesNumberCoeff = doubleArrayOf(coefficients[1],coefficients[7])
@@ -23,7 +22,17 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     private val winningConfCoeff = doubleArrayOf(coefficients[12],coefficients[16])
 
     private var ordered = 0
-    override fun makeDecision(state: State?): String {
+
+    private val iterativeSearch = IterativeSearch(MulinoGame,
+            utilMin,
+            utilMax,
+            this::eval,
+            orderActions = { s, al, p, d -> al },
+            maxTime = timeLimit)
+
+    fun makeDecision(state: State): String = iterativeSearch.makeDecision(state)
+
+    /*override fun makeDecision(state: State?): String {
         if (state == null) throw IllegalArgumentException("Lo stato è null")
 
         if (state.currentPhase == 1 || state.currentPhase == 2) {
@@ -33,11 +42,11 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         val decision = super.makeDecision(state)
         println("ordered $ordered")
         return decision
-    }
+    }*/
 
 
-    override fun eval(state: State?, player: Int?): Double {
-        var value = super.eval(state, player)
+    /*override*/ fun eval(state: State?, player: Int?): Double {
+        var value = 0.0 /*super.eval(state, player)*/
 
         if (state == null) throw IllegalArgumentException("state null")
         if (player == null) throw IllegalArgumentException("player null")
@@ -140,6 +149,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     //TODO("DA TOGLIERE")
     fun evalTest(state: State, player: Int): Double = eval(state, player)
 
+    /*
     fun oldeval(state: State?, player: Int?): Double {
         //if (state == null) throw IllegalArgumentException("State is null")
         //if (player == null) throw IllegalArgumentException("Player is null")
@@ -234,50 +244,51 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         }
         //println("Evaluation state for player $player : ${game.printState(state)} -> $amount")
         return amount
-    }
+    }*/
 
     private val sorter = QLearningPlayerAlternative({ 0.0 })
 
-    override fun orderActions(state: State?, actions: MutableList<String>?, player: Int?, depth: Int): MutableList<String> {
-        if (state == null) throw IllegalArgumentException("State is null")
-        if (actions == null) throw IllegalArgumentException("Actions is null")
-        if (player == null) throw IllegalArgumentException("Player is null")
-        if (depth > 2 || !sortAction)
-            return actions
 
-        return when (getPhase(state)) {
-            1 -> sorter.playPhase1(state, actions)//.map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
-            2 -> sorter.playPhase2(state, actions)//.map { it.first }.toMutableList()
-            3 -> sorter.playPhase3(state, actions)//.map { it.first }.toMutableList()
-            else -> throw IllegalStateException("Fase non valida")
-        }
-        //if(!sortAction) return actions
-        //println("Sorting")
-        /*return when (getPhase(state)) {
-            1 -> sorter.playPhase1(state.remapToQLearningState(player)).map {
-                //println("Action ${it.first} -> ${it.second}")
-                when (it.first.remove.isPresent) {
-                    true -> "1${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
-                    false -> "1${it.first.to.get().toExternal()}"
-                }
-            }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
-            2 -> sorter.playPhase2(state.remapToQLearningState(player)).map {
-                //println("Action ${it.first} -> ${it.second}")
-                when (it.first.remove.isPresent) {
-                    true -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
-                    false -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
-                }
-            }.toMutableList()
-            3 -> sorter.playPhase3(state.remapToQLearningState(player)).map {
-                //println("Action ${it.first} -> ${it.second}")
-                when (it.first.remove.isPresent) {
-                    true -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
-                    false -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
-                }
-            }.toMutableList()
-            else -> throw IllegalStateException("Fase non valida")
-        }*/
-    }
+//    override fun orderActions(state: State?, actions: MutableList<String>?, player: Int?, depth: Int): MutableList<String> {
+//        if (state == null) throw IllegalArgumentException("State is null")
+//        if (actions == null) throw IllegalArgumentException("Actions is null")
+//        if (player == null) throw IllegalArgumentException("Player is null")
+//        if (depth > 2 || !sortAction)
+//            return actions
+//
+//        return when (getPhase(state)) {
+//            1 -> sorter.playPhase1(state, actions)//.map { it.first }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+//            2 -> sorter.playPhase2(state, actions)//.map { it.first }.toMutableList()
+//            3 -> sorter.playPhase3(state, actions)//.map { it.first }.toMutableList()
+//            else -> throw IllegalStateException("Fase non valida")
+//        }
+//        //if(!sortAction) return actions
+//        //println("Sorting")
+//        /*return when (getPhase(state)) {
+//            1 -> sorter.playPhase1(state.remapToQLearningState(player)).map {
+//                //println("Action ${it.first} -> ${it.second}")
+//                when (it.first.remove.isPresent) {
+//                    true -> "1${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+//                    false -> "1${it.first.to.get().toExternal()}"
+//                }
+//            }.toMutableList()// .sort(state,actions).map { it.first }.toMutableList()
+//            2 -> sorter.playPhase2(state.remapToQLearningState(player)).map {
+//                //println("Action ${it.first} -> ${it.second}")
+//                when (it.first.remove.isPresent) {
+//                    true -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+//                    false -> "2${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+//                }
+//            }.toMutableList()
+//            3 -> sorter.playPhase3(state.remapToQLearningState(player)).map {
+//                //println("Action ${it.first} -> ${it.second}")
+//                when (it.first.remove.isPresent) {
+//                    true -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}${it.first.remove.get().toExternal()}"
+//                    false -> "3${it.first.from.get().toExternal()}${it.first.to.get().toExternal()}"
+//                }
+//            }.toMutableList()
+//            else -> throw IllegalStateException("Fase non valida")
+//        }*/
+//    }
 
     /*
         private fun State.remapToQLearningState(player: Checker): QLearningState = QLearningState(this.toChesaniState(), when (player) {

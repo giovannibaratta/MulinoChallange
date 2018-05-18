@@ -5,8 +5,6 @@ import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.ai.didattica.mulino.actions.Phase2Action
 import it.unibo.ai.didattica.mulino.actions.PhaseFinalAction
 import it.unibo.mulino.player.AIPlayer
-import it.unibo.utils.IterariveDeepingAlphaBetaSearch.*
-import it.unibo.utils.Metrics
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 
 class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
@@ -77,7 +75,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
                 if(actionString.length>3)
                     action.removeOpponentChecker=actionString.substring(3,5)
 
-                search.metrics.print()
+                //search.metrics.print()
                 println("Azione $action")
                 return action
             }
@@ -88,7 +86,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
                 if(actionString.length>5)
                     action.removeOpponentChecker=actionString.substring(5,7)
 
-                search.metrics.print()
+                //search.metrics.print()
 
                 println("Azione $action")
                 return action
@@ -100,7 +98,7 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
                 if(actionString.length>5)
                     action.removeOpponentChecker=actionString.substring(5,7)
 
-                search.metrics.print()
+                //search.metrics.print()
 
                 println("Azione $action")
                 return action
@@ -115,11 +113,12 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
         else -> throw IllegalArgumentException("Checker $this non valido")
     }
 
+    /*
     private fun Metrics.print() {
         println("NODI : ${this.getInt(METRICS_NODES_EXPANDED)}")
         println("MAX DEPTH : ${this.getInt(METRICS_MAX_DEPTH)}")
         println("PRUNE :${this.get(METRICS_PRUNE)}")
-    }
+    }*/
 
     private fun PhaseFinalAction.toPhase2Action(): Phase2Action {
         val action = Phase2Action()
@@ -135,11 +134,13 @@ class MinMaxPlayer(val timeLimit: Int = 55) : AIPlayer {
 
 fun main(args: Array<String>) {
 
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, Int.MAX_VALUE / 2000, sortAction = false)
+    search.makeDecision(State(0, intArrayOf(0, 0), intArrayOf(9, 9), intArrayOf(0, 0), false))
     /* stato buggato no isterminal */
 //var board = intArrayOf(6206,12067969)
     //  println(MulinoGame.isTerminal(State(0,board, intArrayOf(0,0), intArrayOf(7,8))))
 
-
+/*
     // genera -inf
     var board = intArrayOf(0, 0)
 
@@ -177,7 +178,7 @@ fun main(args: Array<String>) {
     val state = State(0, board, intArrayOf(1, 1), intArrayOf(7, 8), false)
     val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, Int.MAX_VALUE / 2000, sortAction = false)
     println(search.makeDecision(state))
-
+*/
 
 //    val state = State(0, board, intArrayOf(1, 1), intArrayOf(7, 8), false)
 //    */
