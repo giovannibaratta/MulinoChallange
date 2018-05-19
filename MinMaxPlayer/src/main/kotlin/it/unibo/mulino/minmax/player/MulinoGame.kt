@@ -584,7 +584,7 @@ object MulinoGame : Game() {
                                 count++
                             if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), playerType)) &&
                                     (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), playerType)) &&
-                                    (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))) &&
+                                    (State.isNotSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)))) &&
                                     (State.isNotSet(state.board, vertex, nextLevel(level))))
                                 count++
                             if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), playerType)) &&
@@ -660,29 +660,6 @@ object MulinoGame : Game() {
 
 fun main(args: Array<String>) {
 
-    var board = intArrayOf(0, 0)
-    MulinoGame.addPiece(board, 0, 0)
-    MulinoGame.addPiece(board, 15, 0)
-    MulinoGame.addPiece(board, 3, 0)
-    MulinoGame.addPiece(board, 5, 0)
-    MulinoGame.addPiece(board, 20, 0)
-    MulinoGame.addPiece(board, 11, 0)
-    MulinoGame.addPiece(board, 10, 0)
-    MulinoGame.addPiece(board, 21, 1)
-    MulinoGame.addPiece(board, 1, 1)
-    MulinoGame.addPiece(board, 19, 1)
-    MulinoGame.addPiece(board, 16, 1)
-    MulinoGame.addPiece(board, 4, 1)
 
-    MulinoGame.addPiece(board, 7, 1)
-
-    MulinoGame.addPiece(board, 6, 1)
-
-    MulinoGame.addPiece(board, 9, 1)
-
-    MulinoGame.addPiece(board, 12, 1)
-    val state = State(0, board, intArrayOf(0, 0), intArrayOf(6, 9), false)
-
-    val actions = MulinoGame.getActions(state)
 
 }

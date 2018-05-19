@@ -1,5 +1,6 @@
 package it.unibo.mulino.minmax.player
 
+import it.unibo.ai.didattica.mulino.actions.Phase1Action
 import it.unibo.utils.FibonacciHeap
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 import it.unibo.mulino.qlearning.player.model.State as QLearningState
@@ -107,7 +108,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         piecesNumberCoeff[0] * state.checkersOnBoard[parOpposite] -
                         piecesNumberCoeff[0] * state.checkers[parOpposite] -
                         num2PiecesCoeff[0] * game.getNum2Conf(state, parOpposite) -
-                        num3PiecesCoeff[0] * -game.getNum3Conf(state, parOpposite)
+                        num3PiecesCoeff[0] * game.getNum3Conf(state, parOpposite)
             }
 
             2 -> {
@@ -180,6 +181,41 @@ fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
         mutableList.add(this.dequeueMin().value)
     }
     return mutableList
+}
+
+fun main(args: Array<String>) {
+    var board = intArrayOf(0, 0)
+    MulinoGame.addPiece(board, 6, 0)
+    MulinoGame.addPiece(board, 13, 0)
+    MulinoGame.addPiece(board, 14, 0)
+    MulinoGame.addPiece(board, 16, 1)
+    MulinoGame.addPiece(board, 15, 1)
+    MulinoGame.addPiece(board, 18, 1)
+
+    val state = State(0, board, intArrayOf(6, 6), intArrayOf(3, 3), false)
+    val search = MulinoAlphaBetaSearch(arrayOf(18.0, 26.0, 1.0, 6.0, 12.0, 7.0, 14.0, 43.0, 10.0, 8.0, 7.0, 42.0, 1086.0, 10.0, 1.0, 16.0, 1190.0), -700.00, 700.00, Int.MAX_VALUE / 2000, sortAction = false)
+    val actions = MulinoGame.getActions(state)
+    for (action in actions) {
+        val newState = MulinoGame.getResult(state, action)
+
+        val ph1Action = Phase1Action()
+        val ac = ActionMapper.actionMap[action]!!
+        if (ac.remove != -1) {
+            val removeVertex = MulinoGame.delinearizeVertex[ac.remove]
+            val removeLevel = MulinoGame.deliearizeLevel[ac.remove]
+            ph1Action.removeOpponentChecker = MulinoGame.toExternalPositions[Pair(removeVertex, removeLevel)]!!
+        }
+        val toVertex = MulinoGame.delinearizeVertex[ac.to]
+        val toLevel = MulinoGame.deliearizeLevel[ac.to]
+        ph1Action.putPosition = MulinoGame.toExternalPositions[Pair(toVertex, toLevel)]!!
+        println("$ph1Action -> ${search.eval(newState, 0)}")
+
+        //println(MulinoGame.getNum2Conf(newState, 0))
+
+        //println(MulinoGame.getNum3Conf(newState, 0))
+
+        //println("\n\n")
+    }
 }
 
 /*
