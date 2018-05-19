@@ -9,7 +9,7 @@ import kotlin.math.max
 
 typealias Player = Int
 typealias Action = Int
-typealias Actions = IntArray
+typealias Actions = MutableList<Int>
 
 class IterativeSearch(
         val game: Game,
@@ -52,13 +52,13 @@ class IterativeSearch(
             timeout = true
         }
         val player = game.getPlayer(state)
-        var actions = orderActions(state, game.getActions(state), player, 0)
+        var actions: MutableList<Int> = orderActions(state, game.getActions(state), player, 0)
         depthLimit = 0
         heuristicUsed = false
         var logger: StringBuilder
         val actionValueMap: FibonacciHeap<Action>
         actionValueMap = FibonacciHeap<Action>()
-        //var lastBestAction: Action? = null
+
         do {
             cacheTotal = 0
             cacheHit = 0
@@ -89,6 +89,8 @@ class IterativeSearch(
                 logger.append("\nNodi esplorati : $exploredNode [NON COMPLETATO]")
                 println(logger.toString())
                 cache.clear()
+                if (actionValueMap.isEmpty)
+                    return actions[0]
                 return actionValueMap.min().value
                         ?: throw IllegalStateException("Non sono riuscito a calcolare neanche una mossa")
             }
@@ -97,7 +99,7 @@ class IterativeSearch(
             logger.append("\nCache size : ${cache.size()}")
             logger.append("\nNodi esplorati : $exploredNode ")
             println(logger.toString())
-            actions = actionValueMap.dequeueAll().toIntArray()
+            actions = actionValueMap.dequeueAll()/*.toIntArray()*/
         } while (!timeout && heuristicUsed)
         cache.clear()
         return actionValueMap.min().value
@@ -123,23 +125,14 @@ class IterativeSearch(
         }
     }
 
-
-    // value you want, but always the same
-
     private fun hash(state: State, player: Player): Int = Objects.hash(state, player)
-    //private fun hash(state : State, player : Player) : Int = state.hashCode() * 31 + player
-    /*
-    private fun hash2(){
-        HashFunctions.hash()
-    }*/
 
     private inline fun evaluation(state: State, player: Player, eval: (State, Player) -> Double): Double {
 
         val hash = hash(state, player)
         val cached = cache.retrieve(hash)
         cacheTotal++
-        if (cached != null /*&& cached != Double.NEGATIVE_INFINITY*/) {
-            //if(cached == Double.NEGATIVE_INFINITY) throw IllegalStateException("-inf")
+        if (cached != null) {
             cacheHit++
             return cached
         }
@@ -176,11 +169,8 @@ class IterativeSearch(
     }
 
     private class StateCache(val cacheLimit: Int) {
-        //private val map = HashMap<Int, Double>()
-        // più lento private val map = TIntDoubleHashMap(512000, 0.5F, Int.MIN_VALUE, Double.NEGATIVE_INFINITY)
-        private val map = HashIntDoubleMaps.newMutableMap(4 * 1000 * 1000).withDefault { Double.NEGATIVE_INFINITY }
 
-        //fun size() = map.size
+        private val map = HashIntDoubleMaps.newMutableMap(4 * 1000 * 1000).withDefault { Double.NEGATIVE_INFINITY }
         fun size() = map.size
 
         fun insert(state: Int, value: Double) {
@@ -188,12 +178,7 @@ class IterativeSearch(
                 println("cleaning")
                 for (i in 0 until 100000) {
                     map.remove(map.keys.first())
-                }/*
-                for(key in map.keys){
-                    if(removed++ > 10000)
-                        break
-                    map.remove(key)
-                }*/
+                }
             }
             map.put(state, value)
         }
@@ -201,7 +186,6 @@ class IterativeSearch(
         fun clear() {
             map.clear()
         }
-
         fun retrieve(state: Int): Double? = map.get(state)
     }
 

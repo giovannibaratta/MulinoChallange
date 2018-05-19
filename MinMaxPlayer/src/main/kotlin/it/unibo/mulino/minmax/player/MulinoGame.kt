@@ -142,7 +142,7 @@ object MulinoGame : Game() {
                 }
             }
 
-    private fun getPhase1Action(state: State): IntArray {
+    private fun getPhase1Action(state: State): Actions {
         val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
@@ -165,10 +165,10 @@ object MulinoGame : Game() {
             // aggiungo l'azione senza remove
                 actions.add(ActionMapper.generateHashPh1(emptyPosition))
         }
-        return actions.toIntArray()
+        return actions
     }
 
-    private fun getPhase2Action(state: State): IntArray {
+    private fun getPhase2Action(state: State): Actions {
         val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
@@ -199,10 +199,10 @@ object MulinoGame : Game() {
                 }
             }
 
-        return actions.toIntArray()
+        return actions
     }
 
-    private fun getPhase3Action(state: State): IntArray {
+    private fun getPhase3Action(state: State): Actions {
         val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
@@ -229,10 +229,10 @@ object MulinoGame : Game() {
                     actions.add(ActionMapper.generateHashPh23(playerPosition, emptyPosition))
             }
 
-        return actions.toIntArray()
+        return actions
     }
 
-    override fun getActions(state: State): IntArray {
+    override fun getActions(state: State): Actions {
         //if (state == null)
         //   throw IllegalArgumentException("State is  null")
 
