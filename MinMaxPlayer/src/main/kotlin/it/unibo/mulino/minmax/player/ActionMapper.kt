@@ -1,23 +1,28 @@
 package it.unibo.mulino.minmax.player
 
-import java.util.*
-import kotlin.collections.HashMap
-
 data class ActionContainer(val from: Int, val to: Int, val remove: Int)
 
 // TODO("Lanciare con asser per verificare che tutte le azioni siano codificate diversamente")
 object ActionMapper {
 
-    fun generateHashPh1(to: Int) = Objects.hash(-1, to, -1)
-    fun generateHashPh1(to: Int, remove: Int) = Objects.hash(-1, to, remove)
-    fun generateHashPh23(from: Int, to: Int) = Objects.hash(from, to, -1)
-    fun generateHashPh23(from: Int, to: Int, remove: Int) = Objects.hash(from, to, remove)
+
+    fun generateHashPh1(to: Int) = ((-1 * 31) * 31 + to) * 31 + -1
+    fun generateHashPh1(to: Int, remove: Int) = (((-1 * 31) * 31 + to) * 31) + remove
+    fun generateHashPh23(from: Int, to: Int) = (((from * 31) * 31 + to) * 31) + -1
+    fun generateHashPh23(from: Int, to: Int, remove: Int) = (((from * 31) * 31 + to) * 31) + remove
+
+
+    //fun generateHashPh1(to : Int) = Objects.hash (-1, to, -1)
+    //fun generateHashPh1(to: Int, remove: Int) = Objects.hash(-1, to, remove)
+    //fun generateHashPh23(from: Int, to: Int) = Objects.hash(from, to, -1)
+    //fun generateHashPh23(from: Int, to: Int, remove: Int) = Objects.hash(from, to, remove)
     //fun generateHashPh3NoRemove(from : Int , to : Int) = Objects.hash(from, to,-1)
     //fun generateHashPh3(from : Int, to : Int, remove : Int) = Objects.hash(from, to, remove)
 
     val actionMap = HashMap<Int, ActionContainer>()
 
     init {
+        //assert(false)
         // azioni fase 1
         for (toVertex in 0 until 8)
             for (toLevel in 0 until 3) {
@@ -67,6 +72,7 @@ object ActionMapper {
             }
     }
 }
+
 
 fun main(args: Array<String>) {
     println(ActionMapper.actionMap.get(ActionMapper.generateHashPh1(10)))
