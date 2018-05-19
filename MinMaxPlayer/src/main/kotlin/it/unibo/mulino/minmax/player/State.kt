@@ -25,20 +25,6 @@ data class State(
         return ((((((((1125899906842597L * 31) + board[0]) * 31 + board[1]) * 31 + checkers[0]) * 31 + checkers[1]) * 31 + playerType) * 31 + 0))
     }
 
-    /*override fun hashCode() : Int {
-        var hash = 17
-        hash = hash * 31 + board[0]
-        hash = hash * 31 + board[1]
-        hash = hash * 31 + checkers[0]
-        hash = hash * 31 + checkers[1]
-        hash = hash * 31 + playerType
-        if(closedMorris)
-            hash = hash * 31 + 1
-        if(!closedMorris)
-            hash = hash * 32 + 2
-        return hash
-    } //31 * (board[0] + board[1] + checkers[0] + checkers[1] * playerType + closedMorris.hashCode())
-*/
     override fun toString(): String {
         val sb = StringBuilder()
         sb.append("CurrentPhase : ${currentPhase}\tPlayerType : $playerType\n")

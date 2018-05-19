@@ -337,7 +337,7 @@ object MulinoGame : Game() {
         else -> throw IllegalStateException("In $position non c'è nessun pezzo")
     }
 
-    private fun getPositions(state: State, playerType: Int): MutableList<Int> {
+    fun getPositions(state: State, playerType: Int): MutableList<Int> {
         val positions = mutableListOf<Int>()
         for (position in 0 until 24)
             if (State.isSet(state.board, position, playerType))
@@ -345,7 +345,7 @@ object MulinoGame : Game() {
         return positions
     }
 
-    private fun getEmptyPositions(state: State): MutableList<Int> {
+    fun getEmptyPositions(state: State): MutableList<Int> {
         val emptyPositions = mutableListOf<Int>()
         for (position in 0 until 24)
             if (State.isNotSet(state.board, position))
@@ -453,17 +453,17 @@ object MulinoGame : Game() {
 
     // TODO("Controllare da qui in poi")
 
-    fun getBlockedPieces(state: State, playerType: Int): Int {
+    fun getBlockedPieces(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
         var count = 0
-        for (position in getPositions(state, playerType))
+        for (position in playerPosition)
             if (checkNoMoves(state, position, playerType))
                 count++
         return count
     }
 
-    fun getNumMorrises(state: State, playerType: Int): Int {
+    fun getNumMorrises(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
         var count = 0
-        for (position in getPositions(state, playerType)) {
+        for (position in playerPosition) {
             val vertex = delinearizeVertex[position]
             val level = deliearizeLevel[position]
             when (vertex) {
@@ -520,10 +520,10 @@ object MulinoGame : Game() {
         return false
     }
 
-    fun getNum2Conf(state: State, playerType: Int): Int {
+    fun getNum2Conf(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
         var count = 0
         val charChecker = checkersToChar[playerType]
-        for (position in getPositions(state, playerType)) {
+        for (position in playerPosition) {
             val vertex = delinearizeVertex[position]
             val level = deliearizeLevel[position]
             when (vertex) {
@@ -560,9 +560,9 @@ object MulinoGame : Game() {
         return count
     }
 
-    fun getNum3Conf(state: State, playerType: Int): Int {
+    fun getNum3Conf(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
         var count = 0
-        for (position in getPositions(state, playerType)) {
+        for (position in playerPosition) {
             val vertex = delinearizeVertex[position]
             val level = deliearizeLevel[position]
             when (vertex) {
