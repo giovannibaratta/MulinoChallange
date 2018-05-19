@@ -8,14 +8,14 @@ import kotlin.math.max
 
 typealias Player = Int
 typealias Action = Int
-typealias Actions = MutableList<Int>
+typealias Actions = ArrayList<Int>
 
 class IterativeSearch(
         val game: Game,
         val utilMin: Double,
         val utilMax: Double,
         val eval: (State, Player) -> Double,
-        val orderActions: (State, Actions, Player, Int) -> Actions,
+        val orderActions: (State, ArrayList<Int>, Player, Int) -> ArrayList<Int>,
         val maxTime: Int) {
 
     private var depthLimit = 0
@@ -51,7 +51,7 @@ class IterativeSearch(
             timeout = true
         }
         val player = game.getPlayer(state)
-        var actions: MutableList<Int> = orderActions(state, game.getActions(state), player, 0)
+        var actions: ArrayList<Int> = orderActions(state, game.getActions(state), player, 0)
         depthLimit = 0
         heuristicUsed = false
         var logger: StringBuilder

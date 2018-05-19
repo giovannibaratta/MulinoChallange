@@ -143,7 +143,7 @@ object MulinoGame : Game() {
             }
 
     private fun getPhase1Action(state: State): Actions {
-        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
+        val actions = ArrayList<Int>(16) // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val emptyPositions = getEmptyPositions(state)
@@ -169,7 +169,7 @@ object MulinoGame : Game() {
     }
 
     private fun getPhase2Action(state: State): Actions {
-        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
+        val actions = ArrayList<Int>(16) // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val playerPositions = getPositions(state, playerIndex)
@@ -203,7 +203,7 @@ object MulinoGame : Game() {
     }
 
     private fun getPhase3Action(state: State): Actions {
-        val actions = mutableListOf<Int>() // possibili azioni per il player in questo stato
+        val actions = ArrayList<Int>(16) // possibili azioni per il player in questo stato
         val playerIndex = state.playerType // indice del player che deve giocare il turno
         val enemyIndex = Math.abs(state.playerType - 1) // indice del player avversario
         val emptyPositions = getEmptyPositions(state)
@@ -271,45 +271,6 @@ object MulinoGame : Game() {
             newClosedMorris = true
         }
 
-        /*
-        when(action.get(0)){
-            '1' ->{
-                addPiece(newBoard, toInternalPositions[action.substring(1, 3)]!!, playerIndex)
-                newCheckers[playerIndex]--
-                newBoardCheckers[playerIndex]++
-
-                if (action.length>3) {
-                    // presente una remove
-                    removePiece(newBoard, toInternalPositions[action.substring(3, 5)]!!)
-                    newBoardCheckers[enemyIndex]--
-                    newClosedMorris = true
-                }
-            }
-
-            '2' ->{
-                removePiece(newBoard, toInternalPositions[action.substring(1, 3)]!!)
-                addPiece(newBoard, toInternalPositions[action.substring(3, 5)]!!, playerIndex)
-
-                if (action.length>5) {
-                    // presente una remove
-                    removePiece(newBoard, toInternalPositions[action.substring(5, 7)]!!)
-                    newBoardCheckers[enemyIndex]--
-                    newClosedMorris = true
-                }
-            }
-            '3' ->{
-                removePiece(newBoard, toInternalPositions[action.substring(1, 3)]!!)
-                addPiece(newBoard, toInternalPositions[action.substring(3, 5)]!!, playerIndex)
-                if (action.length>5) {
-                    // presente una remove
-                    removePiece(newBoard, toInternalPositions[action.substring(5, 7)]!!)
-                    newBoardCheckers[enemyIndex]--
-                    newClosedMorris = true
-                }
-            }
-        }*/
-        //val totalTime = System.nanoTime()-startTime
-        //println("Action ${state.playerType}: $action -> State : ${printState(newState)}")
         return State(playerType = enemyIndex, board = newBoard, checkers = newCheckers, checkersOnBoard = newBoardCheckers, closedMorris = newClosedMorris)
     }
 
@@ -337,16 +298,16 @@ object MulinoGame : Game() {
         else -> throw IllegalStateException("In $position non c'è nessun pezzo")
     }
 
-    fun getPositions(state: State, playerType: Int): MutableList<Int> {
-        val positions = mutableListOf<Int>()
+    fun getPositions(state: State, playerType: Int): ArrayList<Int> {
+        val positions = ArrayList<Int>(24)
         for (position in 0 until 24)
             if (State.isSet(state.board, position, playerType))
                 positions.add(position)
         return positions
     }
 
-    fun getEmptyPositions(state: State): MutableList<Int> {
-        val emptyPositions = mutableListOf<Int>()
+    fun getEmptyPositions(state: State): ArrayList<Int> {
+        val emptyPositions = ArrayList<Int>(24)
         for (position in 0 until 24)
             if (State.isNotSet(state.board, position))
                 emptyPositions.add(position)
@@ -451,9 +412,7 @@ object MulinoGame : Game() {
         return true // tutte occupare
     }
 
-    // TODO("Controllare da qui in poi")
-
-    fun getBlockedPieces(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
+    fun getBlockedPieces(state: State, playerPosition: ArrayList<Int>, playerType: Int): Int {
         var count = 0
         for (position in playerPosition)
             if (checkNoMoves(state, position, playerType))
@@ -461,7 +420,7 @@ object MulinoGame : Game() {
         return count
     }
 
-    fun getNumMorrises(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
+    fun getNumMorrises(state: State, playerPosition: ArrayList<Int>, playerType: Int): Int {
         var count = 0
         for (position in playerPosition) {
             val vertex = delinearizeVertex[position]
@@ -520,7 +479,7 @@ object MulinoGame : Game() {
         return false
     }
 
-    fun getNum2Conf(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
+    fun getNum2Conf(state: State, playerPosition: ArrayList<Int>, playerType: Int): Int {
         var count = 0
         val charChecker = checkersToChar[playerType]
         for (position in playerPosition) {
@@ -560,7 +519,7 @@ object MulinoGame : Game() {
         return count
     }
 
-    fun getNum3Conf(state: State, playerPosition: MutableList<Int>, playerType: Int): Int {
+    fun getNum3Conf(state: State, playerPosition: ArrayList<Int>, playerType: Int): Int {
         var count = 0
         for (position in playerPosition) {
             val vertex = delinearizeVertex[position]
@@ -660,6 +619,38 @@ object MulinoGame : Game() {
 
 fun main(args: Array<String>) {
 
+    val iteration = 1000000
+    var start = System.nanoTime()
+    for (z in 0 until iteration) {
+        val init = ArrayList<Int>(24)
+        for (i in 0 until 24)
+            init.add(i)
+        for (i in 0 until 24)
+            init[i] += 1
+    }
+    var end = System.nanoTime()
+    println("con init ${(end - start) / 1000}us")
 
+    start = System.nanoTime()
+    for (z in 0 until iteration) {
+        val init = ArrayList<Int>()
+        for (i in 0 until 24)
+            init.add(i)
+        for (i in 0 until 24)
+            init[i] += 1
+    }
+    end = System.nanoTime()
+    println("senza init ${(end - start) / 1000}us")
+
+    start = System.nanoTime()
+    for (z in 0 until iteration) {
+        val init = mutableListOf<Int>()
+        for (i in 0 until 24)
+            init.add(i)
+        for (i in 0 until 24)
+            init[i] += 1
+    }
+    end = System.nanoTime()
+    println("senza init ${(end - start) / 1000}us")
 
 }

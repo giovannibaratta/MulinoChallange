@@ -177,8 +177,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
 }
 
-fun <T> FibonacciHeap<T>.dequeueAll() : MutableList<T>{
-    val mutableList = arrayListOf<T>()
+fun <T> FibonacciHeap<T>.dequeueAll(): ArrayList<T> {
+    val mutableList = ArrayList<T>(16)
     while (!this.isEmpty) {
         mutableList.add(this.dequeueMin().value)
     }
