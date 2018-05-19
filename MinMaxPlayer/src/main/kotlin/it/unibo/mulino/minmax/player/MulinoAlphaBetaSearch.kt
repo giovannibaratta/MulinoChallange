@@ -62,8 +62,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             1 -> {
                 value += morrisesNumberCoeff[0] * game.getNumMorrises(state, parPlayer) -
                         blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, parPlayer) +
-                        piecesNumberCoeff[0] * state.checkersOnBoard[statePlayer] +
-                        piecesNumberCoeff[0] * state.checkers[statePlayer] +
+                        piecesNumberCoeff[0] * state.checkersOnBoard[parPlayer] +
+                        piecesNumberCoeff[0] * state.checkers[parPlayer] +
                         num2PiecesCoeff[0] * game.getNum2Conf(state, parPlayer) +
                         num3PiecesCoeff[0] * game.getNum3Conf(state, parPlayer)
                 if (state.closedMorris) {
@@ -77,10 +77,10 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             2 -> {
                 value += morrisesNumberCoeff[1] * game.getNumMorrises(state, parPlayer) -
                         blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, parPlayer) +
-                        piecesNumberCoeff[1] * state.checkersOnBoard[statePlayer]
+                        piecesNumberCoeff[1] * state.checkersOnBoard[parPlayer]
 
                 if (state.closedMorris) {
-                    when (game.opposite(state.playerType)) {
+                    when (stateOpposite) {
                         parPlayer -> value += closedMorrisCoeff[1]
                         parOpposite -> value -= closedMorrisCoeff[1]
                     }
@@ -95,7 +95,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                 value += num2PiecesCoeff[1] * game.getNum2Conf(state, parPlayer) +
                         num3PiecesCoeff[1] * game.getNum3Conf(state, parPlayer)
 
-                if (state.closedMorris && game.opposite(state.playerType) == parPlayer)
+                if (state.closedMorris && stateOpposite == parPlayer)
                     value += closedMorrisCoeff[2]
             }
         }
@@ -104,8 +104,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             1 -> {
                 value += -morrisesNumberCoeff[0] * game.getNumMorrises(state, parOpposite) +
                         blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, parOpposite) -
-                        piecesNumberCoeff[0] * state.checkersOnBoard[stateOpposite] -
-                        piecesNumberCoeff[0] * state.checkers[stateOpposite] -
+                        piecesNumberCoeff[0] * state.checkersOnBoard[parOpposite] -
+                        piecesNumberCoeff[0] * state.checkers[parOpposite] -
                         num2PiecesCoeff[0] * game.getNum2Conf(state, parOpposite) -
                         num3PiecesCoeff[0] * -game.getNum3Conf(state, parOpposite)
             }
@@ -113,7 +113,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             2 -> {
                 value += -morrisesNumberCoeff[1] * game.getNumMorrises(state, parOpposite) +
                         blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, parOpposite) -
-                        piecesNumberCoeff[1] * state.checkersOnBoard[stateOpposite]
+                        piecesNumberCoeff[1] * state.checkersOnBoard[parOpposite]
 
                 if (game.hasOpenedMorris(state, parOpposite))
                     value -= openedMorrisCoeff
@@ -124,7 +124,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             3 -> {
                 value += -num2PiecesCoeff[1] * game.getNum2Conf(state, parOpposite) -
                         num3PiecesCoeff[1] * game.getNum3Conf(state, parOpposite)
-                if (state.closedMorris && game.opposite(state.playerType) == parOpposite) {
+                if (state.closedMorris && stateOpposite == parOpposite) {
                     value -= closedMorrisCoeff[2]
                 }
             }

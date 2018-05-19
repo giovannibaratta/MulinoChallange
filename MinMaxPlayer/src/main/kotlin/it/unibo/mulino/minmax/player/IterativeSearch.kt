@@ -74,7 +74,27 @@ class IterativeSearch(
                 if (timeout)
                     break
                 actionValueMap.enqueue(action, -actionValue)
-                logger.append("$action -> $actionValue ,")
+                //ricavo l'azione come stringa
+                val (from, to, remove) = ActionMapper.actionMap[action]
+                        ?: throw IllegalStateException("Mapping azione(int) azione(string) non trovato")
+                var stringAction = ""
+                if(from != -1){
+                    val vertex = MulinoGame.delinearizeVertex[from]
+                    val level = MulinoGame.deliearizeLevel[from]
+                    stringAction+=MulinoGame.toExternalPositions[Pair(vertex,level)]
+                }
+                if(to != -1){
+                    val vertex = MulinoGame.delinearizeVertex[to]
+                    val level = MulinoGame.deliearizeLevel[to]
+                    stringAction+=MulinoGame.toExternalPositions[Pair(vertex,level)]
+                }
+                if(remove != -1){
+                    val vertex = MulinoGame.delinearizeVertex[remove]
+                    val level = MulinoGame.deliearizeLevel[remove]
+                    stringAction+=MulinoGame.toExternalPositions[Pair(vertex,level)]
+                }
+
+                logger.append("$stringAction -> $actionValue ,")
                 alpha = max(actionValue, alpha)
             }
             if (!timeout) {
