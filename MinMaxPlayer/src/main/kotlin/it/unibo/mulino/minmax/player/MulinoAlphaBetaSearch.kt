@@ -1,6 +1,5 @@
 package it.unibo.mulino.minmax.player
 
-import it.unibo.mulino.qlearning.player.model.Position
 import it.unibo.utils.FibonacciHeap
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 import it.unibo.mulino.qlearning.player.model.State as QLearningState
@@ -33,11 +32,11 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     fun makeDecision(state: State): Action = iterativeSearch.makeDecision(state)
 
 
-    fun eval(state: State?, player: Int?): Double {
+    fun eval(state: State, player: Int): Double {
         var value = 0.0 /*super.eval(state, player)*/
 
-        if (state == null) throw IllegalArgumentException("state null")
-        if (player == null) throw IllegalArgumentException("player null")
+        //if (state == null) throw IllegalArgumentException("state null")
+        //if (player == null) throw IllegalArgumentException("player null")
 
         val statePlayer = state.playerType
         val stateOpposite = Math.abs(state.playerType - 1)
@@ -164,18 +163,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             Pair(Pair(4, 0), "g7")
     )
 
-    private fun Char.toChecker() = when (this) {
-        'e' -> ChesaniState.Checker.EMPTY
-        'w' -> ChesaniState.Checker.WHITE
-        'b' -> ChesaniState.Checker.BLACK
-        else -> throw  IllegalArgumentException("Non esiste un mapping per $this")
-    }
-
-    private fun Position.toExternal(): String {
-        val xPos: Char = 'a' + this.x
-        val yPos: String = (this.y + 1).toString()
-        return xPos + yPos
-    }
 
     private fun getPhase(state: State) = when {
         state.currentPhase == 1 -> 1

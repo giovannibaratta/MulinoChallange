@@ -52,13 +52,13 @@ class IterativeSearch(
             timeout = true
         }
         val player = game.getPlayer(state)
-        val actions = orderActions(state, game.getActions(state), player, 0)
+        var actions = orderActions(state, game.getActions(state), player, 0)
         depthLimit = 0
         heuristicUsed = false
         var logger: StringBuilder
         val actionValueMap: FibonacciHeap<Action>
         actionValueMap = FibonacciHeap<Action>()
-        var lastBestAction: Action? = null
+        //var lastBestAction: Action? = null
         do {
             cacheTotal = 0
             cacheHit = 0
@@ -78,8 +78,8 @@ class IterativeSearch(
                 alpha = max(actionValue, alpha)
             }
             if (!timeout) {
-                lastBestAction = actionValueMap.min().value
-                // ho completato tutto
+                //lastBestAction = actionValueMap.min().value
+                // ho completato tutto e non è scattato il timeout
                 if (actionValueMap.size() > 0 && hasSafeWinner(actionValueMap.min().priority))
                     break
             } else {
@@ -89,14 +89,15 @@ class IterativeSearch(
                 logger.append("\nNodi esplorati : $exploredNode [NON COMPLETATO]")
                 println(logger.toString())
                 cache.clear()
-                return lastBestAction ?: throw IllegalStateException("Non sono riuscito a calcolare neanche una mossa")
+                return actionValueMap.min().value
+                        ?: throw IllegalStateException("Non sono riuscito a calcolare neanche una mossa")
             }
-            //if(cacheTotal > 0)
+
             logger.append("\nCache Hit ${cacheHit} su ${cacheTotal}")
-            logger.append("Cache size : ${cache.size()}")
+            logger.append("\nCache size : ${cache.size()}")
             logger.append("\nNodi esplorati : $exploredNode ")
             println(logger.toString())
-            actionValueMap.dequeueAll()
+            actions = actionValueMap.dequeueAll().toIntArray()
         } while (!timeout && heuristicUsed)
         cache.clear()
         return actionValueMap.min().value
