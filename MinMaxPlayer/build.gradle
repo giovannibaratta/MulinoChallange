@@ -30,10 +30,8 @@ dependencies {
     compile project(':Server')
     compile project(':api')
     compile project(':QLearningPlayer')
-    compile 'net.sf.trove4j:trove4j:3.0.1'
     compile 'com.koloboke:koloboke-api-jdk8:1.0.0'
     runtime 'com.koloboke:koloboke-impl-jdk8:1.0.0'
-    compile group: 'org.lz4', name: 'lz4-java', version: '1.4.1'
 }
 
 compileKotlin {

@@ -1,8 +1,7 @@
 package it.unibo.mulino.minmax.player
 
-import com.koloboke.collect.map.hash.HashIntDoubleMaps
+import com.koloboke.collect.map.hash.HashLongDoubleMaps
 import it.unibo.utils.FibonacciHeap
-import java.util.*
 import kotlin.concurrent.thread
 import kotlin.math.max
 
@@ -95,7 +94,7 @@ class IterativeSearch(
                 }
 
                 logger.append("$stringAction -> $actionValue ,")
-                alpha = max(actionValue, alpha)
+                // alpha = max(actionValue, alpha)
             }
             if (!timeout) {
                 //lastBestAction = actionValueMap.min().value
@@ -145,7 +144,7 @@ class IterativeSearch(
         }
     }
 
-    private fun hash(state: State, player: Player): Int = Objects.hash(state, player)
+    private fun hash(state: State, player: Player): Long = state.lognHashCode() * 31 + player
 
     private inline fun evaluation(state: State, player: Player, eval: (State, Player) -> Double): Double {
 
@@ -190,10 +189,10 @@ class IterativeSearch(
 
     private class StateCache(val cacheLimit: Int) {
 
-        private val map = HashIntDoubleMaps.newMutableMap(4 * 1000 * 1000).withDefault { Double.NEGATIVE_INFINITY }
+        private val map = HashLongDoubleMaps.newMutableMap(4 * 1000 * 1000).withDefault { Double.NEGATIVE_INFINITY }
         fun size() = map.size
 
-        fun insert(state: Int, value: Double) {
+        fun insert(state: Long, value: Double) {
             if (map.size > cacheLimit) {
                 println("cleaning")
                 for (i in 0 until 100000) {
@@ -206,7 +205,8 @@ class IterativeSearch(
         fun clear() {
             map.clear()
         }
-        fun retrieve(state: Int): Double? = map.get(state)
+
+        fun retrieve(state: Long): Double? = map.get(state)
     }
 
 }

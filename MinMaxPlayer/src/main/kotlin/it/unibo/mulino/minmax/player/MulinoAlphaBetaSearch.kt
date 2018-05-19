@@ -39,7 +39,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         //if (state == null) throw IllegalArgumentException("state null")
         //if (player == null) throw IllegalArgumentException("player null")
 
-        val statePlayer = state.playerType
         val stateOpposite = Math.abs(state.playerType - 1)
         val parOpposite = Math.abs(player - 1)
         val parPlayer = player
