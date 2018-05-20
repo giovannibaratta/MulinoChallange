@@ -62,6 +62,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
         return count
     }
 
+    //region MixedEval
     fun eval(state: State, player: Int): Double {
         var value = 0.0 /*super.eval(state, player)*/
 
@@ -92,7 +93,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
         when (parPlayerPhase) {
             1 -> {
-
                 var numMorrisesPlayer: Int = 0
                 var blockedPieces: Int = 0
                 var num2Pieces = 0
@@ -228,7 +228,6 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
 
             2 -> {
-
                 var numMorrisesPlayer: Int = 0
                 var blockedPieces: Int = 0
                 var hasOpenedMorris: Boolean = false
@@ -256,16 +255,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                     if (MulinoGame.checkNoMoves(state, position, parPlayer))
                         blockedPieces++
                     //endregion
-                    //region hasOpenedMorris
-                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
-                        val vertexAdj = MulinoGame.delinearizeVertex[adiacentPosition]
-                        val levelAdj = MulinoGame.deliearizeLevel[adiacentPosition]
-                        if (State.isNotSet(state.board, vertexAdj, levelAdj) && MulinoGame.checkMorris(state, position, adiacentPosition, parPlayer)) {
-                            hasOpenedMorris = true
-                            break
-                        }
-                    }
-                    //endregion
+
                     //region hasDoubleMorris
                     when (vertex) {
                         0, 2, 4, 6 -> {
@@ -298,14 +288,13 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         parOpposite -> value -= closedMorrisCoeff[1]
                     }
                 }
-                if (hasOpenedMorris)
+                if (game.hasOpenedMorris(state, playerPosition, parPlayer))
                     value += openedMorrisCoeff
                 if (hasDoubleMorris)
                     value += doubleMorrisCoeff
             }
 
             3 -> {
-
                 var num2Pieces = 0
                 var num3Pieces = 0
 
@@ -416,13 +405,12 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
         when (parOppositePhase) {
             1 -> {
-
                 var numMorrisesPlayer: Int = 0
                 var blockedPieces: Int = 0
                 var num2Pieces = 0
                 var num3Pieces = 0
                 //region Calcolo valori per il value
-                for (position in playerPosition) {
+                for (position in enemyPosition) {
                     val vertex = MulinoGame.delinearizeVertex[position]
                     val level = MulinoGame.deliearizeLevel[position]
                     //region Calcolo morris
@@ -543,86 +531,26 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         num2PiecesCoeff[0] * num2Pieces -
                         num3PiecesCoeff[0] * num3Pieces/* -
                         5.0 * numeroStruttureParallele(state.board, parPlayer)*/
+
             }
 
             2 -> {
-
-                var numMorrisesPlayer: Int = 0
-                var blockedPieces: Int = 0
-                var hasOpenedMorris: Boolean = false
-                var hasDoubleMorris: Boolean = false
-
-                //region Calcolo valori per il value
-                for (position in playerPosition) {
-                    val vertex = MulinoGame.delinearizeVertex[position]
-                    val level = MulinoGame.deliearizeLevel[position]
-                    //region Calcolo morris
-                    when (vertex) {
-                        1, 3, 5, 7 -> {
-                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parOpposite) &&
-                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parOpposite)) {
-                                numMorrisesPlayer++
-                            }
-                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parOpposite)) &&
-                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parOpposite))) {
-                                numMorrisesPlayer++
-                            }
-                        }
-                    }
-                    //endregion
-                    //region BlockerPieces
-                    if (MulinoGame.checkNoMoves(state, position, parOpposite))
-                        blockedPieces++
-                    //endregion
-                    //region hasOpenedMorris
-                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
-                        val vertexAdj = MulinoGame.delinearizeVertex[adiacentPosition]
-                        val levelAdj = MulinoGame.deliearizeLevel[adiacentPosition]
-                        if (State.isNotSet(state.board, vertexAdj, levelAdj) && MulinoGame.checkMorris(state, position, adiacentPosition, parOpposite)) {
-                            hasOpenedMorris = true
-                            break
-                        }
-                    }
-                    //endregion
-                    //region hasDoubleMorris
-                    when (vertex) {
-                        0, 2, 4, 6 -> {
-                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
-                                    State.isSet(state.board, nextVertex(nextVertex(vertex)), level, parOpposite) &&
-                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
-                                    State.isSet(state.board, previousVertex(previousVertex(vertex)), level, parOpposite))
-                                hasDoubleMorris = true
-
-                        }
-                        else -> {
-                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
-                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
-                                    State.isSet(state.board, vertex, nextLevel(level), parOpposite) &&
-                                    State.isSet(state.board, vertex, nextLevel(level), parOpposite))
-                                hasDoubleMorris = true
-                        }
-                    }
-                    //endregion
-                }
-                //endregion
-
-                value += -morrisesNumberCoeff[1] * numMorrisesPlayer +
-                        blockedOppPiecesCoeff[1] * blockedPieces -
+                value += -morrisesNumberCoeff[1] * game.getNumMorrises(state, enemyPosition, parOpposite) +
+                        blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, enemyPosition, parOpposite) -
                         piecesNumberCoeff[1] * state.checkersOnBoard[parOpposite]
 
-                if (hasOpenedMorris)
+                if (game.hasOpenedMorris(state, enemyPosition, parOpposite))
                     value -= openedMorrisCoeff
-                if (hasDoubleMorris)
+                if (game.hasDoubleMorris(state, enemyPosition, parOpposite))
                     value -= doubleMorrisCoeff
             }
 
             3 -> {
-
                 var num2Pieces = 0
                 var num3Pieces = 0
 
                 //region Calcolo valori per il value
-                for (position in playerPosition) {
+                for (position in enemyPosition) {
                     val vertex = MulinoGame.delinearizeVertex[position]
                     val level = MulinoGame.deliearizeLevel[position]
                     //region Num2Pieces
@@ -727,6 +655,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
         return value
     }
+    //endregion
 
     //TODO("DA TOGLIERE")
     fun evalTest(state: State, player: Int): Double = eval(state, player)

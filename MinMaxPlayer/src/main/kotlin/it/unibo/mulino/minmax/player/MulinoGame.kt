@@ -442,8 +442,8 @@ object MulinoGame : Game() {
     }
 
 
-    fun hasOpenedMorris(state: State, playerType: Int): Boolean {
-        for (position in getPositions(state, playerType)) {
+    fun hasOpenedMorris(state: State, positions: ArrayList<Int>, playerType: Int): Boolean {
+        for (position in positions) {
             for (adiacentPosition in adiacentPositions[position]) {
                 val vertex = delinearizeVertex[adiacentPosition]
                 val level = deliearizeLevel[adiacentPosition]
@@ -454,8 +454,8 @@ object MulinoGame : Game() {
         return false
     }
 
-    fun hasDoubleMorris(state: State, playerType: Int): Boolean {
-        for (position in getPositions(state, playerType)) {
+    fun hasDoubleMorris(state: State, positions: ArrayList<Int>, playerType: Int): Boolean {
+        for (position in positions) {
             val vertex = delinearizeVertex[position]
             val level = deliearizeLevel[position]
             when (vertex) {
