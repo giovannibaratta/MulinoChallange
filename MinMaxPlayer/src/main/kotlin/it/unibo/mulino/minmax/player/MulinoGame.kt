@@ -619,6 +619,33 @@ object MulinoGame : Game() {
 
 fun main(args: Array<String>) {
 
+    val board = intArrayOf(0, 0)
+    MulinoGame.addPiece(board, 2, 0)
+
+    MulinoGame.addPiece(board, 1, 0)
+
+    MulinoGame.addPiece(board, 22, 0)
+
+    MulinoGame.addPiece(board, 19, 0)
+
+    MulinoGame.addPiece(board, 9, 1)
+
+    MulinoGame.addPiece(board, 12, 1)
+
+    MulinoGame.addPiece(board, 10, 1)
+
+    MulinoGame.addPiece(board, 4, 1)
+
+    MulinoGame.addPiece(board, 5, 1)
+
+    MulinoGame.addPiece(board, 16, 1)
+
+    MulinoGame.addPiece(board, 23, 1)
+
+    MulinoGame.addPiece(board, 21, 1)
+
+    println(MulinoGame.isTerminal(State(0, board, intArrayOf(0, 0), intArrayOf(4, 8), false)))
+    /*
     val iteration = 1000000
     var start = System.nanoTime()
     for (z in 0 until iteration) {
@@ -652,5 +679,5 @@ fun main(args: Array<String>) {
     }
     end = System.nanoTime()
     println("senza init ${(end - start) / 1000}us")
-
+    */
 }

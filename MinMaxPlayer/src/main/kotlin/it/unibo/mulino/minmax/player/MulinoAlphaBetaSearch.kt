@@ -91,12 +91,60 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             else -> throw IllegalStateException("Stato non valido")
         }
 
+        val densita = 20.0
+
         when (parPlayerPhase) {
             1 -> {
                 var numMorrisesPlayer: Int = 0
                 var blockedPieces: Int = 0
                 var num2Pieces = 0
                 var num3Pieces = 0
+                /*
+                //region densita
+                var enemyCount= 0
+                var playerCount = 0
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 2,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 2,parOpposite))
+                        enemyCount++
+                }
+
+                val differenceOnLevel2 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel2 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel2 <= -2) {
+                    value -= densita
+                }
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 1,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 1,parOpposite))
+                        enemyCount++
+                }
+
+                val differenceOnLevel1 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel1 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel1 <= -2) {
+                    value -= densita
+                }
+
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 0,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 0,parOpposite))
+                        enemyCount++
+                }
+
+                val differenceOnLevel0 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel0 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel0 <= -2) {
+                    value -= densita
+                }
+                //endregion
+                */
                 //region Calcolo valori per il value
                 for (position in playerPosition) {
                     val vertex = MulinoGame.delinearizeVertex[position]
@@ -217,8 +265,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         piecesNumberCoeff[0] * state.checkersOnBoard[parPlayer] +
                         piecesNumberCoeff[0] * state.checkers[parPlayer] +
                         num2PiecesCoeff[0] * num2Pieces +
-                        num3PiecesCoeff[0] * num3Pieces/*+
-                        5.0 * numeroStruttureParallele(state.board, parPlayer)*/
+                        num3PiecesCoeff[0] * num3Pieces /*+
+                        15.0 * numeroStruttureParallele(state.board, parPlayer)*/
                 if (state.closedMorris) {
                     when (stateOpposite) {
                         parPlayer -> value += closedMorrisCoeff[0]
@@ -228,72 +276,173 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
 
             2 -> {
-                var numMorrisesPlayer: Int = 0
-                var blockedPieces: Int = 0
-                var hasOpenedMorris: Boolean = false
-                var hasDoubleMorris: Boolean = false
+                value += morrisesNumberCoeff[1] * game.getNumMorrises(state, playerPosition, parPlayer) -
+                        blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, playerPosition, parPlayer) +
+                        piecesNumberCoeff[1] * state.checkersOnBoard[parPlayer] /*+
+                        15 * numeroStruttureParallele(state.board, parPlayer)//+*/
+                // aggiunta adesso
+                //num2PiecesCoeff[0] * game.getNum2Conf(state, playerPosition, parPlayer)
+/*
+                //region densita
+                var enemyCount= 0
+                var playerCount = 0
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 2,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 2,parOpposite))
+                        enemyCount++
+                }
 
-                //region Calcolo valori per il value
-                for (position in playerPosition) {
-                    val vertex = MulinoGame.delinearizeVertex[position]
-                    val level = MulinoGame.deliearizeLevel[position]
-                    //region Calcolo morris
-                    when (vertex) {
-                        1, 3, 5, 7 -> {
-                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
-                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer)) {
-                                numMorrisesPlayer++
-                            }
-                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parPlayer)) &&
-                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parPlayer))) {
-                                numMorrisesPlayer++
-                            }
-                        }
-                    }
-                    //endregion
-                    //region BlockerPieces
-                    if (MulinoGame.checkNoMoves(state, position, parPlayer))
-                        blockedPieces++
-                    //endregion
+                val differenceOnLevel2 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel2 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel2 <= -2) {
+                    value -= densita
+                }
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 1,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 1,parOpposite))
+                        enemyCount++
+                }
 
-                    //region hasDoubleMorris
-                    when (vertex) {
-                        0, 2, 4, 6 -> {
-                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
-                                    State.isSet(state.board, nextVertex(nextVertex(vertex)), level, parPlayer) &&
-                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
-                                    State.isSet(state.board, previousVertex(previousVertex(vertex)), level, parPlayer))
-                                hasDoubleMorris = true
+                val differenceOnLevel1 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel1 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel1 <= -2) {
+                    value -= densita
+                }
 
-                        }
-                        else -> {
-                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
-                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
-                                    State.isSet(state.board, vertex, nextLevel(level), parPlayer) &&
-                                    State.isSet(state.board, vertex, nextLevel(level), parPlayer))
-                                hasDoubleMorris = true
-                        }
-                    }
-                    //endregion
+                for(vertexIndex in 0 until 8){
+                    if(State.isSet(state.board,vertexIndex * 3 + 0,parPlayer))
+                        playerCount++
+                    else if (State.isSet(state.board,vertexIndex * 3 + 0,parOpposite))
+                        enemyCount++
+                }
+
+                val differenceOnLevel0 = player-enemyCount
+                if(playerCount > 3 && differenceOnLevel0 > 2) {
+                    value += densita
+                }else if(enemyCount > 2 && differenceOnLevel0 <= -2) {
+                    value -= densita
                 }
                 //endregion
-
-                value += morrisesNumberCoeff[1] * numMorrisesPlayer -
-                        blockedOppPiecesCoeff[1] * blockedPieces +
-                        piecesNumberCoeff[1] * state.checkersOnBoard[parPlayer]
-
+*/
                 if (state.closedMorris) {
                     when (stateOpposite) {
                         parPlayer -> value += closedMorrisCoeff[1]
                         parOpposite -> value -= closedMorrisCoeff[1]
                     }
                 }
-                if (game.hasOpenedMorris(state, playerPosition, parPlayer))
-                    value += openedMorrisCoeff
-                if (hasDoubleMorris)
+
+                var hasOpenMorris = false
+                var enemyImpossible = true
+                var bonus = false
+
+                outer@ for (position in playerPosition) {
+                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
+                        val vertex = MulinoGame.delinearizeVertex[adiacentPosition]
+                        val level = MulinoGame.deliearizeLevel[adiacentPosition]
+                        if (State.isNotSet(state.board, vertex, level) && MulinoGame.checkMorris(state, position, adiacentPosition, parPlayer)) {
+                            hasOpenMorris = true
+                            if (level == 2)
+                                bonus = true
+                            if (parPlayer == state.playerType) {
+                                impossible@ for (adiacentToMorris in MulinoGame.adiacentPositions[adiacentPosition]) {
+                                    // vero solo se entrambi in fase 2, se uno in fase 2 e l'altro in fase 3 non è vero ma meh..
+                                    if (State.isSet(state.board, adiacentToMorris, parOpposite)) {
+                                        enemyImpossible = false
+                                        break@impossible
+                                    }
+                                }
+                            }
+                            break@outer
+                        }
+                    }
+                }
+
+                if (hasOpenMorris) {
+                    if (enemyImpossible && parPlayer == state.playerType) { // mio turno)
+                        if (bonus)
+                            value += 15.0
+                        value += openedMorrisCoeff * 1.5
+                    } else {
+                        if (bonus)
+                            value += 15.0
+                        value += openedMorrisCoeff
+                    }
+                }
+                if (game.hasDoubleMorris(state, playerPosition, parPlayer))
                     value += doubleMorrisCoeff
             }
+        /*
+        2 -> {
+            var numMorrisesPlayer: Int = 0
+            var blockedPieces: Int = 0
+            var hasOpenedMorris: Boolean = false
+            var hasDoubleMorris: Boolean = false
 
+            //region Calcolo valori per il value
+            for (position in playerPosition) {
+                val vertex = MulinoGame.delinearizeVertex[position]
+                val level = MulinoGame.deliearizeLevel[position]
+                //region Calcolo morris
+                when (vertex) {
+                    1, 3, 5, 7 -> {
+                        if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
+                                State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer)) {
+                            numMorrisesPlayer++
+                        }
+                        if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parPlayer)) &&
+                                (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parPlayer))) {
+                            numMorrisesPlayer++
+                        }
+                    }
+                }
+                //endregion
+                //region BlockerPieces
+                if (MulinoGame.checkNoMoves(state, position, parPlayer))
+                    blockedPieces++
+                //endregion
+
+                //region hasDoubleMorris
+                when (vertex) {
+                    0, 2, 4, 6 -> {
+                        if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                State.isSet(state.board, nextVertex(nextVertex(vertex)), level, parPlayer) &&
+                                State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                State.isSet(state.board, previousVertex(previousVertex(vertex)), level, parPlayer))
+                            hasDoubleMorris = true
+
+                    }
+                    else -> {
+                        if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                State.isSet(state.board, vertex, nextLevel(level), parPlayer) &&
+                                State.isSet(state.board, vertex, nextLevel(level), parPlayer))
+                            hasDoubleMorris = true
+                    }
+                }
+                //endregion
+            }
+            //endregion
+
+            value += morrisesNumberCoeff[1] * numMorrisesPlayer -
+                    blockedOppPiecesCoeff[1] * blockedPieces +
+                    piecesNumberCoeff[1] * state.checkersOnBoard[parPlayer]
+
+            if (state.closedMorris) {
+                when (stateOpposite) {
+                    parPlayer -> value += closedMorrisCoeff[1]
+                    parOpposite -> value -= closedMorrisCoeff[1]
+                }
+            }
+            if (game.hasOpenedMorris(state, playerPosition, parPlayer))
+                value += openedMorrisCoeff
+            if (hasDoubleMorris)
+                value += doubleMorrisCoeff
+        }
+*/
             3 -> {
                 var num2Pieces = 0
                 var num3Pieces = 0
@@ -529,7 +678,8 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         piecesNumberCoeff[0] * state.checkersOnBoard[parOpposite] -
                         piecesNumberCoeff[0] * state.checkers[parOpposite] -
                         num2PiecesCoeff[0] * num2Pieces -
-                        num3PiecesCoeff[0] * num3Pieces/* -
+                        num3PiecesCoeff[0] * num3Pieces/*-
+                        15.0 * numeroStruttureParallele(state.board, parOpposite)*//* -
                         5.0 * numeroStruttureParallele(state.board, parPlayer)*/
 
             }
@@ -537,10 +687,48 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             2 -> {
                 value += -morrisesNumberCoeff[1] * game.getNumMorrises(state, enemyPosition, parOpposite) +
                         blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, enemyPosition, parOpposite) -
-                        piecesNumberCoeff[1] * state.checkersOnBoard[parOpposite]
+                        piecesNumberCoeff[1] * state.checkersOnBoard[parOpposite] /*+
+                        15.0 * numeroStruttureParallele(state.board, parOpposite)*///-
+                // aggiunta adesso
+                //num2PiecesCoeff[0] * game.getNum2Conf(state, enemyPosition, parOpposite)
 
-                if (game.hasOpenedMorris(state, enemyPosition, parOpposite))
-                    value -= openedMorrisCoeff
+                var hasOpenMorris = false
+                var enemyImpossible = true
+                var bonus = false
+
+                outer@ for (position in enemyPosition) {
+                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
+                        val vertex = MulinoGame.delinearizeVertex[adiacentPosition]
+                        val level = MulinoGame.deliearizeLevel[adiacentPosition]
+                        if (State.isNotSet(state.board, vertex, level) && MulinoGame.checkMorris(state, position, adiacentPosition, parOpposite)) {
+                            hasOpenMorris = true
+                            if (level == 2)
+                                bonus = true
+                            if (parPlayer == state.playerType) {
+                                impossible@ for (adiacentToMorris in MulinoGame.adiacentPositions[adiacentPosition]) {
+                                    // vero solo se entrambi in fase 2, se uno in fase 2 e l'altro in fase 3 non è vero ma meh..
+                                    if (State.isSet(state.board, adiacentToMorris, parPlayer)) {
+                                        enemyImpossible = false
+                                        break@impossible
+                                    }
+                                }
+                            }
+                            break@outer
+                        }
+                    }
+                }
+
+                if (hasOpenMorris) {
+                    if (enemyImpossible && parPlayer == state.playerType) { // mio turno)
+                        if (bonus)
+                            value -= 15.0
+                        value -= openedMorrisCoeff * 1.5
+                    } else {
+                        if (bonus)
+                            value -= 15.0
+                        value -= openedMorrisCoeff
+                    }
+                }
                 if (game.hasDoubleMorris(state, enemyPosition, parOpposite))
                     value -= doubleMorrisCoeff
             }
