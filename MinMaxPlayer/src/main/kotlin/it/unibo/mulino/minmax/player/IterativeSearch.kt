@@ -72,7 +72,12 @@ class IterativeSearch(
                 val actionValue = minValue(game.getResult(state, action), player, alpha, beta, 1)
                 if (timeout)
                     break
-                actionValueMap.enqueue(action, -actionValue)
+                if (actionValue <= alpha)
+                    actionValueMap.enqueue(action, -actionValue + 1)
+                else {
+                    actionValueMap.enqueue(action, -actionValue)
+                    alpha = max(actionValue, alpha)
+                }
                 //ricavo l'azione come stringa
                 val (from, to, remove) = ActionMapper.actionMap[action]
                         ?: throw IllegalStateException("Mapping azione(int) azione(string) non trovato")
@@ -150,9 +155,9 @@ class IterativeSearch(
 
         val hash = hash(state, player)
         val cached = cache.retrieve(hash)
-        cacheTotal++
+        //cacheTotal++
         if (cached != null) {
-            cacheHit++
+            //cacheHit++
             return cached
         }
 

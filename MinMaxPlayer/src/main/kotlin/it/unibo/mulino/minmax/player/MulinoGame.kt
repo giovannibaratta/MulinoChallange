@@ -71,7 +71,7 @@ object MulinoGame : Game() {
     // Posizione adiacenti ad ogni posizione della board. L'indice dell'array esterno
     // indica la posizione della board, mentre l'array interno sono le relative posizioni
     // adiacenti
-    private val adiacentPositions = arrayOf(
+    val adiacentPositions = arrayOf(
             intArrayOf(21, 3), // 0
             intArrayOf(22, 4), // 1
             intArrayOf(23, 5), // 2
@@ -98,14 +98,14 @@ object MulinoGame : Game() {
             intArrayOf(2, 20, 22) // 23
     )
 
-    private fun nextVertex(vertex: Int) = (vertex + 1) % 8
-    private fun nextLevel(level: Int) = (level + 1) % 3
-    private fun previousVertex(vertex: Int) = when (vertex) {
+    fun nextVertex(vertex: Int) = (vertex + 1) % 8
+    fun nextLevel(level: Int) = (level + 1) % 3
+    fun previousVertex(vertex: Int) = when (vertex) {
         0 -> 7
         else -> vertex - 1
     }
 
-    private fun previousLevel(level: Int) = when (level) {
+    fun previousLevel(level: Int) = when (level) {
         0 -> 2
         else -> level - 1
     }
@@ -338,7 +338,7 @@ object MulinoGame : Game() {
         }
     }
 
-    private fun checkMorris(state: State, oldPosition: Int, newPosition: Int, playerType: Int): Boolean {
+    fun checkMorris(state: State, oldPosition: Int, newPosition: Int, playerType: Int): Boolean {
         val oldVertex = delinearizeVertex[oldPosition]
         val oldLevel = deliearizeLevel[oldPosition]
         val newVertex = delinearizeVertex[newPosition]
@@ -380,7 +380,7 @@ object MulinoGame : Game() {
     }
 
 
-    private fun checkNoMoves(state: State, playerType: Int): Boolean {
+    fun checkNoMoves(state: State, playerType: Int): Boolean {
         for (position in getPositions(state, playerType))
             if (!checkNoMoves(state, position, playerType))
                 return false
@@ -390,7 +390,7 @@ object MulinoGame : Game() {
     /**
      * true se il player non si può muovere
      */
-    private fun checkNoMoves(state: State, position: Int, playerType: Int): Boolean {
+    fun checkNoMoves(state: State, position: Int, playerType: Int): Boolean {
         val vertex = delinearizeVertex[position]
         val level = deliearizeLevel[position]
 

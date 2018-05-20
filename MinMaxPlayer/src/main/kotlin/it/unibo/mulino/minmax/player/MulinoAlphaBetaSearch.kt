@@ -1,6 +1,9 @@
 package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.actions.Phase1Action
+import it.unibo.mulino.minmax.player.MulinoGame.nextLevel
+import it.unibo.mulino.minmax.player.MulinoGame.nextVertex
+import it.unibo.mulino.minmax.player.MulinoGame.previousVertex
 import it.unibo.utils.FibonacciHeap
 import it.unibo.ai.didattica.mulino.domain.State as ChesaniState
 import it.unibo.mulino.qlearning.player.model.State as QLearningState
@@ -33,6 +36,32 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
     fun makeDecision(state: State): Action = iterativeSearch.makeDecision(state)
 
 
+    // le prime 4 posizioni devono essere necessariamente occupate mentre le ultime 2 devono o essere libere
+    // o al max 1 occupata
+    val paralleli = arrayOf(
+            intArrayOf(6, 12, 7, 13, 9, 10),
+            intArrayOf(7, 13, 8, 14, 10, 11),
+            intArrayOf(2, 20, 1, 19, 23, 22),
+            intArrayOf(1, 19, 0, 18, 22, 21),
+            intArrayOf(6, 0, 7, 1, 3, 4),
+            intArrayOf(7, 8, 1, 2, 4, 5),
+            intArrayOf(14, 13, 20, 19, 17, 16),
+            intArrayOf(13, 12, 19, 18, 16, 15)
+    )
+
+    fun numeroStruttureParallele(board: IntArray, playerType: Int): Int {
+        var count = 0
+        for (parallelo in paralleli) {
+            if (State.isSet(board, parallelo[0], playerType) &&
+                    State.isSet(board, parallelo[1], playerType) &&
+                    State.isSet(board, parallelo[2], playerType) &&
+                    State.isSet(board, parallelo[3], playerType) &&
+                    ((State.isNotSet(board, parallelo[4]) && State.isNotSet(board, parallelo[5])) || (State.isNotSet(board, parallelo[4]) && State.isSet(board, parallelo[5], playerType)) || (State.isNotSet(board, parallelo[5]) && State.isSet(board, parallelo[4], playerType))))
+                count++
+        }
+        return count
+    }
+
     fun eval(state: State, player: Int): Double {
         var value = 0.0 /*super.eval(state, player)*/
 
@@ -63,12 +92,133 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
         when (parPlayerPhase) {
             1 -> {
-                value += morrisesNumberCoeff[0] * game.getNumMorrises(state, playerPosition, parPlayer) -
-                        blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, playerPosition, parPlayer) +
+
+                var numMorrisesPlayer: Int = 0
+                var blockedPieces: Int = 0
+                var num2Pieces = 0
+                var num3Pieces = 0
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Calcolo morris
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer)) {
+                                numMorrisesPlayer++
+                            }
+                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parPlayer)) &&
+                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parPlayer))) {
+                                numMorrisesPlayer++
+                            }
+                        }
+                    }
+                    //endregion
+                    //region BlockerPieces
+                    if (MulinoGame.checkNoMoves(state, position, parPlayer))
+                        blockedPieces++
+                    //endregion
+                    //region Num2Pieces
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, MulinoGame.previousVertex(vertex), level))
+                                num2Pieces++
+                            else if (State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, MulinoGame.nextVertex(vertex), level))
+                                num2Pieces++
+                            when (level) {
+                                0 -> {
+                                    if (State.isSet(state.board, vertex, 1, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                }
+                                1 -> {
+                                    if (State.isSet(state.board, vertex, 0, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                    else if (State.isSet(state.board, vertex, 2, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                                2 -> {
+                                    if (State.isSet(state.board, vertex, 1, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                    //region Num3Pieces
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, nextVertex(nextVertex(vertex)), level) &&
+                                    State.isNotSet(state.board, previousVertex(previousVertex(vertex)), level))
+                                num3Pieces++
+
+                        }
+                        else -> {
+                            when (level) {
+                                1 -> {
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(level), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                }
+                //endregion
+
+                value += morrisesNumberCoeff[0] * numMorrisesPlayer -
+                        blockedOppPiecesCoeff[0] * blockedPieces +
                         piecesNumberCoeff[0] * state.checkersOnBoard[parPlayer] +
                         piecesNumberCoeff[0] * state.checkers[parPlayer] +
-                        num2PiecesCoeff[0] * game.getNum2Conf(state, playerPosition, parPlayer) +
-                        num3PiecesCoeff[0] * game.getNum3Conf(state, playerPosition, parPlayer)
+                        num2PiecesCoeff[0] * num2Pieces +
+                        num3PiecesCoeff[0] * num3Pieces/*+
+                        5.0 * numeroStruttureParallele(state.board, parPlayer)*/
                 if (state.closedMorris) {
                     when (stateOpposite) {
                         parPlayer -> value += closedMorrisCoeff[0]
@@ -78,8 +228,68 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             }
 
             2 -> {
-                value += morrisesNumberCoeff[1] * game.getNumMorrises(state, playerPosition, parPlayer) -
-                        blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, playerPosition, parPlayer) +
+
+                var numMorrisesPlayer: Int = 0
+                var blockedPieces: Int = 0
+                var hasOpenedMorris: Boolean = false
+                var hasDoubleMorris: Boolean = false
+
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Calcolo morris
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer)) {
+                                numMorrisesPlayer++
+                            }
+                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parPlayer)) &&
+                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parPlayer))) {
+                                numMorrisesPlayer++
+                            }
+                        }
+                    }
+                    //endregion
+                    //region BlockerPieces
+                    if (MulinoGame.checkNoMoves(state, position, parPlayer))
+                        blockedPieces++
+                    //endregion
+                    //region hasOpenedMorris
+                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
+                        val vertexAdj = MulinoGame.delinearizeVertex[adiacentPosition]
+                        val levelAdj = MulinoGame.deliearizeLevel[adiacentPosition]
+                        if (State.isNotSet(state.board, vertexAdj, levelAdj) && MulinoGame.checkMorris(state, position, adiacentPosition, parPlayer)) {
+                            hasOpenedMorris = true
+                            break
+                        }
+                    }
+                    //endregion
+                    //region hasDoubleMorris
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, nextVertex(nextVertex(vertex)), level, parPlayer) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, previousVertex(previousVertex(vertex)), level, parPlayer))
+                                hasDoubleMorris = true
+
+                        }
+                        else -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, vertex, nextLevel(level), parPlayer) &&
+                                    State.isSet(state.board, vertex, nextLevel(level), parPlayer))
+                                hasDoubleMorris = true
+                        }
+                    }
+                    //endregion
+                }
+                //endregion
+
+                value += morrisesNumberCoeff[1] * numMorrisesPlayer -
+                        blockedOppPiecesCoeff[1] * blockedPieces +
                         piecesNumberCoeff[1] * state.checkersOnBoard[parPlayer]
 
                 if (state.closedMorris) {
@@ -88,15 +298,116 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         parOpposite -> value -= closedMorrisCoeff[1]
                     }
                 }
-                if (game.hasOpenedMorris(state, parPlayer))
+                if (hasOpenedMorris)
                     value += openedMorrisCoeff
-                if (game.hasDoubleMorris(state, parPlayer))
+                if (hasDoubleMorris)
                     value += doubleMorrisCoeff
             }
 
             3 -> {
-                value += num2PiecesCoeff[1] * game.getNum2Conf(state, playerPosition, parPlayer) +
-                        num3PiecesCoeff[1] * game.getNum3Conf(state, playerPosition, parPlayer)
+
+                var num2Pieces = 0
+                var num3Pieces = 0
+
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Num2Pieces
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, MulinoGame.previousVertex(vertex), level))
+                                num2Pieces++
+                            else if (State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, MulinoGame.nextVertex(vertex), level))
+                                num2Pieces++
+                            when (level) {
+                                0 -> {
+                                    if (State.isSet(state.board, vertex, 1, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                }
+                                1 -> {
+                                    if (State.isSet(state.board, vertex, 0, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                    else if (State.isSet(state.board, vertex, 2, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                                2 -> {
+                                    if (State.isSet(state.board, vertex, 1, parPlayer) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                    //region Num3Pieces
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parPlayer) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parPlayer) &&
+                                    State.isNotSet(state.board, nextVertex(nextVertex(vertex)), level) &&
+                                    State.isNotSet(state.board, previousVertex(previousVertex(vertex)), level))
+                                num3Pieces++
+
+                        }
+                        else -> {
+                            when (level) {
+                                1 -> {
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(level), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parPlayer)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parPlayer)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                }
+                //endregion
+
+                value += num2PiecesCoeff[1] * num2Pieces +
+                        num3PiecesCoeff[1] * num3Pieces
 
                 if (state.closedMorris && stateOpposite == parPlayer)
                     value += closedMorrisCoeff[2]
@@ -105,28 +416,309 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
 
         when (parOppositePhase) {
             1 -> {
-                value += -morrisesNumberCoeff[0] * game.getNumMorrises(state, enemyPosition, parOpposite) +
-                        blockedOppPiecesCoeff[0] * game.getBlockedPieces(state, enemyPosition, parOpposite) -
+
+                var numMorrisesPlayer: Int = 0
+                var blockedPieces: Int = 0
+                var num2Pieces = 0
+                var num3Pieces = 0
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Calcolo morris
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parOpposite)) {
+                                numMorrisesPlayer++
+                            }
+                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parOpposite)) &&
+                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parOpposite))) {
+                                numMorrisesPlayer++
+                            }
+                        }
+                    }
+                    //endregion
+                    //region BlockerPieces
+                    if (MulinoGame.checkNoMoves(state, position, parOpposite))
+                        blockedPieces++
+                    //endregion
+                    //region Num2Pieces
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, MulinoGame.previousVertex(vertex), level))
+                                num2Pieces++
+                            else if (State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, MulinoGame.nextVertex(vertex), level))
+                                num2Pieces++
+                            when (level) {
+                                0 -> {
+                                    if (State.isSet(state.board, vertex, 1, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                }
+                                1 -> {
+                                    if (State.isSet(state.board, vertex, 0, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                    else if (State.isSet(state.board, vertex, 2, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                                2 -> {
+                                    if (State.isSet(state.board, vertex, 1, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                    //region Num3Pieces
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, nextVertex(nextVertex(vertex)), level) &&
+                                    State.isNotSet(state.board, previousVertex(previousVertex(vertex)), level))
+                                num3Pieces++
+
+                        }
+                        else -> {
+                            when (level) {
+                                1 -> {
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(level), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                }
+                //endregion
+
+                value += -morrisesNumberCoeff[0] * numMorrisesPlayer +
+                        blockedOppPiecesCoeff[0] * blockedPieces -
                         piecesNumberCoeff[0] * state.checkersOnBoard[parOpposite] -
                         piecesNumberCoeff[0] * state.checkers[parOpposite] -
-                        num2PiecesCoeff[0] * game.getNum2Conf(state, enemyPosition, parOpposite) -
-                        num3PiecesCoeff[0] * game.getNum3Conf(state, enemyPosition, parOpposite)
+                        num2PiecesCoeff[0] * num2Pieces -
+                        num3PiecesCoeff[0] * num3Pieces/* -
+                        5.0 * numeroStruttureParallele(state.board, parPlayer)*/
             }
 
             2 -> {
-                value += -morrisesNumberCoeff[1] * game.getNumMorrises(state, enemyPosition, parOpposite) +
-                        blockedOppPiecesCoeff[1] * game.getBlockedPieces(state, enemyPosition, parOpposite) -
+
+                var numMorrisesPlayer: Int = 0
+                var blockedPieces: Int = 0
+                var hasOpenedMorris: Boolean = false
+                var hasDoubleMorris: Boolean = false
+
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Calcolo morris
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parOpposite)) {
+                                numMorrisesPlayer++
+                            }
+                            if (level == 1 && (State.isSet(state.board, vertex, MulinoGame.nextLevel(level), parOpposite)) &&
+                                    (State.isSet(state.board, vertex, MulinoGame.nextLevel(MulinoGame.nextLevel(level)), parOpposite))) {
+                                numMorrisesPlayer++
+                            }
+                        }
+                    }
+                    //endregion
+                    //region BlockerPieces
+                    if (MulinoGame.checkNoMoves(state, position, parOpposite))
+                        blockedPieces++
+                    //endregion
+                    //region hasOpenedMorris
+                    for (adiacentPosition in MulinoGame.adiacentPositions[position]) {
+                        val vertexAdj = MulinoGame.delinearizeVertex[adiacentPosition]
+                        val levelAdj = MulinoGame.deliearizeLevel[adiacentPosition]
+                        if (State.isNotSet(state.board, vertexAdj, levelAdj) && MulinoGame.checkMorris(state, position, adiacentPosition, parOpposite)) {
+                            hasOpenedMorris = true
+                            break
+                        }
+                    }
+                    //endregion
+                    //region hasDoubleMorris
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, nextVertex(nextVertex(vertex)), level, parOpposite) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, previousVertex(previousVertex(vertex)), level, parOpposite))
+                                hasDoubleMorris = true
+
+                        }
+                        else -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, vertex, nextLevel(level), parOpposite) &&
+                                    State.isSet(state.board, vertex, nextLevel(level), parOpposite))
+                                hasDoubleMorris = true
+                        }
+                    }
+                    //endregion
+                }
+                //endregion
+
+                value += -morrisesNumberCoeff[1] * numMorrisesPlayer +
+                        blockedOppPiecesCoeff[1] * blockedPieces -
                         piecesNumberCoeff[1] * state.checkersOnBoard[parOpposite]
 
-                if (game.hasOpenedMorris(state, parOpposite))
+                if (hasOpenedMorris)
                     value -= openedMorrisCoeff
-                if (game.hasDoubleMorris(state, parOpposite))
+                if (hasDoubleMorris)
                     value -= doubleMorrisCoeff
             }
 
             3 -> {
-                value += -num2PiecesCoeff[1] * game.getNum2Conf(state, enemyPosition, parOpposite) -
-                        num3PiecesCoeff[1] * game.getNum3Conf(state, enemyPosition, parOpposite)
+
+                var num2Pieces = 0
+                var num3Pieces = 0
+
+                //region Calcolo valori per il value
+                for (position in playerPosition) {
+                    val vertex = MulinoGame.delinearizeVertex[position]
+                    val level = MulinoGame.deliearizeLevel[position]
+                    //region Num2Pieces
+                    when (vertex) {
+                        1, 3, 5, 7 -> {
+                            if (State.isSet(state.board, MulinoGame.nextVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, MulinoGame.previousVertex(vertex), level))
+                                num2Pieces++
+                            else if (State.isSet(state.board, MulinoGame.previousVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, MulinoGame.nextVertex(vertex), level))
+                                num2Pieces++
+                            when (level) {
+                                0 -> {
+                                    if (State.isSet(state.board, vertex, 1, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                }
+                                1 -> {
+                                    if (State.isSet(state.board, vertex, 0, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 2))
+                                        num2Pieces++
+                                    else if (State.isSet(state.board, vertex, 2, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                                2 -> {
+                                    if (State.isSet(state.board, vertex, 1, parOpposite) &&
+                                            State.isNotSet(state.board, vertex, 0))
+                                        num2Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                    //region Num3Pieces
+                    when (vertex) {
+                        0, 2, 4, 6 -> {
+                            if (State.isSet(state.board, nextVertex(vertex), level, parOpposite) &&
+                                    State.isSet(state.board, previousVertex(vertex), level, parOpposite) &&
+                                    State.isNotSet(state.board, nextVertex(nextVertex(vertex)), level) &&
+                                    State.isNotSet(state.board, previousVertex(previousVertex(vertex)), level))
+                                num3Pieces++
+
+                        }
+                        else -> {
+                            when (level) {
+                                1 -> {
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(level), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(level), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(level))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), nextLevel(nextLevel(level)))) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, nextVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, previousVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(level), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(nextLevel(level)))))
+                                        num3Pieces++
+                                    if ((State.isSet(state.board, previousVertex(vertex), level, parOpposite)) &&
+                                            (State.isSet(state.board, vertex, nextLevel(nextLevel(level)), parOpposite)) &&
+                                            (State.isNotSet(state.board, nextVertex(vertex), level)) &&
+                                            (State.isNotSet(state.board, vertex, nextLevel(level))))
+                                        num3Pieces++
+                                }
+                            }
+                        }
+                    }
+                    //endregion
+                }
+
+                value += -num2PiecesCoeff[1] * num2Pieces -
+                        num3PiecesCoeff[1] * num3Pieces
                 if (state.closedMorris && stateOpposite == parOpposite) {
                     value -= closedMorrisCoeff[2]
                 }
