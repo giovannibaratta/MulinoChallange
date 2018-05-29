@@ -11,6 +11,7 @@ Progetto sviluppato per la competizione "Gioco del mulino A.A. 2017/2018" del co
 # Parametri per lanciare il client:
 
 Per il giocatore bianco -> `java -jar client.jar White MinMax`
+
 Per il giocatore nero -> `java -jar client.jar Black MinMax`
 
 # Descrizione
