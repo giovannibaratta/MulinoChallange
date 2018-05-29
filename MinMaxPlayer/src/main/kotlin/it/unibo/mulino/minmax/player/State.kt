@@ -2,7 +2,14 @@ package it.unibo.mulino.minmax.player
 
 import java.util.*
 
-// TODO("Override delle hashcode e equals della classe")
+// TODO("Override di equals")
+/**
+ * [playerType] : Indica il giocatore che deve eseguire la prossima mossa
+ * [board] : board[0] rappresenta la board del player bianco,  board[1] rappresenta la board del player nero
+ * [checkers] : rappresentano le pedine in mano al giocatore bianco e nero
+ * [checkersOnBoard] : rappresentano le pedine sulla board del giocatore bianco e nero, dato ridondante
+ * [closedMorris] : true se l'azione che ha portato in questo stato ha generato un morris
+ */
 data class State(
         val playerType: Int,
         val board: IntArray = intArrayOf(0, 0),
@@ -57,7 +64,7 @@ data class State(
         // Controlla se nella board è presente la pedina del giocatore indicato, nella posizione indicata
         fun isSet(board: IntArray, x: Int, y: Int, player: Int): Boolean = board[player].and(position[x * 3 + y]) > 0
 
-        // Controlla se nella board non è presente nessuna pedina (empty)
+        // Controlla se nella board non è presente nessuna pedina (empty) nella posizione specificata
         fun isNotSet(board: IntArray, x: Int, y: Int): Boolean = !State.isSet(board, x, y, 0) && !State.isSet(board, x, y, 1)
 
         fun isSet(board: IntArray, posToCheck: Pair<Int, Int>, player: Int): Boolean = board[player].and(position[posToCheck.first * 3 + posToCheck.second]) > 0

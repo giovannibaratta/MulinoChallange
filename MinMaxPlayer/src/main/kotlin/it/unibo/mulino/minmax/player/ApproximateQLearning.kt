@@ -5,6 +5,7 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
                                  private val featureExtractors: Array<(T, E, T) -> Double>,
                                  val weights: DoubleArray = DoubleArray(featureExtractors.size, { 0.0 }),
                                  private val actionsFromState: (T) -> List<E>,
+                                 private val explorationRate: Double,
                                  private val applyAction: (T, E) -> Pair<Double, T> // reward State
 ) {
 
@@ -16,26 +17,32 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         return value
     }
 
-    fun think(state: T, actions: MutableList<E>): MutableList<E>/*List<Pair<E, Double>>*/ {
+    fun think(state: T, actions: ArrayList<E>): ArrayList<E>/*List<Pair<E, Double>>*/ {
         //printActionValue(state)
-        //val nextActionAndValue = actions.map { Pair(it, qValue(state, it, applyAction(state, it).second)) }
-        //        .sortedByDescending { it.second }
+        val nextActionAndValue = actions.map { Pair(it, qValue(state, it, applyAction(state, it).second)) }
+                .sortedByDescending { it.second }.toMutableList()
 
-        val nextActionAndValue = actions
-        nextActionAndValue.sortBy { qValue(state, it, applyAction(state, it).second) }
+        //val nextActionAndValue = actions
+        //nextActionAndValue.sortBy { qValue(state, it, applyAction(state, it).second) }
+        if (explorationRate > Math.random()) {
+            val random = Math.round(Math.random() * nextActionAndValue.size).toInt() % nextActionAndValue.size
+            val action = nextActionAndValue.get(random)
+            val first = nextActionAndValue[0]
+            nextActionAndValue[0] = action
+            nextActionAndValue[random] = first
+        }
 
-        /*
         val alpha = alpha()
         // fine dei giochi
-        if (nextActionAndValue.isEmpty()) return mutableListOf()
+        if (nextActionAndValue.isEmpty()) return arrayListOf()
 
         if (alpha <= 0)
-            return nextActionAndValue // no update
+            return ArrayList(nextActionAndValue.map { it.first }) // no update
 
         val bestActionValue = nextActionAndValue.first()
 
         val reward = applyAction(state, bestActionValue.first)
-        //println("Reward : " + reward.first)
+        println("Reward : " + reward.first)
         val difference = (reward.first +
                 (discount() * (getSortedAction(reward.second).firstOrNull()?.second ?: 0.0))) - bestActionValue.second
 
@@ -43,8 +50,8 @@ class ApproximateQLearning<T, E>(private val alpha: () -> Double,
         // aggiorno i pesi
         for (index in weights.indices)
             weights[index] += alpha * difference * featureExtractors[index](state, bestActionValue.first, reward.second)
-        */
-        return nextActionAndValue
+
+        return ArrayList(nextActionAndValue.map { it.first })
     }
 
     /*

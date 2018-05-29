@@ -132,7 +132,7 @@ class IterativeSearch(
     // returns an utility value
     fun maxValue(state: State, player: Player, previousAlpha: Double, previousBeta: Double, depth: Int): Double {
         var alpha = previousAlpha
-        exploredNode++
+        //exploredNode++
         //updateMetrics(depth)
 
         if (game.isTerminal(state) || depth >= depthLimit || timeout) {
@@ -176,7 +176,7 @@ class IterativeSearch(
     // returns an utility value
     fun minValue(state: State, player: Player, previousAlpha: Double, previousBeta: Double, depth: Int): Double {
         var beta = previousBeta
-        exploredNode++
+        //exploredNode++
         if (game.isTerminal(state) || depth >= depthLimit || timeout) {
             return evaluation(state, player, eval)
         } else {

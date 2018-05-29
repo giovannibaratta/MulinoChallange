@@ -14,7 +14,7 @@ import it.unibo.mulino.minmax.player.State as MinMaxState
 
 class Trainer : AIPlayer {
 
-    private val player = QLearningPlayerAlternative({ 0.05 })
+    private val player = QLearningPlayerAlternative({ 0.1 })
 
     private fun convert(state: State, player: State.Checker): MinMaxState {
         /*

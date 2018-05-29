@@ -8,8 +8,14 @@ abstract class Game {
 
     abstract fun getPlayer(state: State): Player
 
+    /**
+     * Dato uno stato [state] genera tutte le azioni valide che è possibile eseguire
+     */
     abstract fun getActions(state: State): Actions
 
+    /**
+     * Dato uno stato [state] e l'hash [actionHash] di un'azione, genera lo stato risultate
+     */
     abstract fun getResult(state: State, actionHash: Action): State
 
     abstract fun isTerminal(state: State): Boolean

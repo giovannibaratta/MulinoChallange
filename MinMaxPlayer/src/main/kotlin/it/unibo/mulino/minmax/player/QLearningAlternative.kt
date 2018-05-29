@@ -502,39 +502,70 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
 
     private val phase1Reward = { oldState: MinMaxState, action: Int, newState: MinMaxState ->
 
+        //TODO("openMorris Safe prende un bonus")
+        val opposite = MulinoGame.opposite(oldState.playerType)
         val oldPlayerPosition = MulinoGame.getPositions(oldState, oldState.playerType)
         val newPlayerPosition = MulinoGame.getPositions(newState, oldState.playerType)
+        val oldOppositePosition = MulinoGame.getPositions(oldState, opposite)
+        val newOppositePosition = MulinoGame.getPositions(newState, opposite)
+
 
         var reward = 0.0
         if (!MulinoGame.hasOpenedMorris(oldState, oldPlayerPosition, oldState.playerType)
-                && MulinoGame.hasOpenedMorris(newState, newPlayerPosition, oldState.playerType))
-            reward += 1.0
+                && MulinoGame.hasOpenedMorris(newState, newPlayerPosition, oldState.playerType)) {
+            reward += 0.3
+            //println("Reward open morris")
+        }
 
-        if (newState.closedMorris)
+        if (MulinoGame.hasOpenedMorris(oldState, oldOppositePosition, oldState.playerType)
+                && MulinoGame.hasOpenedMorris(newState, newOppositePosition, oldState.playerType)) {
+            reward -= 1.5
+            //println("Reward negativo open morris")
+        }
+
+        val enemyMoves = MulinoGame.getActions(newState)
+        for (enemyAction in enemyMoves) {
+            val enemyNewstate = MulinoGame.getResult(newState, enemyAction)
+            if (MulinoGame.isWinner(enemyNewstate, MulinoGame.opposite(oldState.playerType))) {
+                //   println("Enemy può vincere")
+                reward -= 25.0
+                break
+            }
+        }
+
+
+        if (newState.closedMorris) {
+            // println("Reward closed morris")
             reward += 5.0
+        }
 
         val myBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldPlayerPosition, oldState.playerType) -
                 MulinoGame.getBlockedPieces(newState, newPlayerPosition, oldState.playerType)
 
-        val opposite = MulinoGame.opposite(oldState.playerType)
-        val oldOppositePosition = MulinoGame.getPositions(oldState, opposite)
-        val newOppositePosition = MulinoGame.getPositions(newState, opposite)
         val enemyBlockedDiff = MulinoGame.getBlockedPieces(oldState, oldOppositePosition, opposite) -
                 MulinoGame.getBlockedPieces(newState, newOppositePosition, opposite)
 
-        if (myBlockedDiff > 0)
-            reward += 0.5
-        else if (myBlockedDiff < 0)
-            reward -= 0.5
+        if (myBlockedDiff > 0) {
+            reward += 0.75
+            //println("Reward positivo blocked")
+        } else if (myBlockedDiff < 0) {
+            reward -= 0.75
+            //println("Reward negativo blocked")
+        }
 
-        if (enemyBlockedDiff > 0)
-            reward -= 0.5
-        else if (enemyBlockedDiff < 0)
-            reward += 0.5
+        if (enemyBlockedDiff > 0) {
+            reward -= 0.75
+            //println("Reward enemy negativo blocked")
+        } else if (enemyBlockedDiff < 0) {
+            reward += 0.75
+            //println("Reward enemy positivo blocked")
+        }
 
-        if (MulinoGame.isWinner(newState, oldState.playerType))
+        if (MulinoGame.isWinner(newState, oldState.playerType)) {
             reward += 25.0
-
+            //  println("Reward vittoria")
+        }
+        //println("Reward totale $reward")
         reward
     }
     private val phase2Reward = phase1Reward
@@ -809,17 +840,23 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
 
     private val discount = 0.99
 
+
+    val exploreationRate = 0.1
+
     private val learnerPhase1 = ApproximateQLearning<MinMaxState, Int>(
             alpha,
             { discount }, featureExtractors = featuresPhase12,
             weights = phase1Weights,
             actionsFromState = actionFromStatePhase1,
-            applyAction = applyAction(phase1Reward))
+            applyAction = applyAction(phase1Reward),
+
+            explorationRate = exploreationRate)
+
 
     private val learnerPhase2 = ApproximateQLearning<MinMaxState, Int>(
             alpha,
             { discount },
-            //explorationRate = explorationRate,
+            explorationRate = exploreationRate,
             featureExtractors = featuresPhase12,
             weights = phase2Weights,
             actionsFromState = actionFromStatePhase2,
@@ -831,15 +868,17 @@ internal class QLearningPlayerAlternative(private val alpha: () -> Double) {
             weights = phaseFinalWeights,
             featureExtractors = featuresPhase3,
             actionsFromState = actionFromStatePhase3,
-            applyAction = applyAction(phase1Reward))
+            applyAction = applyAction(phase1Reward),
 
-    fun playPhase1(state: MinMaxState, actions: MutableList<Int>) =
+            explorationRate = exploreationRate)
+
+    fun playPhase1(state: MinMaxState, actions: ArrayList<Int>) =
             learnerPhase1.think(state, actions)
 
-    fun playPhase2(state: MinMaxState, actions: MutableList<Int>) =
+    fun playPhase2(state: MinMaxState, actions: ArrayList<Int>) =
             learnerPhase2.think(state, actions)
 
-    fun playPhase3(state: MinMaxState, actions: MutableList<Int>) =
+    fun playPhase3(state: MinMaxState, actions: ArrayList<Int>) =
             learnerPhase3.think(state, actions)
 
     private fun QLearningPlayerState.simulateWithCache(action: Action): ActionResult {

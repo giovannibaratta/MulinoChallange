@@ -2,6 +2,9 @@ package it.unibo.mulino.minmax.player
 
 import it.unibo.ai.didattica.mulino.domain.State.Checker
 
+/**
+ * Implementa le funzioni di [Game] più altre funzioni per la valutazione di uno stato
+ */
 object MulinoGame : Game() {
 
     const val WHITE_PLAYER = 0
@@ -14,7 +17,7 @@ object MulinoGame : Game() {
             Pair(BLACK_PLAYER, 'b')
     )
 
-    // Mapping tra le posizioni utilizzare nello stao di chesani e le posizioni interne
+    // Mapping tra le posizioni utilizzare nello stato di chesani e le posizioni interne
     val toInternalPositions = hashMapOf(
             Pair("a1", 0),
             Pair("b2", 1),
@@ -109,9 +112,6 @@ object MulinoGame : Game() {
         0 -> 2
         else -> level - 1
     }
-
-    //private fun previousVertex(vertex : Int) = (vertex - 1) % 7
-    //private fun previousLevel(level : Int) = (level - 1) % 3
 
     private val adiacentLevels = hashMapOf(
             Pair(0, arrayOf(1)),
@@ -614,70 +614,4 @@ object MulinoGame : Game() {
         return out
     }
 
-}
-
-
-fun main(args: Array<String>) {
-
-    val board = intArrayOf(0, 0)
-    MulinoGame.addPiece(board, 2, 0)
-
-    MulinoGame.addPiece(board, 1, 0)
-
-    MulinoGame.addPiece(board, 22, 0)
-
-    MulinoGame.addPiece(board, 19, 0)
-
-    MulinoGame.addPiece(board, 9, 1)
-
-    MulinoGame.addPiece(board, 12, 1)
-
-    MulinoGame.addPiece(board, 10, 1)
-
-    MulinoGame.addPiece(board, 4, 1)
-
-    MulinoGame.addPiece(board, 5, 1)
-
-    MulinoGame.addPiece(board, 16, 1)
-
-    MulinoGame.addPiece(board, 23, 1)
-
-    MulinoGame.addPiece(board, 21, 1)
-
-    println(MulinoGame.isTerminal(State(0, board, intArrayOf(0, 0), intArrayOf(4, 8), false)))
-    /*
-    val iteration = 1000000
-    var start = System.nanoTime()
-    for (z in 0 until iteration) {
-        val init = ArrayList<Int>(24)
-        for (i in 0 until 24)
-            init.add(i)
-        for (i in 0 until 24)
-            init[i] += 1
-    }
-    var end = System.nanoTime()
-    println("con init ${(end - start) / 1000}us")
-
-    start = System.nanoTime()
-    for (z in 0 until iteration) {
-        val init = ArrayList<Int>()
-        for (i in 0 until 24)
-            init.add(i)
-        for (i in 0 until 24)
-            init[i] += 1
-    }
-    end = System.nanoTime()
-    println("senza init ${(end - start) / 1000}us")
-
-    start = System.nanoTime()
-    for (z in 0 until iteration) {
-        val init = mutableListOf<Int>()
-        for (i in 0 until 24)
-            init.add(i)
-        for (i in 0 until 24)
-            init[i] += 1
-    }
-    end = System.nanoTime()
-    println("senza init ${(end - start) / 1000}us")
-    */
 }

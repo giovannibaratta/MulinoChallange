@@ -3,6 +3,10 @@ package it.unibo
 import java.util.concurrent.Semaphore
 import kotlin.concurrent.thread
 
+/**
+ * Main per simulare un torneo contro gli altri giocatori.
+ * TODO("Le raccolta delle statistiche è approssimativa e quindi i risultati sono sbagliati")
+ */
 fun main(args: Array<String>) {
 
 
@@ -19,27 +23,27 @@ fun main(args: Array<String>) {
     )
 
     val enemyWhite = arrayOf(
-            "white -t 55",
+            "white -t 15",
             "White",
-            "-w -t 55",
-            "-w -t 55", // deep
-            "-t 55",
+            "-w -t 15",
+            "-w -t 15", // deep
+            "-t 15",
             "White",
             "White"
     )
 
     val enemyBlack = arrayOf(
-            "black -t 55",
+            "black -t 15",
             "Black",
-            "-b -t 55",
-            "-b -t 55", // deep
-            "-b -t 55",
+            "-b -t 15",
+            "-b -t 15", // deep
+            "-b -t 15",
             "Black",
             "Black"
     )
 
-    val myClientW = "java -jar client.jar White MinMax"
-    val myClientB = "java -jar client.jar Black MinMax"
+    val myClientW = "java -jar client.jar White TrainerMinMax"
+    val myClientB = "java -jar client.jar Black TrainerMinMax"
     var sconfitte = 0
     var partite = 0
     var vittorie = 0

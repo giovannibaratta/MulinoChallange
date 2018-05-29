@@ -30,10 +30,24 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
             utilMin,
             utilMax,
             this::eval,
-            orderActions = { s, al, p, d -> al },
+            orderActions = this::orderdActions,
             maxTime = timeLimit)
 
     fun makeDecision(state: State): Action = iterativeSearch.makeDecision(state)
+
+
+    private val thinker = QLearningPlayerAlternative({ 0.0 })
+
+    private fun orderdActions(s: State, al: ArrayList<Int>, p: Int, d: Int): ArrayList<Int> {
+        if (!sortAction || d > 2)
+            return al
+        return when (s.currentPhase) {
+            1 -> thinker.playPhase1(s, al)
+            2 -> thinker.playPhase2(s, al)
+            3 -> thinker.playPhase3(s, al)
+            else -> throw IllegalStateException("Fase non valida")
+        }
+    }
 
 
     // le prime 4 posizioni devono essere necessariamente occupate mentre le ultime 2 devono o essere libere
@@ -345,7 +359,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         val level = MulinoGame.deliearizeLevel[adiacentPosition]
                         if (State.isNotSet(state.board, vertex, level) && MulinoGame.checkMorris(state, position, adiacentPosition, parPlayer)) {
                             hasOpenMorris = true
-                            if (level == 2)
+                            if (level == 2 || level == 0)
                                 bonus = true
                             if (parPlayer == state.playerType) {
                                 impossible@ for (adiacentToMorris in MulinoGame.adiacentPositions[adiacentPosition]) {
@@ -702,7 +716,7 @@ class MulinoAlphaBetaSearch(coefficients: Array<Double>,
                         val level = MulinoGame.deliearizeLevel[adiacentPosition]
                         if (State.isNotSet(state.board, vertex, level) && MulinoGame.checkMorris(state, position, adiacentPosition, parOpposite)) {
                             hasOpenMorris = true
-                            if (level == 2)
+                            if (level == 2 || level == 0)
                                 bonus = true
                             if (parPlayer == state.playerType) {
                                 impossible@ for (adiacentToMorris in MulinoGame.adiacentPositions[adiacentPosition]) {
